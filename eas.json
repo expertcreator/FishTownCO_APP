@@ -1,0 +1,94 @@
+{
+  "cli": {
+    "version": ">= 13.2.0",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "credentialsSource": "remote",
+      "distribution": "internal",
+      "environment": "development",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "development",
+        "EXPO_PUBLIC_APP_BRAND": "fishtownco",
+        "EXPO_PUBLIC_APP_TYPE": "customer",
+        "EXPO_PUBLIC_OTA_CHANNEL": "development"
+      },
+      "android": {
+        "autoIncrement": true
+      }
+    },
+    "preview": {
+      "credentialsSource": "remote",
+      "distribution": "store",
+      "channel": "fishtownco-customer-staging",
+      "environment": "preview",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "staging",
+        "EXPO_PUBLIC_APP_BRAND": "fishtownco",
+        "EXPO_PUBLIC_APP_TYPE": "customer",
+        "EXPO_PUBLIC_OTA_CHANNEL": "fishtownco-customer-staging"
+      },
+      "ios": {
+        "resourceClass": "m-medium"
+      },
+      "android": {
+        "autoIncrement": true,
+        "buildType": "apk"
+      }
+    },
+    "production": {
+      "credentialsSource": "remote",
+      "distribution": "store",
+      "channel": "fishtownco-customer-production",
+      "environment": "production",
+      "env": {
+        "EXPO_PUBLIC_APP_VARIANT": "production",
+        "EXPO_PUBLIC_APP_BRAND": "fishtownco",
+        "EXPO_PUBLIC_APP_TYPE": "customer",
+        "EXPO_PUBLIC_OTA_CHANNEL": "fishtownco-customer-production"
+      },
+      "ios": {
+        "resourceClass": "medium"
+      },
+      "android": {
+        "autoIncrement": true,
+        "buildType": "app-bundle"
+      }
+    },
+    "production-apk": {
+      "extends": "production",
+      "android": {
+        "buildType": "apk"
+      }
+    }
+  },
+  "submit": {
+    "preview": {
+      "ios": {
+        "appleTeamId": "<FISHTOWNCO_APPLE_TEAM_ID>",
+        "ascAppId": "<FISHTOWNCO_ASC_APP_ID>",
+        "ascApiKeyPath": "/tmp/asc-api-key-fishtownco.p8",
+        "ascApiKeyId": "<FISHTOWNCO_ASC_API_KEY_ID>",
+        "ascApiKeyIssuerId": "<FISHTOWNCO_ASC_API_KEY_ISSUER_ID>"
+      },
+      "android": {
+        "serviceAccountKeyPath": "/tmp/gplay-fishtownco.json",
+        "track": "internal"
+      }
+    },
+    "production": {
+      "ios": {
+        "appleTeamId": "<FISHTOWNCO_APPLE_TEAM_ID>",
+        "ascAppId": "<FISHTOWNCO_ASC_APP_ID>",
+        "ascApiKeyPath": "/tmp/asc-api-key-fishtownco.p8",
+        "ascApiKeyId": "<FISHTOWNCO_ASC_API_KEY_ID>",
+        "ascApiKeyIssuerId": "<FISHTOWNCO_ASC_API_KEY_ISSUER_ID>"
+      },
+      "android": {
+        "serviceAccountKeyPath": "/tmp/gplay-fishtownco.json"
+      }
+    }
+  }
+}

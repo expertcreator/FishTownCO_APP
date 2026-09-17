@@ -1,0 +1,12 @@
+stages:
+  - comment
+
+include:
+  - project: "DevSoul/devops-templates"
+    file:
+      - "/ci/comment-job.yml"
+
+comment-on-mr-job:
+  extends: .comment-on-mr
+  tags:
+    - dokploy-local

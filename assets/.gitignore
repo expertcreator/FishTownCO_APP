@@ -1,0 +1,7 @@
+# Next Intl
+*.d.json.ts
+
+# Macos
+.DS_Store
+
+.well-known/*
