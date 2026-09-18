@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_SAFETY_ITEMS, DEMO_VESSEL } from "@/features/common/data/demo";
-import { Card, Screen, StatusPill } from "@/features/common/ui";
+import { AppText, Card, Screen, StatusPill } from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 type FilterKey = "all" | "ok" | "due" | "overdue";
@@ -31,10 +31,10 @@ export default function SafetyScreen() {
 
   return (
     <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
-      <Text style={styles.title}>{t("safety.title").toUpperCase()}</Text>
-      <Text style={styles.sub}>
+      <AppText style={styles.title}>{t("safety.title").toUpperCase()}</AppText>
+      <AppText style={styles.sub}>
         {t("safety.tracked-on", { count: counts.all, vessel: DEMO_VESSEL.name })}
-      </Text>
+      </AppText>
 
       <View style={styles.filters}>
         {(
@@ -52,9 +52,9 @@ export default function SafetyScreen() {
               onPress={() => setFilter(key)}
               style={[styles.chip, on && styles.chipOn]}
             >
-              <Text style={[styles.chipText, on && styles.chipTextOn]}>
+              <AppText style={[styles.chipText, on && styles.chipTextOn]}>
                 {label} ({count})
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
@@ -70,10 +70,10 @@ export default function SafetyScreen() {
               <Ionicons name="help-buoy-outline" size={22} color={colors.orange} />
             </View>
             <View style={styles.body}>
-              <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.meta}>
+              <AppText style={styles.name}>{item.name}</AppText>
+              <AppText style={styles.meta}>
                 Next due: {item.dueDate} · {item.location}
-              </Text>
+              </AppText>
             </View>
             <StatusPill label={item.status} tone={item.tone} />
           </Card>
@@ -82,7 +82,7 @@ export default function SafetyScreen() {
 
       <Pressable style={styles.fab} onPress={() => router.push("/safety/add")}>
         <Ionicons name="add" size={20} color={colors.white} />
-        <Text style={styles.fabText}>{t("safety.add-title")}</Text>
+        <AppText style={styles.fabText}>{t("safety.add-title")}</AppText>
       </Pressable>
     </Screen>
   );

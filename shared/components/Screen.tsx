@@ -13,7 +13,7 @@ type ScreenProps = {
 };
 
 /**
- * Cream-backed screen shell. Scrolling screens use Foori's keyboard-aware container.
+ * Cream-backed screen shell. Scrolling screens use the shared keyboard-aware container.
  * @param props - Screen props
  * @param props.children - Screen content
  * @param props.scroll - Whether content scrolls

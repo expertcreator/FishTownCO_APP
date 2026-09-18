@@ -1,14 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_CREW } from "@/features/common/data/demo";
 import {
+  AppText,
   BackHeader,
   Card,
   Screen,
   StatusPill,
-} from "@/features/common/ui";
+} from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -54,8 +55,8 @@ type RowProps = { label: string; value: string };
 function Row({ label, value }: RowProps) {
   return (
     <View style={styles.row}>
-      <Text style={styles.label}>{label}</Text>
-      <Text style={styles.value}>{value}</Text>
+      <AppText style={styles.label}>{label}</AppText>
+      <AppText style={styles.value}>{value}</AppText>
     </View>
   );
 }

@@ -3,12 +3,12 @@ import { useState } from "react";
 import {
   Pressable,
   StyleSheet,
-  Text,
   TextInput,
   View,
   type TextInputProps,
 } from "react-native";
 import { colors } from "@/constants/theme";
+import AppText from "./Text";
 
 type FieldProps = TextInputProps & {
   label: string;
@@ -17,7 +17,7 @@ type FieldProps = TextInputProps & {
 };
 
 /**
- * Labeled text field matching Fishtownco auth/setup forms.
+ * Labeled text field, same role as Foori `AppTextInput` / `AppFormField`.
  * @param props - Field props
  * @param props.label - Uppercase field label
  * @param props.icon - Optional leading Ionicons name
@@ -36,7 +36,7 @@ export function Field({
 
   return (
     <View style={styles.wrap}>
-      <Text style={styles.label}>{label}</Text>
+      <AppText style={styles.label}>{label}</AppText>
       <View style={styles.inputRow}>
         {icon ? (
           <Ionicons name={icon} size={18} color={colors.muted} style={styles.icon} />
@@ -44,7 +44,7 @@ export function Field({
         <TextInput
           {...rest}
           secureTextEntry={secureToggle ? hidden : secureTextEntry}
-          placeholderTextColor="#9AA7B5"
+          placeholderTextColor={colors.muted}
           style={[styles.input, style]}
         />
         {secureToggle ? (
@@ -60,31 +60,3 @@ export function Field({
     </View>
   );
 }
-
-const styles = StyleSheet.create({
-  wrap: { gap: 8 },
-  label: {
-    color: colors.navy,
-    fontSize: 12,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-  },
-  inputRow: {
-    minHeight: 52,
-    borderWidth: 1,
-    borderColor: colors.inputBorder,
-    borderRadius: 12,
-    backgroundColor: colors.white,
-    paddingHorizontal: 14,
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10,
-  },
-  icon: { marginTop: 1 },
-  input: {
-    flex: 1,
-    color: colors.navy,
-    fontSize: 15,
-    paddingVertical: 12,
-  },
-});

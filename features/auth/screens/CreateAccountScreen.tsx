@@ -1,15 +1,16 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import {
+  AppText,
   BackHeader,
   Card,
   Field,
   OutlineButton,
   PrimaryButton,
   Screen,
-} from "@/features/common/ui";
+} from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -56,18 +57,18 @@ export default function CreateAccountScreen() {
           secureToggle
           placeholder="••••••••••••"
         />
-        <Text style={styles.hint}>{t("auth.password-hint")}</Text>
+        <AppText style={styles.hint}>{t("auth.password-hint")}</AppText>
 
         <Pressable
           style={styles.agreeRow}
           onPress={() => setAgreed((v) => !v)}
         >
           <View style={[styles.checkbox, agreed && styles.checkboxOn]} />
-          <Text style={styles.agreeText}>
+          <AppText style={styles.agreeText}>
             {t("auth.agree-prefix")}{" "}
-            <Text style={styles.link}>{t("auth.terms")}</Text> {t("auth.and")}{" "}
-            <Text style={styles.link}>{t("auth.privacy")}</Text>
-          </Text>
+            <AppText style={styles.link}>{t("auth.terms")}</AppText> {t("auth.and")}{" "}
+            <AppText style={styles.link}>{t("auth.privacy")}</AppText>
+          </AppText>
         </Pressable>
 
         <PrimaryButton
@@ -78,7 +79,7 @@ export default function CreateAccountScreen() {
         />
       </Card>
 
-      <Text style={styles.or}>{t("auth.or-continue-with")}</Text>
+      <AppText style={styles.or}>{t("auth.or-continue-with")}</AppText>
       <OutlineButton label={t("auth.continue-apple")} icon="logo-apple" />
       <OutlineButton
         label={t("auth.continue-google")}
@@ -86,12 +87,12 @@ export default function CreateAccountScreen() {
         style={styles.gap}
       />
 
-      <Text style={styles.footer}>
+      <AppText style={styles.footer}>
         {t("auth.already-have-account")}{" "}
-        <Text style={styles.link} onPress={() => router.replace("/(auth)/login")}>
+        <AppText style={styles.link} onPress={() => router.replace("/(auth)/login")}>
           {t("auth.log-in")}
-        </Text>
-      </Text>
+        </AppText>
+      </AppText>
     </Screen>
   );
 }

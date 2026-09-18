@@ -18,7 +18,7 @@ type KeyboardAwareContainerProps = {
 };
 
 /**
- * Scroll container that lifts content above the keyboard (Foori `KeyboardAwareContainer`).
+ * Scroll container that lifts content above the keyboard.
  * @param props - Container props
  * @param props.children - Scrollable content
  * @param props.style - Scroll view style

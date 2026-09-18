@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, Text, View, type StyleProp, type ViewStyle } from "react-native";
+import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { colors } from "@/constants/theme";
+import AppText from "./Text";
 
 type PrimaryButtonProps = {
   label: string;
@@ -12,7 +13,7 @@ type PrimaryButtonProps = {
 };
 
 /**
- * Orange primary CTA used across Fishtownco screens.
+ * Orange primary CTA, same role as Foori `AppButton`.
  * @param props - Button props
  * @param props.label - Button label
  * @param props.onPress - Press handler
@@ -34,7 +35,7 @@ export function PrimaryButton({
       disabled={disabled}
       style={[styles.primary, disabled && styles.disabled, style]}
     >
-      <Text style={styles.primaryText}>{label}</Text>
+      <AppText style={styles.primaryText}>{label}</AppText>
       {icon ? <Ionicons name={icon} size={18} color={colors.white} /> : null}
     </Pressable>
   );
@@ -60,7 +61,7 @@ export function OutlineButton({ label, onPress, icon, style }: OutlineButtonProp
   return (
     <Pressable onPress={onPress} style={[styles.outline, style]}>
       {icon ? <Ionicons name={icon} size={18} color={colors.navy} /> : null}
-      <Text style={styles.outlineText}>{label}</Text>
+      <AppText style={styles.outlineText}>{label}</AppText>
     </Pressable>
   );
 }
@@ -82,7 +83,7 @@ type TextLinkProps = {
 export function TextLink({ children, onPress, align = "left" }: TextLinkProps) {
   return (
     <Pressable onPress={onPress}>
-      <Text style={[styles.link, { textAlign: align }]}>{children}</Text>
+      <AppText style={[styles.link, { textAlign: align }]}>{children}</AppText>
     </Pressable>
   );
 }
@@ -147,7 +148,7 @@ const styles = StyleSheet.create({
     borderRadius: 18,
     padding: 16,
     borderWidth: 1,
-    borderColor: "#EEF1F4",
+    borderColor: colors.border,
   },
   disabled: { opacity: 0.5 },
 });

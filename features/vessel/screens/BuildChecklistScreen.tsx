@@ -1,15 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_CHECKLIST } from "@/features/common/data/demo";
 import {
+  AppText,
   BackHeader,
   Card,
   PrimaryButton,
   Screen,
-} from "@/features/common/ui";
+} from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -36,14 +37,14 @@ export default function BuildChecklistScreen() {
       />
 
       <View style={styles.meta}>
-        <Text style={styles.metaText}>
+        <AppText style={styles.metaText}>
           {t("setup.checklist-selected", { count: selectedCount })}
-        </Text>
+        </AppText>
       </View>
 
       {DEMO_CHECKLIST.map((group) => (
         <Card key={group.id} style={styles.group}>
-          <Text style={styles.groupTitle}>{group.title}</Text>
+          <AppText style={styles.groupTitle}>{group.title}</AppText>
           {group.items.map((item) => {
             const id = `${group.id}:${item}`;
             const on = Boolean(checked[id]);
@@ -58,7 +59,7 @@ export default function BuildChecklistScreen() {
                   size={22}
                   color={on ? colors.teal : colors.muted}
                 />
-                <Text style={styles.rowText}>{item}</Text>
+                <AppText style={styles.rowText}>{item}</AppText>
               </Pressable>
             );
           })}

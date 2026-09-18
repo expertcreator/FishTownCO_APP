@@ -1,14 +1,14 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import {
   DEMO_SAFETY_ITEMS,
   DEMO_VESSEL,
   type StatusTone,
 } from "@/features/common/data/demo";
-import { Card, Screen, StatusPill } from "@/features/common/ui";
+import { AppText, Card, Screen, StatusPill } from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 type FilterKey = "all" | "ok" | "due" | "overdue";
@@ -43,7 +43,7 @@ export default function HomeScreen() {
           style={styles.brand}
           resizeMode="contain"
         />
-        <Text style={styles.topTitle}>{t("home.title")}</Text>
+        <AppText style={styles.topTitle}>{t("home.title")}</AppText>
         <View style={styles.topSpacer} />
       </View>
 
@@ -55,19 +55,19 @@ export default function HomeScreen() {
         />
         <View style={styles.heroOverlay}>
           <View style={styles.classPill}>
-            <Text style={styles.classText}>{t("home.vessel-class")}</Text>
+            <AppText style={styles.classText}>{t("home.vessel-class")}</AppText>
           </View>
-          <Text style={styles.vesselName}>{DEMO_VESSEL.name.toUpperCase()}</Text>
+          <AppText style={styles.vesselName}>{DEMO_VESSEL.name.toUpperCase()}</AppText>
         </View>
       </Card>
 
       {attention > 0 ? (
         <Pressable onPress={() => setFilter("overdue")}>
           <Card style={styles.attention}>
-            <Text style={styles.attentionTitle}>
+            <AppText style={styles.attentionTitle}>
               {t("home.attention-title", { count: attention })}
-            </Text>
-            <Text style={styles.attentionBody}>{t("home.attention-body")}</Text>
+            </AppText>
+            <AppText style={styles.attentionBody}>{t("home.attention-body")}</AppText>
           </Card>
         </Pressable>
       ) : null}
@@ -112,15 +112,15 @@ export default function HomeScreen() {
               onPress={() => setFilter(key)}
               style={[styles.chip, on && styles.chipOn]}
             >
-              <Text style={[styles.chipText, on && styles.chipTextOn]}>
+              <AppText style={[styles.chipText, on && styles.chipTextOn]}>
                 {label} ({count})
-              </Text>
+              </AppText>
             </Pressable>
           );
         })}
       </View>
 
-      <Text style={styles.section}>{t("home.upcoming")}</Text>
+      <AppText style={styles.section}>{t("home.upcoming")}</AppText>
       {items.map((item) => (
         <Pressable
           key={item.id}
@@ -128,17 +128,17 @@ export default function HomeScreen() {
         >
           <Card style={styles.row}>
             <View style={styles.rowBody}>
-              <Text style={styles.rowTitle}>{item.name}</Text>
-              <Text style={styles.rowMeta}>
+              <AppText style={styles.rowTitle}>{item.name}</AppText>
+              <AppText style={styles.rowMeta}>
                 {item.category} · {item.dueDate}
-              </Text>
+              </AppText>
             </View>
             <StatusPill label={item.status} tone={item.tone} />
           </Card>
         </Pressable>
       ))}
 
-      <Text style={styles.section}>{t("home.quick-actions")}</Text>
+      <AppText style={styles.section}>{t("home.quick-actions")}</AppText>
       <View style={styles.actions}>
         <ActionChip
           label={t("home.view-safety")}
@@ -199,8 +199,8 @@ function StatCard({ icon, label, value, tone, onPress }: StatCardProps) {
   return (
     <Pressable onPress={onPress} style={[styles.stat, { backgroundColor: bg }]}>
       <Ionicons name={icon} size={18} color={fg} />
-      <Text style={[styles.statValue, { color: fg }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: fg }]}>{label}</Text>
+      <AppText style={[styles.statValue, { color: fg }]}>{value}</AppText>
+      <AppText style={[styles.statLabel, { color: fg }]}>{label}</AppText>
     </Pressable>
   );
 }
@@ -220,7 +220,7 @@ function ActionChip({ label, icon, onPress }: ActionChipProps) {
   return (
     <Pressable onPress={onPress} style={styles.action}>
       <Ionicons name={icon} size={16} color={colors.navy} />
-      <Text style={styles.actionText}>{label}</Text>
+      <AppText style={styles.actionText}>{label}</AppText>
     </Pressable>
   );
 }

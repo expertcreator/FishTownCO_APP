@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_WALLET } from "@/features/common/data/demo";
-import { Card, Screen, StatusPill } from "@/features/common/ui";
+import { AppText, Card, Screen, StatusPill } from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -17,8 +17,8 @@ export default function WalletScreen() {
     <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
       <View style={styles.header}>
         <View style={styles.headerText}>
-          <Text style={styles.title}>{t("wallet.title")}</Text>
-          <Text style={styles.sub}>{t("wallet.subtitle")}</Text>
+          <AppText style={styles.title}>{t("wallet.title")}</AppText>
+          <AppText style={styles.sub}>{t("wallet.subtitle")}</AppText>
         </View>
         <Pressable style={styles.add} onPress={() => router.push("/wallet/add")}>
           <Ionicons name="add" size={22} color={colors.white} />
@@ -31,13 +31,13 @@ export default function WalletScreen() {
             <Ionicons name="document-text" size={20} color={colors.teal} />
           </View>
           <View style={styles.body}>
-            <Text style={styles.name}>{doc.title}</Text>
-            <Text style={styles.meta}>{doc.subtitle}</Text>
+            <AppText style={styles.name}>{doc.title}</AppText>
+            <AppText style={styles.meta}>{doc.subtitle}</AppText>
             <StatusPill label={doc.expires} tone={doc.tone} />
             {doc.code ? (
-              <Text style={styles.code}>
+              <AppText style={styles.code}>
                 {t("wallet.code-label")}: {doc.code}
-              </Text>
+              </AppText>
             ) : null}
           </View>
         </Card>
@@ -46,7 +46,7 @@ export default function WalletScreen() {
       <Pressable onPress={() => router.push("/billing")}>
         <Card style={styles.billing}>
           <Ionicons name="card-outline" size={20} color={colors.navy} />
-          <Text style={styles.billingText}>{t("vessel.billing")}</Text>
+          <AppText style={styles.billingText}>{t("vessel.billing")}</AppText>
           <Ionicons name="chevron-forward" size={18} color={colors.muted} />
         </Card>
       </Pressable>

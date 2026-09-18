@@ -8,9 +8,9 @@ import {
   type NativeSyntheticEvent,
   Pressable,
   StyleSheet,
-  Text,
   View,
 } from "react-native";
+import { AppText } from "@/shared/components";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
 import { BrandWordmark } from "@/features/onboarding/components/BrandLogo";
@@ -74,7 +74,7 @@ export default function OnboardingScreen() {
       <View style={styles.header}>
         <BrandWordmark />
         <Pressable onPress={finish} hitSlop={12}>
-          <Text style={styles.skip}>{t("onboarding.skip")}</Text>
+          <AppText style={styles.skip}>{t("onboarding.skip")}</AppText>
         </Pressable>
       </View>
 
@@ -111,10 +111,10 @@ export default function OnboardingScreen() {
                 setIndex(i);
               }}
             >
-              <Text style={[styles.tabLabel, active && styles.tabLabelActive]}>
+              <AppText style={[styles.tabLabel, active && styles.tabLabelActive]}>
                 SLIDE {String(i + 1).padStart(2, "0")}
-              </Text>
-              <Text style={styles.tabTitle}>{t(slide.tabKey)}</Text>
+              </AppText>
+              <AppText style={styles.tabTitle}>{t(slide.tabKey)}</AppText>
             </Pressable>
           );
         })}
@@ -130,9 +130,9 @@ export default function OnboardingScreen() {
       </View>
 
       <Pressable style={styles.cta} onPress={goNext}>
-        <Text style={styles.ctaText}>
+        <AppText style={styles.ctaText}>
           {isLast ? t("onboarding.get-started") : t("onboarding.next")}
-        </Text>
+        </AppText>
         <Ionicons name="arrow-forward" size={18} color={colors.white} />
       </Pressable>
     </SafeAreaView>

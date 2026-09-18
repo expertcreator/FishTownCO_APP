@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_VESSEL } from "@/features/common/data/demo";
-import { Card, Screen } from "@/features/common/ui";
+import { AppText, Card, Screen } from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -15,8 +15,8 @@ export default function VesselScreen() {
 
   return (
     <Screen edges={["top", "left", "right"]}>
-      <Text style={styles.title}>{t("vessel.title")}</Text>
-      <Text style={styles.sub}>{t("vessel.subtitle")}</Text>
+      <AppText style={styles.title}>{t("vessel.title")}</AppText>
+      <AppText style={styles.sub}>{t("vessel.subtitle")}</AppText>
 
       <Card style={styles.hero}>
         <View style={styles.heroTop}>
@@ -24,8 +24,8 @@ export default function VesselScreen() {
             <Ionicons name="boat" size={28} color={colors.teal} />
           </View>
           <View style={styles.heroText}>
-            <Text style={styles.name}>{DEMO_VESSEL.name}</Text>
-            <Text style={styles.type}>{DEMO_VESSEL.type}</Text>
+            <AppText style={styles.name}>{DEMO_VESSEL.name}</AppText>
+            <AppText style={styles.type}>{DEMO_VESSEL.type}</AppText>
           </View>
         </View>
         <View style={styles.grid}>
@@ -69,8 +69,8 @@ type MetaProps = { label: string; value: string };
 function Meta({ label, value }: MetaProps) {
   return (
     <View style={styles.meta}>
-      <Text style={styles.metaLabel}>{label}</Text>
-      <Text style={styles.metaValue}>{value}</Text>
+      <AppText style={styles.metaLabel}>{label}</AppText>
+      <AppText style={styles.metaValue}>{value}</AppText>
     </View>
   );
 }
@@ -91,7 +91,7 @@ function ActionRow({ icon, label, onPress }: ActionRowProps) {
     <Pressable onPress={onPress}>
       <Card style={styles.action}>
         <Ionicons name={icon} size={20} color={colors.navy} />
-        <Text style={styles.actionText}>{label}</Text>
+        <AppText style={styles.actionText}>{label}</AppText>
         <Ionicons name="chevron-forward" size={18} color={colors.muted} />
       </Card>
     </Pressable>

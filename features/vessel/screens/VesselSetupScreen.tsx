@@ -1,15 +1,16 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_VESSEL } from "@/features/common/data/demo";
 import {
+  AppText,
   BackHeader,
   Card,
   Field,
   PrimaryButton,
   Screen,
-} from "@/features/common/ui";
+} from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -32,7 +33,7 @@ export default function VesselSetupScreen() {
       />
 
       <View style={styles.step}>
-        <Text style={styles.stepText}>{t("setup.step-1")}</Text>
+        <AppText style={styles.stepText}>{t("setup.step-1")}</AppText>
       </View>
 
       <Card style={styles.card}>

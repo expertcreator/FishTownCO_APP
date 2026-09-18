@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_CREW } from "@/features/common/data/demo";
-import { Card, Screen, StatusPill } from "@/features/common/ui";
+import { AppText, Card, Screen, StatusPill } from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -24,8 +24,8 @@ export default function CrewListScreen() {
           <Ionicons name="arrow-back" size={22} color={colors.navy} />
         </Pressable>
         <View style={styles.headerText}>
-          <Text style={styles.title}>{t("crew.title")}</Text>
-          <Text style={styles.sub}>{t("crew.subtitle")}</Text>
+          <AppText style={styles.title}>{t("crew.title")}</AppText>
+          <AppText style={styles.sub}>{t("crew.subtitle")}</AppText>
         </View>
         <Pressable style={styles.add} onPress={() => router.push("/crew/add")}>
           <Ionicons name="add" size={22} color={colors.white} />
@@ -39,18 +39,18 @@ export default function CrewListScreen() {
         >
           <Card style={styles.row}>
             <View style={styles.avatar}>
-              <Text style={styles.avatarText}>
+              <AppText style={styles.avatarText}>
                 {member.name
                   .replace("Capt. ", "")
                   .split(" ")
                   .map((p) => p[0])
                   .join("")
                   .slice(0, 2)}
-              </Text>
+              </AppText>
             </View>
             <View style={styles.body}>
-              <Text style={styles.name}>{member.name}</Text>
-              <Text style={styles.meta}>{member.role}</Text>
+              <AppText style={styles.name}>{member.name}</AppText>
+              <AppText style={styles.meta}>{member.role}</AppText>
               <StatusPill label={member.expires} tone={member.tone} />
             </View>
             <Ionicons name="chevron-forward" size={18} color={colors.muted} />

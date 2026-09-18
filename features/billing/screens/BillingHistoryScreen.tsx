@@ -1,14 +1,15 @@
 import { router } from "expo-router";
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_BILLING } from "@/features/common/data/demo";
 import {
+  AppText,
   BackHeader,
   Card,
   PrimaryButton,
   Screen,
   StatusPill,
-} from "@/features/common/ui";
+} from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -26,9 +27,9 @@ export default function BillingHistoryScreen() {
       />
 
       <Card style={styles.plan}>
-        <Text style={styles.planLabel}>{t("billing.current-plan")}</Text>
-        <Text style={styles.planName}>{t("billing.plan-name")}</Text>
-        <Text style={styles.planMeta}>{t("billing.renews")}</Text>
+        <AppText style={styles.planLabel}>{t("billing.current-plan")}</AppText>
+        <AppText style={styles.planName}>{t("billing.plan-name")}</AppText>
+        <AppText style={styles.planMeta}>{t("billing.renews")}</AppText>
         <PrimaryButton
           label={t("billing.manage")}
           icon="card-outline"
@@ -37,15 +38,15 @@ export default function BillingHistoryScreen() {
         />
       </Card>
 
-      <Text style={styles.section}>{t("billing.history")}</Text>
+      <AppText style={styles.section}>{t("billing.history")}</AppText>
       {DEMO_BILLING.map((row) => (
         <Card key={row.id} style={styles.row}>
           <View style={styles.rowTop}>
-            <Text style={styles.label}>{row.label}</Text>
-            <Text style={styles.amount}>{row.amount}</Text>
+            <AppText style={styles.label}>{row.label}</AppText>
+            <AppText style={styles.amount}>{row.amount}</AppText>
           </View>
           <View style={styles.rowBottom}>
-            <Text style={styles.date}>{row.date}</Text>
+            <AppText style={styles.date}>{row.date}</AppText>
             <StatusPill label={row.status} tone="ok" />
           </View>
         </Card>

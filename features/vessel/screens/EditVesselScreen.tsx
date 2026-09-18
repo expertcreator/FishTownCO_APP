@@ -8,7 +8,7 @@ import {
   Field,
   PrimaryButton,
   Screen,
-} from "@/features/common/ui";
+} from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**

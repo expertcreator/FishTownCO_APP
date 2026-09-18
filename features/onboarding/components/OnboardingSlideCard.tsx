@@ -1,5 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
+import { AppText } from "@/shared/components";
 import { colors } from "@/constants/theme";
 import type { OnboardingSlideData } from "@/features/onboarding/data/slides";
 import { useTranslation } from "@/shared/translations";
@@ -36,12 +37,12 @@ export function OnboardingSlideCard({ slide }: OnboardingSlideCardProps) {
           <View style={styles.badgeIconWrap}>
             <Ionicons name={iconName} size={16} color={colors.white} />
           </View>
-          <Text style={styles.badgeText}>{t(slide.badgeKey)}</Text>
+          <AppText style={styles.badgeText}>{t(slide.badgeKey)}</AppText>
         </View>
       </View>
-      <Text style={styles.slideLabel}>{t(slide.labelKey)}</Text>
-      <Text style={styles.title}>{t(slide.titleKey)}</Text>
-      <Text style={styles.body}>{t(slide.bodyKey)}</Text>
+      <AppText style={styles.slideLabel}>{t(slide.labelKey)}</AppText>
+      <AppText style={styles.title}>{t(slide.titleKey)}</AppText>
+      <AppText style={styles.body}>{t(slide.bodyKey)}</AppText>
     </View>
   );
 }

@@ -1,8 +1,9 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Image, StyleSheet, Text, View } from "react-native";
+import { Image, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import {
+  AppText,
   BackHeader,
   Card,
   Field,
@@ -10,7 +11,7 @@ import {
   PrimaryButton,
   Screen,
   TextLink,
-} from "@/features/common/ui";
+} from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -39,7 +40,7 @@ export default function LoginScreen() {
         />
         <View style={styles.badge}>
           <View style={styles.badgeDot} />
-          <Text style={styles.badgeText}>{t("auth.hero-badge")}</Text>
+          <AppText style={styles.badgeText}>{t("auth.hero-badge")}</AppText>
         </View>
       </Card>
 
@@ -74,7 +75,7 @@ export default function LoginScreen() {
         />
       </Card>
 
-      <Text style={styles.or}>{t("auth.or-continue-with")}</Text>
+      <AppText style={styles.or}>{t("auth.or-continue-with")}</AppText>
       <OutlineButton label={t("auth.continue-apple")} icon="logo-apple" />
       <OutlineButton
         label={t("auth.continue-google")}
@@ -82,15 +83,15 @@ export default function LoginScreen() {
         style={styles.gap}
       />
 
-      <Text style={styles.footer}>
+      <AppText style={styles.footer}>
         {t("auth.new-here")}{" "}
-        <Text
+        <AppText
           style={styles.link}
           onPress={() => router.push("/(auth)/create-account")}
         >
           {t("auth.create-account")}
-        </Text>
-      </Text>
+        </AppText>
+      </AppText>
     </Screen>
   );
 }

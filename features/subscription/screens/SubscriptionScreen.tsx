@@ -1,13 +1,14 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import {
+  AppText,
   BackHeader,
   Card,
   PrimaryButton,
   Screen,
-} from "@/features/common/ui";
+} from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 const PLANS = [
@@ -46,20 +47,20 @@ export default function SubscriptionScreen() {
           <Pressable key={p.id} onPress={() => setPlan(p.id)}>
             <Card style={[styles.plan, selected && styles.planOn]}>
               <View style={styles.planTop}>
-                <Text style={styles.planTitle}>{t(p.titleKey)}</Text>
+                <AppText style={styles.planTitle}>{t(p.titleKey)}</AppText>
                 <View style={[styles.radio, selected && styles.radioOn]} />
               </View>
-              <Text style={styles.price}>{t(p.priceKey)}</Text>
-              <Text style={styles.note}>{t(p.noteKey)}</Text>
+              <AppText style={styles.price}>{t(p.priceKey)}</AppText>
+              <AppText style={styles.note}>{t(p.noteKey)}</AppText>
             </Card>
           </Pressable>
         );
       })}
 
       <Card style={styles.perks}>
-        <Text style={styles.perk}>{t("subscription.perk-1")}</Text>
-        <Text style={styles.perk}>{t("subscription.perk-2")}</Text>
-        <Text style={styles.perk}>{t("subscription.perk-3")}</Text>
+        <AppText style={styles.perk}>{t("subscription.perk-1")}</AppText>
+        <AppText style={styles.perk}>{t("subscription.perk-2")}</AppText>
+        <AppText style={styles.perk}>{t("subscription.perk-3")}</AppText>
       </Card>
 
       <PrimaryButton
@@ -67,7 +68,7 @@ export default function SubscriptionScreen() {
         onPress={() => router.replace("/(tabs)/home")}
       />
       <Pressable onPress={() => router.replace("/(tabs)/home")}>
-        <Text style={styles.skip}>{t("subscription.skip")}</Text>
+        <AppText style={styles.skip}>{t("subscription.skip")}</AppText>
       </Pressable>
     </Screen>
   );

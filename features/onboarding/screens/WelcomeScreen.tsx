@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
-import { Image, Pressable, StyleSheet, Text, View } from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
+import { AppText } from "@/shared/components";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
 import { useTranslation } from "@/shared/translations";
@@ -22,24 +23,24 @@ export default function WelcomeScreen() {
             resizeMode="contain"
             accessibilityLabel={t("app.name")}
           />
-          <Text style={styles.eyebrow}>{t("welcome.eyebrow")}</Text>
-          <Text style={styles.headline}>{t("welcome.headline")}</Text>
+          <AppText style={styles.eyebrow}>{t("welcome.eyebrow")}</AppText>
+          <AppText style={styles.headline}>{t("welcome.headline")}</AppText>
         </View>
 
         <View style={styles.actions}>
           <Link href="/onboarding" asChild>
             <Pressable style={styles.cta}>
-              <Text style={styles.ctaText}>{t("welcome.get-started")}</Text>
+              <AppText style={styles.ctaText}>{t("welcome.get-started")}</AppText>
               <Ionicons name="arrow-forward" size={18} color={colors.white} />
             </Pressable>
           </Link>
 
           <Link href="/(auth)/login" asChild>
             <Pressable style={styles.loginWrap}>
-              <Text style={styles.loginPrompt}>
+              <AppText style={styles.loginPrompt}>
                 {t("welcome.already-have-account")}{" "}
-                <Text style={styles.loginLink}>{t("welcome.log-in")}</Text>
-              </Text>
+                <AppText style={styles.loginLink}>{t("welcome.log-in")}</AppText>
+              </AppText>
             </Pressable>
           </Link>
         </View>

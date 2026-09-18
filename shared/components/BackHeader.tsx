@@ -1,7 +1,8 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
+import AppText from "./Text";
 
 type BackHeaderProps = {
   title: string;
@@ -29,8 +30,8 @@ export function BackHeader({ title, subtitle, onBack }: BackHeaderProps) {
       >
         <Ionicons name="arrow-back" size={22} color={colors.navy} />
       </Pressable>
-      <Text style={styles.title}>{title}</Text>
-      {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
+      <AppText style={styles.title}>{title}</AppText>
+      {subtitle ? <AppText style={styles.subtitle}>{subtitle}</AppText> : null}
     </View>
   );
 }

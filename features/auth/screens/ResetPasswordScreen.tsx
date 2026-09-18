@@ -1,14 +1,15 @@
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text } from "react-native";
+import { StyleSheet } from "react-native";
 import { colors } from "@/constants/theme";
 import {
+  AppText,
   BackHeader,
   Card,
   Field,
   PrimaryButton,
   Screen,
-} from "@/features/common/ui";
+} from "@/shared/components";
 import { useTranslation } from "@/shared/translations";
 
 /**
@@ -29,7 +30,7 @@ export default function ResetPasswordScreen() {
 
       <Card style={styles.card}>
         {sent ? (
-          <Text style={styles.sent}>{t("auth.reset-sent")}</Text>
+          <AppText style={styles.sent}>{t("auth.reset-sent")}</AppText>
         ) : (
           <>
             <Field
@@ -49,11 +50,11 @@ export default function ResetPasswordScreen() {
         )}
       </Card>
 
-      <Text style={styles.footer}>
-        <Text style={styles.link} onPress={() => router.replace("/(auth)/login")}>
+      <AppText style={styles.footer}>
+        <AppText style={styles.link} onPress={() => router.replace("/(auth)/login")}>
           {t("auth.back-to-login")}
-        </Text>
-      </Text>
+        </AppText>
+      </AppText>
     </Screen>
   );
 }

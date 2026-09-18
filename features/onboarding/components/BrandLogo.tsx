@@ -1,4 +1,5 @@
-import { StyleSheet, Text, View, Image } from "react-native";
+import { StyleSheet, View, Image } from "react-native";
+import { AppText } from "@/shared/components";
 import { colors } from "@/constants/theme";
 
 type BrandLogoProps = {
@@ -34,9 +35,9 @@ export function BrandLogo({ size = "md" }: BrandLogoProps) {
  */
 export function BrandWordmark() {
   return (
-    <Text style={styles.wordmark}>
-      FISHTOWN <Text style={styles.wordmarkAccent}>CO.</Text>
-    </Text>
+    <AppText style={styles.wordmark}>
+      FISHTOWN <AppText style={styles.wordmarkAccent}>CO.</AppText>
+    </AppText>
   );
 }
 
