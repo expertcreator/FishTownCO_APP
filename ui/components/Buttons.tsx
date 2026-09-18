@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import AppText from "./Text";
 
 type PrimaryButtonProps = {
@@ -29,6 +29,9 @@ export function PrimaryButton({
   style,
   disabled,
 }: PrimaryButtonProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Pressable
       onPress={onPress}
@@ -58,6 +61,9 @@ type OutlineButtonProps = {
  * @returns Button element
  */
 export function OutlineButton({ label, onPress, icon, style }: OutlineButtonProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Pressable onPress={onPress} style={[styles.outline, style]}>
       {icon ? <Ionicons name={icon} size={18} color={colors.navy} /> : null}
@@ -81,6 +87,9 @@ type TextLinkProps = {
  * @returns Link element
  */
 export function TextLink({ children, onPress, align = "left" }: TextLinkProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Pressable onPress={onPress}>
       <AppText style={[styles.link, { textAlign: align }]}>{children}</AppText>
@@ -101,10 +110,14 @@ type CardProps = {
  * @returns Card element
  */
 export function Card({ children, style }: CardProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return <View style={[styles.card, style]}>{children}</View>;
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   primary: {
     backgroundColor: colors.orange,
     borderRadius: 14,
@@ -121,7 +134,7 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
   outline: {
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: 14,
     minHeight: 52,
     borderWidth: 1,
@@ -152,3 +165,4 @@ const styles = StyleSheet.create({
   },
   disabled: { opacity: 0.5 },
 });
+}

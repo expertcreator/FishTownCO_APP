@@ -190,12 +190,6 @@
     "coming-soon": "Coming soon"
   },
   "network-welcome-back": "Welcome back",
-  "languages": {
-    "en": "English",
-    "ar": "Arabic",
-    "ur": "Urdu",
-    "rmu": "Roman Urdu"
-  },
   "validation": {
     "email-required": "Email is required",
     "email-invalid": "Invalid email format",

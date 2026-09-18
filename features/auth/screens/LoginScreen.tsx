@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Image, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
   BackHeader,
@@ -19,6 +19,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Login UI
  */
 export default function LoginScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const [email, setEmail] = useState("skipper@northernstar.co.uk");
   const [password, setPassword] = useState("");
@@ -96,7 +99,8 @@ export default function LoginScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   hero: {
     marginBottom: 14,
     alignItems: "center",
@@ -142,3 +146,4 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
+}

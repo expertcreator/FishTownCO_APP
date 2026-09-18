@@ -26,7 +26,7 @@ type OldI18nState = {
 const OLD_STORAGE_KEY = "locale";
 const NEW_STORAGE_KEY = "i18n-storage";
 const I18N_PERSIST_VERSION = 1;
-const VALID_LANGUAGES: Language[] = ["en", "ar", "ur", "rmu"];
+const VALID_LANGUAGES: Language[] = ["en"];
 
 const initialState = {
   language: "en" as Language,
@@ -60,13 +60,13 @@ const isValidLanguage = (value: unknown): value is Language =>
  * Returns the language if found, or null if not extractable
  */
 const extractLanguageFromOldData = (data: string): Language | null => {
-  // Case 1: Raw string value (e.g., "ar" or "en")
+  // Case 1: Raw string value (e.g., "en")
   const trimmed = data.trim();
   if (isValidLanguage(trimmed)) {
     return trimmed;
   }
 
-  // Case 2: JSON-quoted string (e.g., '"ar"')
+  // Case 2: JSON-quoted string (e.g., '"en"')
   if (trimmed.startsWith('"') && trimmed.endsWith('"')) {
     const unquoted = trimmed.slice(1, -1);
     if (isValidLanguage(unquoted)) {

@@ -7,7 +7,7 @@ import {
   View,
   type TextInputProps,
 } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import AppText from "./Text";
 
 type FieldProps = TextInputProps & {
@@ -32,6 +32,9 @@ export function Field({
   style,
   ...rest
 }: FieldProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const [hidden, setHidden] = useState(Boolean(secureTextEntry));
 
   return (
@@ -60,3 +63,39 @@ export function Field({
     </View>
   );
 }
+
+/**
+ * Builds field styles for the active palette.
+ * @param colors - Active theme colors
+ * @returns Field styles
+ */
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    wrap: { gap: 8 },
+    label: {
+      color: colors.navy,
+      fontSize: 12,
+      fontWeight: "800",
+      letterSpacing: 0.8,
+    },
+    inputRow: {
+      minHeight: 52,
+      borderWidth: 1,
+      borderColor: colors.inputBorder,
+      borderRadius: 12,
+      backgroundColor: colors.card,
+      paddingHorizontal: 14,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 10,
+    },
+    icon: { marginTop: 1 },
+    input: {
+      flex: 1,
+      color: colors.navy,
+      fontSize: 15,
+      paddingVertical: 12,
+    },
+  });
+}
+

@@ -12,7 +12,7 @@ import {
 } from "react-native";
 import { AppText } from "@/ui/components";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { BrandWordmark } from "@/features/onboarding/components/BrandLogo";
 import { OnboardingSlideCard } from "@/features/onboarding/components/OnboardingSlideCard";
 import {
@@ -30,6 +30,9 @@ const CARD_WIDTH = SCREEN_WIDTH - 40;
  * @returns Onboarding screen element
  */
 export default function OnboardingScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const listRef = useRef<FlatList<OnboardingSlideData>>(null);
   const [index, setIndex] = useState(0);
@@ -139,7 +142,8 @@ export default function OnboardingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
@@ -166,13 +170,13 @@ const styles = StyleSheet.create({
   },
   tab: {
     flex: 1,
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderRadius: 14,
     paddingVertical: 10,
     paddingHorizontal: 8,
   },
   tabActive: {
-    backgroundColor: "#EFE8DC",
+    backgroundColor: colors.chipIdle,
   },
   tabLabel: {
     color: colors.navy,
@@ -224,3 +228,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
+}

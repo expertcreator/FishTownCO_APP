@@ -1,4 +1,5 @@
 import { StyleSheet, View } from "react-native";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import AppText from "./Text";
 
 type StatusTone = "ok" | "due" | "overdue" | "info";
@@ -10,19 +11,23 @@ type StatusPillProps = {
 
 /**
  * Resolves pill colors for a status tone.
+ * @param colors - Active theme colors
  * @param tone - Status tone
  * @returns Background and text colors
  */
-function toneColors(tone: StatusTone): { bg: string; text: string } {
+function toneColors(
+  colors: ThemeColors,
+  tone: StatusTone
+): { bg: string; text: string } {
   switch (tone) {
     case "ok":
-      return { bg: "#E4F5EC", text: "#1F7A4D" };
+      return { bg: colors.statusOkBg, text: colors.statusOkText };
     case "due":
-      return { bg: "#FFF4E0", text: "#B45309" };
+      return { bg: colors.statusDueBg, text: colors.statusDueText };
     case "overdue":
-      return { bg: "#FDECEC", text: "#B91C1C" };
+      return { bg: colors.statusOverdueBg, text: colors.statusOverdueText };
     default:
-      return { bg: "#E2F1F8", text: "#0F5F73" };
+      return { bg: colors.statusInfoBg, text: colors.statusInfoText };
   }
 }
 
@@ -34,7 +39,8 @@ function toneColors(tone: StatusTone): { bg: string; text: string } {
  * @returns Pill element
  */
 export function StatusPill({ label, tone = "info" }: StatusPillProps) {
-  const c = toneColors(tone);
+  const colors = useColors();
+  const c = toneColors(colors, tone);
   return (
     <View style={[styles.pill, { backgroundColor: c.bg }]}>
       <AppText style={[styles.text, { color: c.text }]}>{label}</AppText>

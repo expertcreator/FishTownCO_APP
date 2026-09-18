@@ -3,7 +3,7 @@ import { Link } from "expo-router";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { AppText } from "@/ui/components";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 
 /**
@@ -11,6 +11,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Welcome UI
  */
 export default function WelcomeScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
 
   return (
@@ -49,7 +52,8 @@ export default function WelcomeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   safe: {
     flex: 1,
     backgroundColor: colors.background,
@@ -124,3 +128,4 @@ const styles = StyleSheet.create({
     fontWeight: "700",
   },
 });
+}

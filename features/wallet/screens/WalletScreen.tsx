@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_WALLET } from "@/features/common/data/demo";
 import { AppText, Card, Screen, StatusPill } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
@@ -11,6 +11,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Wallet tab UI
  */
 export default function WalletScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
 
   return (
@@ -54,7 +57,8 @@ export default function WalletScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   content: { paddingBottom: 36 },
   header: {
     flexDirection: "row",
@@ -98,3 +102,4 @@ const styles = StyleSheet.create({
   },
   billingText: { flex: 1, color: colors.navy, fontWeight: "700" },
 });
+}

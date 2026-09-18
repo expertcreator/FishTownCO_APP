@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_SAFETY_ITEMS } from "@/features/common/data/demo";
 import {
   AppText,
@@ -17,6 +17,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Item detail UI
  */
 export default function SafetyItemDetailScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const item = DEMO_SAFETY_ITEMS.find((i) => i.id === id) ?? DEMO_SAFETY_ITEMS[0];
@@ -55,6 +58,9 @@ type RowProps = { label: string; value: string };
  * @returns Row element
  */
 function Row({ label, value }: RowProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.row}>
       <AppText style={styles.label}>{label}</AppText>
@@ -63,7 +69,8 @@ function Row({ label, value }: RowProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   hero: {
     alignItems: "flex-start",
     gap: 12,
@@ -87,3 +94,4 @@ const styles = StyleSheet.create({
   },
   value: { color: colors.navy, fontSize: 15, fontWeight: "600" },
 });
+}

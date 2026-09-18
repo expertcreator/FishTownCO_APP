@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_VESSEL } from "@/features/common/data/demo";
 import { AppText, Card, Screen } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
@@ -11,6 +11,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Vessel tab UI
  */
 export default function VesselScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
 
   return (
@@ -67,6 +70,9 @@ type MetaProps = { label: string; value: string };
  * @returns Meta cell
  */
 function Meta({ label, value }: MetaProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.meta}>
       <AppText style={styles.metaLabel}>{label}</AppText>
@@ -87,6 +93,9 @@ type ActionRowProps = {
  * @returns Action row
  */
 function ActionRow({ icon, label, onPress }: ActionRowProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Pressable onPress={onPress}>
       <Card style={styles.action}>
@@ -98,7 +107,8 @@ function ActionRow({ icon, label, onPress }: ActionRowProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   title: { color: colors.navy, fontSize: 28, fontWeight: "800" },
   sub: { color: colors.muted, marginTop: 6, marginBottom: 16 },
   hero: { marginBottom: 14, gap: 16 },
@@ -131,3 +141,4 @@ const styles = StyleSheet.create({
   },
   actionText: { flex: 1, color: colors.navy, fontWeight: "700", fontSize: 15 },
 });
+}

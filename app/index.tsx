@@ -1,6 +1,6 @@
 import { resolveAppLaunchRoute } from "@/features/auth/utils/resolveAppLaunchRoute";
 import { useOnboardingStore } from "@/features/onboarding/store/onboardingStore";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { Redirect, type Href } from "expo-router";
 import { useEffect, useState } from "react";
 import { ActivityIndicator, View } from "react-native";
@@ -10,6 +10,9 @@ import { ActivityIndicator, View } from "react-native";
  * @returns Redirect or boot loader
  */
 export default function Index() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const hasCompletedOnboarding = useOnboardingStore(
     (s) => s.hasCompletedOnboarding
   );
@@ -54,7 +57,8 @@ export default function Index() {
   return <Redirect href={redirectTo} />;
 }
 
-const styles = {
+function getStyles(colors: ThemeColors) {
+  return {
   boot: {
     flex: 1,
     justifyContent: "center" as const,
@@ -62,3 +66,4 @@ const styles = {
     backgroundColor: colors.background,
   },
 };
+}

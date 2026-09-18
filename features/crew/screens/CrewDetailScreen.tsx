@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useLocalSearchParams } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_CREW } from "@/features/common/data/demo";
 import {
   AppText,
@@ -17,6 +17,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Crew member detail UI
  */
 export default function CrewDetailScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const { id } = useLocalSearchParams<{ id: string }>();
   const member = DEMO_CREW.find((c) => c.id === id) ?? DEMO_CREW[0];
@@ -53,6 +56,9 @@ type RowProps = { label: string; value: string };
  * @returns Row element
  */
 function Row({ label, value }: RowProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.row}>
       <AppText style={styles.label}>{label}</AppText>
@@ -61,7 +67,8 @@ function Row({ label, value }: RowProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   hero: { alignItems: "flex-start", gap: 10, marginBottom: 12 },
   avatar: {
     width: 64,
@@ -81,3 +88,4 @@ const styles = StyleSheet.create({
   },
   value: { color: colors.navy, fontSize: 15, fontWeight: "600" },
 });
+}

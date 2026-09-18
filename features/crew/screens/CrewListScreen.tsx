@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_CREW } from "@/features/common/data/demo";
 import { AppText, Card, Screen, StatusPill } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
@@ -11,6 +11,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Crew list UI
  */
 export default function CrewListScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
 
   return (
@@ -61,7 +64,8 @@ export default function CrewListScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   header: {
     flexDirection: "row",
     alignItems: "flex-start",
@@ -105,3 +109,4 @@ const styles = StyleSheet.create({
   name: { color: colors.navy, fontWeight: "700", fontSize: 15 },
   meta: { color: colors.muted, fontSize: 12 },
 });
+}

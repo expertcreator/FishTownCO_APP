@@ -1,6 +1,6 @@
 import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_BILLING } from "@/features/common/data/demo";
 import {
   AppText,
@@ -17,6 +17,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Billing history UI
  */
 export default function BillingHistoryScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
 
   return (
@@ -55,7 +58,8 @@ export default function BillingHistoryScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   plan: { marginBottom: 18, gap: 4 },
   planLabel: {
     color: colors.muted,
@@ -87,3 +91,4 @@ const styles = StyleSheet.create({
   },
   date: { color: colors.muted, fontSize: 12 },
 });
+}

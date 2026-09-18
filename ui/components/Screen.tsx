@@ -1,7 +1,7 @@
 import type { ReactNode } from "react";
 import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { KeyboardAwareContainer } from "./KeyboardAwareContainer";
 
 type ScreenProps = {
@@ -29,6 +29,9 @@ export function Screen({
   contentStyle,
   edges = ["top", "left", "right", "bottom"],
 }: ScreenProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <SafeAreaView style={[styles.safe, style]} edges={edges}>
       {scroll ? (
@@ -47,7 +50,8 @@ export function Screen({
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   safe: { flex: 1, backgroundColor: colors.background },
   flex: { flex: 1 },
   content: {
@@ -56,3 +60,4 @@ const styles = StyleSheet.create({
     paddingTop: 8,
   },
 });
+}

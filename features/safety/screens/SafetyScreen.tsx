@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_SAFETY_ITEMS, DEMO_VESSEL } from "@/features/common/data/demo";
 import { AppText, Card, Screen, StatusPill } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
@@ -14,6 +14,9 @@ type FilterKey = "all" | "ok" | "due" | "overdue";
  * @returns Safety tab UI
  */
 export default function SafetyScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const [filter, setFilter] = useState<FilterKey>("all");
 
@@ -88,7 +91,8 @@ export default function SafetyScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   content: { paddingBottom: 36 },
   title: {
     color: colors.navy,
@@ -107,11 +111,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#EFE8DC",
+    backgroundColor: colors.chipIdle,
   },
-  chipOn: { backgroundColor: colors.navy },
+  chipOn: { backgroundColor: colors.inverse },
   chipText: { color: colors.navy, fontSize: 12, fontWeight: "700" },
-  chipTextOn: { color: colors.white },
+  chipTextOn: { color: colors.onInverse },
   row: {
     flexDirection: "row",
     alignItems: "center",
@@ -143,3 +147,4 @@ const styles = StyleSheet.create({
   },
   fabText: { color: colors.white, fontWeight: "800", fontSize: 13 },
 });
+}

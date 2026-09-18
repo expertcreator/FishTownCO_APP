@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   DEMO_SAFETY_ITEMS,
   DEMO_VESSEL,
@@ -18,6 +18,9 @@ type FilterKey = "all" | "ok" | "due" | "overdue";
  * @returns Home tab UI
  */
 export default function HomeScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const [filter, setFilter] = useState<FilterKey>("all");
 
@@ -179,21 +182,24 @@ type StatCardProps = {
  * @returns Stat card
  */
 function StatCard({ icon, label, value, tone, onPress }: StatCardProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const bg =
     tone === "ok"
-      ? "#E4F5EC"
+      ? colors.statusOkBg
       : tone === "due"
-        ? "#FFF4E0"
+        ? colors.statusDueBg
         : tone === "overdue"
-          ? "#FDECEC"
+          ? colors.statusOverdueBg
           : colors.softTeal;
   const fg =
     tone === "ok"
-      ? "#1F7A4D"
+      ? colors.statusOkText
       : tone === "due"
-        ? "#B45309"
+        ? colors.statusDueText
         : tone === "overdue"
-          ? "#B91C1C"
+          ? colors.statusOverdueText
           : colors.teal;
 
   return (
@@ -217,6 +223,9 @@ type ActionChipProps = {
  * @returns Action chip
  */
 function ActionChip({ label, icon, onPress }: ActionChipProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <Pressable onPress={onPress} style={styles.action}>
       <Ionicons name={icon} size={16} color={colors.navy} />
@@ -225,7 +234,8 @@ function ActionChip({ label, icon, onPress }: ActionChipProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   content: { paddingBottom: 36 },
   topBar: {
     flexDirection: "row",
@@ -254,12 +264,12 @@ const styles = StyleSheet.create({
     gap: 8,
   },
   classPill: {
-    backgroundColor: colors.navy,
+    backgroundColor: colors.inverse,
     borderRadius: 10,
     paddingHorizontal: 10,
     paddingVertical: 6,
   },
-  classText: { color: colors.white, fontSize: 10, fontWeight: "800" },
+  classText: { color: colors.onInverse, fontSize: 10, fontWeight: "800" },
   vesselName: {
     color: colors.white,
     fontSize: 18,
@@ -270,7 +280,7 @@ const styles = StyleSheet.create({
   },
   attention: {
     backgroundColor: colors.softOrange,
-    borderColor: "#F7C7AE",
+    borderColor: colors.attentionBorder,
     marginBottom: 14,
     gap: 4,
   },
@@ -296,11 +306,11 @@ const styles = StyleSheet.create({
     borderRadius: 999,
     paddingHorizontal: 12,
     paddingVertical: 8,
-    backgroundColor: "#EFE8DC",
+    backgroundColor: colors.chipIdle,
   },
-  chipOn: { backgroundColor: colors.navy },
+  chipOn: { backgroundColor: colors.inverse },
   chipText: { color: colors.navy, fontSize: 12, fontWeight: "700" },
-  chipTextOn: { color: colors.white },
+  chipTextOn: { color: colors.onInverse },
   section: {
     color: colors.navy,
     fontWeight: "800",
@@ -321,7 +331,7 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 6,
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
     borderWidth: 1,
     borderColor: colors.border,
     borderRadius: 999,
@@ -330,3 +340,4 @@ const styles = StyleSheet.create({
   },
   actionText: { color: colors.navy, fontWeight: "700", fontSize: 12 },
 });
+}

@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_CHECKLIST } from "@/features/common/data/demo";
 import {
   AppText,
@@ -18,6 +18,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Checklist builder UI
  */
 export default function BuildChecklistScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const allIds = useMemo(
     () => DEMO_CHECKLIST.flatMap((g) => g.items.map((item) => `${g.id}:${item}`)),
@@ -75,7 +78,8 @@ export default function BuildChecklistScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   meta: {
     backgroundColor: colors.softOrange,
     borderRadius: 12,
@@ -94,3 +98,4 @@ const styles = StyleSheet.create({
   rowText: { color: colors.navy, fontSize: 14, flex: 1 },
   cta: { marginTop: 8 },
 });
+}

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, View } from "react-native";
 import { AppText } from "@/ui/components";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import type { OnboardingSlideData } from "@/features/onboarding/data/slides";
 import { useTranslation } from "@/ui/translations";
 
@@ -16,6 +16,9 @@ type OnboardingSlideCardProps = {
  * @returns Onboarding card element
  */
 export function OnboardingSlideCard({ slide }: OnboardingSlideCardProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const iconName =
     slide.badgeIcon === "bell"
@@ -47,7 +50,8 @@ export function OnboardingSlideCard({ slide }: OnboardingSlideCardProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   card: {
     backgroundColor: colors.card,
     borderRadius: 28,
@@ -60,7 +64,7 @@ const styles = StyleSheet.create({
     borderRadius: 22,
     overflow: "hidden",
     justifyContent: "flex-end",
-    backgroundColor: "#E2F1F8",
+    backgroundColor: colors.softTeal,
   },
   illustration: {
     ...StyleSheet.absoluteFillObject,
@@ -123,3 +127,4 @@ const styles = StyleSheet.create({
     lineHeight: 22,
   },
 });
+}

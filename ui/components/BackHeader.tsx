@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import AppText from "./Text";
 
 type BackHeaderProps = {
@@ -19,6 +19,9 @@ type BackHeaderProps = {
  * @returns Header element
  */
 export function BackHeader({ title, subtitle, onBack }: BackHeaderProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <View style={styles.wrap}>
       <Pressable
@@ -36,7 +39,8 @@ export function BackHeader({ title, subtitle, onBack }: BackHeaderProps) {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   wrap: { marginBottom: 18 },
   back: {
     width: 36,
@@ -59,3 +63,4 @@ const styles = StyleSheet.create({
     lineHeight: 20,
   },
 });
+}

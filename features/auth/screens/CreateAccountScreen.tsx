@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
   BackHeader,
@@ -18,6 +18,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Create account UI
  */
 export default function CreateAccountScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
@@ -97,7 +100,8 @@ export default function CreateAccountScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   card: { gap: 14, marginBottom: 18 },
   hint: { color: colors.muted, fontSize: 12, marginTop: -4 },
   agreeRow: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
@@ -108,7 +112,7 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
     borderColor: colors.inputBorder,
     marginTop: 2,
-    backgroundColor: colors.white,
+    backgroundColor: colors.card,
   },
   checkboxOn: {
     backgroundColor: colors.teal,
@@ -132,3 +136,4 @@ const styles = StyleSheet.create({
     fontSize: 14,
   },
 });
+}

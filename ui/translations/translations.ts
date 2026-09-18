@@ -1,24 +1,14 @@
 import { I18nManager } from "react-native";
 
-import arabicTranslations from "@/assets/messages/ar.json" with {
-  type: "json",
-};
 import englishTranslations from "@/assets/messages/en.json" with {
   type: "json",
 };
-import romanUrduTranslations from "@/assets/messages/rmu.json" with {
-  type: "json",
-};
-import urduTranslations from "@/assets/messages/ur.json" with { type: "json" };
 
 const translations: Record<string, unknown> = {
   en: englishTranslations,
-  ar: arabicTranslations,
-  ur: urduTranslations,
-  rmu: romanUrduTranslations,
 };
 
-export type Language = "en" | "ar" | "ur" | "rmu";
+export type Language = "en";
 
 /**
  * Get nested value from object using dot notation
@@ -71,9 +61,11 @@ export const translate = (
 };
 
 /**
- * Check if the language is RTL (Right-to-Left)
+ * English is left-to-right. Other locales can opt into RTL later.
+ * @param _language - Active language
+ * @returns Whether the layout is right-to-left
  */
-export const isRTL = (language: Language): boolean => language === "ar";
+export const isRTL = (_language: Language): boolean => false;
 
 /**
  * Get text direction for the language

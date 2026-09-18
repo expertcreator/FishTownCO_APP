@@ -1,13 +1,14 @@
 import { BrandLogoWarmup } from "@/features/auth/components/BrandLogoWarmup/BrandLogoWarmup";
 import { SafeKeyboardProvider } from "@/ui/components";
 import { prefetchBrandLogos } from "@/features/auth/utils/prefetchBrandLogos";
-import { colors } from "@/constants/theme";
+import { ThemeProvider, useColors, useTheme } from "@/ui/theme";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useLayoutEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
+import { View } from "react-native";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -45,14 +46,32 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1, backgroundColor: colors.background }}>
+    <GestureHandlerRootView style={{ flex: 1 }}>
       <SafeAreaProvider>
-        <StatusBar style="dark" />
-        <BrandLogoWarmup />
-        <SafeKeyboardProvider>
-          <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
-        </SafeKeyboardProvider>
+        <ThemeProvider>
+          <ThemedShell />
+        </ThemeProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );
 }
+
+/**
+ * App shell that follows the active light or dark palette.
+ * @returns Themed navigation tree
+ */
+function ThemedShell() {
+  const colors = useColors();
+  const { isDark } = useTheme();
+
+  return (
+    <View style={{ flex: 1, backgroundColor: colors.background }}>
+      <StatusBar style={isDark ? "light" : "dark"} />
+      <BrandLogoWarmup />
+      <SafeKeyboardProvider>
+        <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
+      </SafeKeyboardProvider>
+    </View>
+  );
+}
+

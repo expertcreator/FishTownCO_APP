@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_VESSEL } from "@/features/common/data/demo";
 import {
   AppText,
@@ -18,6 +18,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Vessel setup UI
  */
 export default function VesselSetupScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const [name, setName] = useState(DEMO_VESSEL.name);
   const [type, setType] = useState(DEMO_VESSEL.type);
@@ -77,7 +80,8 @@ export default function VesselSetupScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   step: {
     alignSelf: "flex-start",
     backgroundColor: colors.softTeal,
@@ -89,3 +93,4 @@ const styles = StyleSheet.create({
   stepText: { color: colors.teal, fontWeight: "700", fontSize: 12 },
   card: { gap: 14 },
 });
+}

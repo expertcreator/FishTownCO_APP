@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
   BackHeader,
@@ -31,6 +31,9 @@ const PLANS = [
  * @returns Subscription plan picker UI
  */
 export default function SubscriptionScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const [plan, setPlan] = useState<(typeof PLANS)[number]["id"]>("annual");
 
@@ -74,7 +77,8 @@ export default function SubscriptionScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   plan: { marginBottom: 12, gap: 6 },
   planOn: { borderColor: colors.orange, borderWidth: 2 },
   planTop: {
@@ -106,3 +110,4 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
+}

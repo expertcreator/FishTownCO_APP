@@ -1,6 +1,6 @@
 import { StyleSheet, View, Image } from "react-native";
 import { AppText } from "@/ui/components";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 
 type BrandLogoProps = {
   /** Visual size of the mark */
@@ -14,6 +14,9 @@ type BrandLogoProps = {
  * @returns Brand logo element
  */
 export function BrandLogo({ size = "md" }: BrandLogoProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const height = size === "sm" ? 40 : size === "lg" ? 72 : 56;
   const width = height * 3.2;
 
@@ -34,6 +37,9 @@ export function BrandLogo({ size = "md" }: BrandLogoProps) {
  * @returns Header brand text
  */
 export function BrandWordmark() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   return (
     <AppText style={styles.wordmark}>
       FISHTOWN <AppText style={styles.wordmarkAccent}>CO.</AppText>
@@ -41,7 +47,8 @@ export function BrandWordmark() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   row: {
     alignItems: "center",
     justifyContent: "center",
@@ -56,3 +63,4 @@ const styles = StyleSheet.create({
     color: colors.orange,
   },
 });
+}

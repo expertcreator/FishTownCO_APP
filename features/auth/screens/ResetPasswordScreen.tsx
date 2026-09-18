@@ -1,7 +1,7 @@
 import { router } from "expo-router";
 import { useState } from "react";
 import { StyleSheet } from "react-native";
-import { colors } from "@/constants/theme";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
   BackHeader,
@@ -17,6 +17,9 @@ import { useTranslation } from "@/ui/translations";
  * @returns Reset password UI
  */
 export default function ResetPasswordScreen() {
+  const colors = useColors();
+  const styles = getStyles(colors);
+
   const { t } = useTranslation();
   const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
@@ -59,7 +62,8 @@ export default function ResetPasswordScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
   card: { gap: 14 },
   sent: { color: colors.navy, fontSize: 15, lineHeight: 22 },
   footer: { textAlign: "center", marginTop: 22 },
@@ -69,3 +73,4 @@ const styles = StyleSheet.create({
     textDecorationLine: "underline",
   },
 });
+}
