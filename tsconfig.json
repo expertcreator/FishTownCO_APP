@@ -27,7 +27,6 @@
     "ios",
     ".expo",
     "dist",
-    "web-build",
-    "core"
+    "web-build"
   ]
 }
