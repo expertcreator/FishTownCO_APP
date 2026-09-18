@@ -29,7 +29,7 @@ const CARD_WIDTH = SCREEN_WIDTH - 40;
  * Fishtownco onboarding carousel (prototype screens 2–4).
  * @returns Onboarding screen element
  */
-export function OnboardingScreen() {
+export default function OnboardingScreen() {
   const { t } = useTranslation();
   const listRef = useRef<FlatList<OnboardingSlideData>>(null);
   const [index, setIndex] = useState(0);
