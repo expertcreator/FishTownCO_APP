@@ -67,7 +67,7 @@ function getStyles(colors: ThemeColors) {
     backgroundColor: colors.softTeal,
   },
   illustration: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     width: "100%",
     height: "100%",
   },

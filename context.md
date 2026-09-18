@@ -5,8 +5,7 @@ Fishtownco Vessel Companion — Expo mobile app.
 ## Stack
 
 - Expo SDK 57, Expo Router, React Native, TypeScript
-- TanStack Query, Zustand, MMKV, Zod
-- Firebase backend (configs TBD)
+- Zustand, MMKV, Zod, react-hook-form
 
 ## Repo Map
 

@@ -22,7 +22,9 @@ export const useOnboardingStore = create<OnboardingState>()(
     }),
     {
       name: "fishtownco-onboarding",
-      storage: createZustandMMKVStorage<OnboardingState>(),
+      storage: createZustandMMKVStorage<
+        Pick<OnboardingState, "hasCompletedOnboarding">
+      >(),
       partialize: (state) => ({
         hasCompletedOnboarding: state.hasCompletedOnboarding,
       }),

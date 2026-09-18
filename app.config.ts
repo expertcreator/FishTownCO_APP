@@ -19,13 +19,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
   version: "1.0.0",
   orientation: "portrait",
   userInterfaceStyle: "automatic",
-  newArchEnabled: true,
   icon: `${BRAND_ROOT}/icon.png`,
-  splash: {
-    image: `${BRAND_ROOT}/splash.png`,
-    resizeMode: "cover",
-    backgroundColor: SPLASH_BG,
-  },
   ios: {
     supportsTablet: true,
     bundleIdentifier: "com.itoasis.Fishtownco",
