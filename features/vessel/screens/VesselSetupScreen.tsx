@@ -69,7 +69,7 @@ export default function VesselSetupScreen() {
         />
         <PrimaryButton
           label={t("setup.continue-checklist")}
-          onPress={() => router.push("/build-checklist")}
+          onPress={() => router.push("/vessel/build-checklist")}
         />
       </Card>
     </Screen>

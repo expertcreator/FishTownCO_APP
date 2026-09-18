@@ -43,7 +43,7 @@ export default function VesselScreen() {
       <ActionRow
         icon="create-outline"
         label={t("vessel.edit")}
-        onPress={() => router.push("/edit-vessel")}
+        onPress={() => router.push("/vessel/edit")}
       />
       <ActionRow
         icon="people-outline"

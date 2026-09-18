@@ -74,7 +74,7 @@ export default function CreateAccountScreen() {
           label={t("auth.create-account")}
           icon="boat-outline"
           disabled={!agreed}
-          onPress={() => router.push("/vessel-setup")}
+          onPress={() => router.push("/vessel/setup")}
         />
       </Card>
 

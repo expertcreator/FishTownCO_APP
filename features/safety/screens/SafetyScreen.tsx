@@ -80,7 +80,7 @@ export default function SafetyScreen() {
         </Pressable>
       ))}
 
-      <Pressable style={styles.fab} onPress={() => router.push("/add-safety")}>
+      <Pressable style={styles.fab} onPress={() => router.push("/safety/add")}>
         <Ionicons name="add" size={20} color={colors.white} />
         <Text style={styles.fabText}>{t("safety.add-title")}</Text>
       </Pressable>

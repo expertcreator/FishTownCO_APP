@@ -20,7 +20,7 @@ export default function WalletScreen() {
           <Text style={styles.title}>{t("wallet.title")}</Text>
           <Text style={styles.sub}>{t("wallet.subtitle")}</Text>
         </View>
-        <Pressable style={styles.add} onPress={() => router.push("/add-document")}>
+        <Pressable style={styles.add} onPress={() => router.push("/wallet/add")}>
           <Ionicons name="add" size={22} color={colors.white} />
         </Pressable>
       </View>
