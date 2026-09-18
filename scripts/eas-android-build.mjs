@@ -72,13 +72,20 @@ if (wantLocal && isWindows) {
     `[eas-android-build] Windows detected: EAS --local is unsupported here.`
   );
   console.log(
-    `[eas-android-build] Falling back to: expo run:android (variant=${variant})`
+    `[eas-android-build] Building project-root APK instead (customer-app style).`
   );
-  const code = await run("bunx", ["expo", "run:android"], {
-    EXPO_PUBLIC_APP_VARIANT: variant,
-    EXPO_PUBLIC_APP_BRAND: "fishtownco",
-    SENTRY_DISABLE_AUTO_UPLOAD: "true",
-  });
+  const code = await run(
+    "bun",
+    [
+      "scripts/build-android-apk.mjs",
+      profile === "development" ? "" : "--release",
+    ].filter(Boolean),
+    {
+      EXPO_PUBLIC_APP_VARIANT: variant,
+      EXPO_PUBLIC_APP_BRAND: "fishtownco",
+      SENTRY_DISABLE_AUTO_UPLOAD: "true",
+    }
+  );
   process.exit(code);
 }
 

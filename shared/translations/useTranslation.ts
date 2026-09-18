@@ -1,6 +1,5 @@
 import { reloadAppAsync } from "expo";
 import { useCallback, useEffect, useMemo } from "react";
-import i18next from "@/shared/utils/i18n";
 import { useI18nStore } from "./store";
 import {
   getDirection,
@@ -38,13 +37,9 @@ export const useCurrentLanguage = () =>
 export const useTranslation = () => {
   const { language, setLanguage: setLanguageStore } = useLanguage();
 
-  // Set RTL and sync react-i18next when language changes
+  // Apply RTL when language changes
   useEffect(() => {
     setRTL(language);
-    // Sync react-i18next with our language store
-    if (i18next.language !== language) {
-      i18next.changeLanguage(language);
-    }
   }, [language]);
 
   /**
@@ -83,7 +78,6 @@ export const useTranslation = () => {
       const directionChanged = isRTL(language) !== isRTL(newLanguage);
 
       setLanguageStore(newLanguage);
-      await i18next.changeLanguage(newLanguage);
       setRTL(newLanguage);
 
       if (!directionChanged) {

@@ -119,7 +119,7 @@ if (opts.mode === "update") {
       ? "development"
       : `fishtownco-customer-${variant}`;
   const args = [
-    "eas",
+    "eas-cli",
     "update",
     "--channel",
     channel,
@@ -139,7 +139,7 @@ const platforms =
 
 for (const platform of platforms) {
   const args = [
-    "eas",
+    "eas-cli",
     "build",
     "--profile",
     profile,

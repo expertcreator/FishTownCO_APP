@@ -14,13 +14,12 @@ export {
   translations,
 } from "./translations";
 
-export { getLanguageIcon, LANGUAGE_OPTIONS } from "./languages";
-
 import { useI18nStore } from "./store";
 import { getDirection, translate, type Language } from "./translations";
 
 /**
- * Get the current language safely with fallback to 'en'
+ * Gets the current language, falling back to English.
+ * @returns Active language code
  */
 const getLanguageSafe = (): Language => {
   const state = useI18nStore.getState();
@@ -28,25 +27,25 @@ const getLanguageSafe = (): Language => {
 };
 
 /**
- * Set the locale/language
- * @param locale - The locale code to set (e.g., 'en', 'ar')
+ * Sets the locale outside React.
+ * @param locale - Locale code
+ * @returns void
  */
 export const setLocale = (locale: Language): void => {
   useI18nStore.getState().setLanguage(locale);
 };
 
 /**
- * Translate function for use outside of React components
+ * Translates a key outside React.
+ * @param key - Translation key
+ * @param params - Interpolation params
+ * @returns Translated string
  */
 export const t = (
   key: string,
   params?: Record<string, string | number>
 ): string => translate(key, getLanguageSafe(), undefined, params);
 
-/**
- * i18n object for backward compatibility with code that imports i18n directly
- * This is a proxy that gets the current language from the store
- */
 const i18n = {
   get language(): Language {
     return getLanguageSafe();

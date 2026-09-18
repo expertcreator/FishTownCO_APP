@@ -16,7 +16,8 @@
         "EXPO_PUBLIC_OTA_CHANNEL": "development"
       },
       "android": {
-        "autoIncrement": true
+        "autoIncrement": true,
+        "buildType": "apk"
       }
     },
     "preview": {

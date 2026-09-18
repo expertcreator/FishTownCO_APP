@@ -1,9 +1,12 @@
-import { Images } from "@/shared/constants";
 import { Image, StyleSheet, View } from "react-native";
+
+const logo = require("@/assets/branding/fishtownco/logo.png");
+const logoArabic = require("@/assets/branding/fishtownco/logoArabic.png");
+const splash = require("@/assets/branding/fishtownco/splash.png");
 
 /**
  * Off-screen mount of bundled brand logos so Android decodes them during
- * native splash / first frame (Foori pattern).
+ * native splash / first frame.
  * @returns Invisible logo pair (no layout impact)
  */
 export function BrandLogoWarmup() {
@@ -14,21 +17,16 @@ export function BrandLogoWarmup() {
       importantForAccessibility="no-hide-descendants"
       style={styles.host}
     >
+      <Image source={logo} defaultSource={logo} style={styles.pixel} fadeDuration={0} />
       <Image
-        source={Images.logo}
-        defaultSource={Images.logo}
+        source={logoArabic}
+        defaultSource={logoArabic}
         style={styles.pixel}
         fadeDuration={0}
       />
       <Image
-        source={Images.logoArabic}
-        defaultSource={Images.logoArabic}
-        style={styles.pixel}
-        fadeDuration={0}
-      />
-      <Image
-        source={Images.splash}
-        defaultSource={Images.splash}
+        source={splash}
+        defaultSource={splash}
         style={styles.pixel}
         fadeDuration={0}
       />
