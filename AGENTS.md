@@ -6,8 +6,7 @@ Goal: Vessel Companion mobile app.
 
 - Routes: `app/` (expo-router)
 - Features: `features/<feature>/{components,hooks,screens,services,store,types}`
-- UI and i18n: `ui/`
-- Constants: `constants/` (vendored)
+- UI, theme, and i18n: `ui/`
 - Assets: `assets/` (vendored)
 
 ## Patterns

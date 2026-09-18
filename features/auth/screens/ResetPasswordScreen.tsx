@@ -1,16 +1,22 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
 import { StyleSheet } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
   BackHeader,
   Card,
-  Field,
+  FormField,
   PrimaryButton,
   Screen,
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+import {
+  createResetPasswordSchema,
+  type ResetPasswordSchema,
+} from "@/features/auth/validation/authSchema";
 
 /**
  * Reset Password screen matching prototype screen 7.
@@ -21,8 +27,14 @@ export default function ResetPasswordScreen() {
   const styles = getStyles(colors);
 
   const { t } = useTranslation();
-  const [email, setEmail] = useState("");
   const [sent, setSent] = useState(false);
+  const schema = useMemo(() => createResetPasswordSchema(t), [t]);
+  const { control, handleSubmit } = useForm<ResetPasswordSchema>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "" },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
 
   return (
     <Screen>
@@ -36,18 +48,18 @@ export default function ResetPasswordScreen() {
           <AppText style={styles.sent}>{t("auth.reset-sent")}</AppText>
         ) : (
           <>
-            <Field
+            <FormField
+              control={control}
+              name="email"
               label={t("auth.email-address")}
               icon="mail-outline"
-              value={email}
-              onChangeText={setEmail}
               autoCapitalize="none"
               keyboardType="email-address"
               placeholder="skipper@northernstar.co.uk"
             />
             <PrimaryButton
               label={t("auth.send-reset-link")}
-              onPress={() => setSent(true)}
+              onPress={handleSubmit(() => setSent(true))}
             />
           </>
         )}

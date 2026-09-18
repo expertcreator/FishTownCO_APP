@@ -12,7 +12,7 @@ Fishtownco Vessel Companion — Expo mobile app.
 
 - Routes: `app/`
 - Features: `features/<feature>`
-- Vendored in this repo: `ui/`, `assets/`, `constants/`
+- Vendored in this repo: `ui/`, `assets/`
 
 ## Bundle
 

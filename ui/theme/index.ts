@@ -5,4 +5,4 @@ export {
   type ColorScheme,
   type ThemePreference,
 } from "./ThemeContext";
-export type { ThemeColors } from "@/constants/theme";
+export type { ThemeColors } from "@/ui/constants/theme";

@@ -9,7 +9,7 @@ import { Appearance, useColorScheme } from "react-native";
 import {
   getThemeColors,
   type ThemeColors,
-} from "@/constants/theme";
+} from "@/ui/constants/theme";
 import { mmkv } from "@/ui/stores/mmkvStorage";
 
 export type ColorScheme = "light" | "dark";

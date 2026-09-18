@@ -1,5 +1,7 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_VESSEL } from "@/features/common/data/demo";
@@ -7,11 +9,15 @@ import {
   AppText,
   BackHeader,
   Card,
-  Field,
+  FormField,
   PrimaryButton,
   Screen,
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+import {
+  createVesselSetupSchema,
+  type VesselSetupSchema,
+} from "@/features/vessel/validation/vesselSchema";
 
 /**
  * Vessel Setup screen matching prototype screen 8.
@@ -22,11 +28,19 @@ export default function VesselSetupScreen() {
   const styles = getStyles(colors);
 
   const { t } = useTranslation();
-  const [name, setName] = useState(DEMO_VESSEL.name);
-  const [type, setType] = useState(DEMO_VESSEL.type);
-  const [length, setLength] = useState(DEMO_VESSEL.length);
-  const [homePort, setHomePort] = useState(DEMO_VESSEL.homePort);
-  const [mmsi, setMmsi] = useState(DEMO_VESSEL.mmsi);
+  const schema = useMemo(() => createVesselSetupSchema(t), [t]);
+  const { control, handleSubmit } = useForm<VesselSetupSchema>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: DEMO_VESSEL.name,
+      type: DEMO_VESSEL.type,
+      length: DEMO_VESSEL.length,
+      homePort: DEMO_VESSEL.homePort,
+      mmsi: DEMO_VESSEL.mmsi,
+    },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
 
   return (
     <Screen>
@@ -40,40 +54,40 @@ export default function VesselSetupScreen() {
       </View>
 
       <Card style={styles.card}>
-        <Field
+        <FormField
+          control={control}
+          name="name"
           label={t("setup.vessel-name")}
           icon="boat-outline"
-          value={name}
-          onChangeText={setName}
         />
-        <Field
+        <FormField
+          control={control}
+          name="type"
           label={t("setup.vessel-type")}
           icon="compass-outline"
-          value={type}
-          onChangeText={setType}
         />
-        <Field
+        <FormField
+          control={control}
+          name="length"
           label={t("setup.length")}
           icon="resize-outline"
-          value={length}
-          onChangeText={setLength}
         />
-        <Field
+        <FormField
+          control={control}
+          name="homePort"
           label={t("setup.home-port")}
           icon="location-outline"
-          value={homePort}
-          onChangeText={setHomePort}
         />
-        <Field
+        <FormField
+          control={control}
+          name="mmsi"
           label={t("setup.mmsi")}
           icon="radio-outline"
-          value={mmsi}
-          onChangeText={setMmsi}
           keyboardType="number-pad"
         />
         <PrimaryButton
           label={t("setup.continue-checklist")}
-          onPress={() => router.push("/vessel/build-checklist")}
+          onPress={handleSubmit(() => router.push("/vessel/build-checklist"))}
         />
       </Card>
     </Screen>

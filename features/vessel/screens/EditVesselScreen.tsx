@@ -1,15 +1,21 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { StyleSheet } from "react-native";
 import { DEMO_VESSEL } from "@/features/common/data/demo";
 import {
   BackHeader,
   Card,
-  Field,
+  FormField,
   PrimaryButton,
   Screen,
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+import {
+  createEditVesselSchema,
+  type EditVesselSchema,
+} from "@/features/vessel/validation/vesselSchema";
 
 /**
  * Edit Vessel screen matching prototype screen 18.
@@ -17,14 +23,22 @@ import { useTranslation } from "@/ui/translations";
  */
 export default function EditVesselScreen() {
   const { t } = useTranslation();
-  const [name, setName] = useState(DEMO_VESSEL.name);
-  const [type, setType] = useState(DEMO_VESSEL.type);
-  const [length, setLength] = useState(DEMO_VESSEL.length);
-  const [tonnage, setTonnage] = useState(DEMO_VESSEL.tonnage);
-  const [flag, setFlag] = useState(DEMO_VESSEL.flag);
-  const [mmsi, setMmsi] = useState(DEMO_VESSEL.mmsi);
-  const [callSign, setCallSign] = useState(DEMO_VESSEL.callSign);
-  const [homePort, setHomePort] = useState(DEMO_VESSEL.homePort);
+  const schema = useMemo(() => createEditVesselSchema(t), [t]);
+  const { control, handleSubmit } = useForm<EditVesselSchema>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: DEMO_VESSEL.name,
+      type: DEMO_VESSEL.type,
+      length: DEMO_VESSEL.length,
+      tonnage: DEMO_VESSEL.tonnage,
+      flag: DEMO_VESSEL.flag,
+      mmsi: DEMO_VESSEL.mmsi,
+      callSign: DEMO_VESSEL.callSign,
+      homePort: DEMO_VESSEL.homePort,
+    },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
 
   return (
     <Screen>
@@ -33,50 +47,46 @@ export default function EditVesselScreen() {
         subtitle={t("vessel.edit-subtitle")}
       />
       <Card style={styles.card}>
-        <Field
+        <FormField
+          control={control}
+          name="name"
           label={t("setup.vessel-name")}
           icon="boat-outline"
-          value={name}
-          onChangeText={setName}
         />
-        <Field
+        <FormField
+          control={control}
+          name="type"
           label={t("setup.vessel-type")}
           icon="compass-outline"
-          value={type}
-          onChangeText={setType}
         />
-        <Field
+        <FormField
+          control={control}
+          name="length"
           label={t("setup.length")}
-          value={length}
-          onChangeText={setLength}
         />
-        <Field
-          label={t("vessel.tonnage")}
-          value={tonnage}
-          onChangeText={setTonnage}
-        />
-        <Field label={t("vessel.flag")} value={flag} onChangeText={setFlag} />
-        <Field
+        <FormField control={control} name="tonnage" label={t("vessel.tonnage")} />
+        <FormField control={control} name="flag" label={t("vessel.flag")} />
+        <FormField
+          control={control}
+          name="mmsi"
           label={t("setup.mmsi")}
-          value={mmsi}
-          onChangeText={setMmsi}
           keyboardType="number-pad"
         />
-        <Field
+        <FormField
+          control={control}
+          name="callSign"
           label={t("vessel.call-sign")}
-          value={callSign}
-          onChangeText={setCallSign}
         />
-        <Field
+        <FormField
+          control={control}
+          name="homePort"
           label={t("setup.home-port")}
           icon="location-outline"
-          value={homePort}
-          onChangeText={setHomePort}
         />
         <PrimaryButton
           label={t("common.save")}
           icon="checkmark"
-          onPress={() => router.back()}
+          onPress={handleSubmit(() => router.back())}
         />
       </Card>
     </Screen>

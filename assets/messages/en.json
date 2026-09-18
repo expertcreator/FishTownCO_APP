@@ -197,7 +197,12 @@
     "password-min-length": "Password must be at least 8 characters",
     "password-min-8": "Password must be at least 8 characters",
     "confirm-password": "Confirm your password",
-    "passwords-no-match": "Passwords do not match"
+    "passwords-no-match": "Passwords do not match",
+    "name-required": "Name is required",
+    "required": "This field is required",
+    "mmsi-invalid": "MMSI must be 9 digits",
+    "phone-invalid": "Enter a valid phone number",
+    "terms-required": "Please accept the terms to continue"
   },
   "validation-error": {
     "password-required": "Password is required",

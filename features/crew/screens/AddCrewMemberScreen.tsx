@@ -1,14 +1,20 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { StyleSheet } from "react-native";
 import {
   BackHeader,
   Card,
-  Field,
+  FormField,
   PrimaryButton,
   Screen,
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+import {
+  createAddCrewSchema,
+  type AddCrewSchema,
+} from "@/features/crew/validation/addCrewSchema";
 
 /**
  * Add Crew Member screen matching prototype screen 20.
@@ -16,12 +22,20 @@ import { useTranslation } from "@/ui/translations";
  */
 export default function AddCrewMemberScreen() {
   const { t } = useTranslation();
-  const [name, setName] = useState("");
-  const [role, setRole] = useState("");
-  const [cert, setCert] = useState("");
-  const [expires, setExpires] = useState("");
-  const [phone, setPhone] = useState("");
-  const [email, setEmail] = useState("");
+  const schema = useMemo(() => createAddCrewSchema(t), [t]);
+  const { control, handleSubmit } = useForm<AddCrewSchema>({
+    resolver: zodResolver(schema),
+    defaultValues: {
+      name: "",
+      role: "",
+      cert: "",
+      expires: "",
+      phone: "",
+      email: "",
+    },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
 
   return (
     <Screen>
@@ -30,47 +44,47 @@ export default function AddCrewMemberScreen() {
         subtitle={t("crew.add-subtitle")}
       />
       <Card style={styles.card}>
-        <Field
+        <FormField
+          control={control}
+          name="name"
           label={t("auth.full-name")}
           icon="person-outline"
-          value={name}
-          onChangeText={setName}
           placeholder="Emma Clarke"
         />
-        <Field
+        <FormField
+          control={control}
+          name="role"
           label={t("crew.role")}
           icon="briefcase-outline"
-          value={role}
-          onChangeText={setRole}
           placeholder="Deckhand"
         />
-        <Field
+        <FormField
+          control={control}
+          name="cert"
           label={t("crew.certificate")}
           icon="medal-outline"
-          value={cert}
-          onChangeText={setCert}
           placeholder="STCW Basic Safety"
         />
-        <Field
+        <FormField
+          control={control}
+          name="expires"
           label={t("crew.expires")}
           icon="calendar-outline"
-          value={expires}
-          onChangeText={setExpires}
           placeholder="02 Feb 2026"
         />
-        <Field
+        <FormField
+          control={control}
+          name="phone"
           label={t("crew.phone")}
           icon="call-outline"
-          value={phone}
-          onChangeText={setPhone}
           keyboardType="phone-pad"
           placeholder="+44 7700 900456"
         />
-        <Field
+        <FormField
+          control={control}
+          name="email"
           label={t("auth.email-address")}
           icon="mail-outline"
-          value={email}
-          onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
           placeholder="emma@northernstar.co.uk"
@@ -78,7 +92,7 @@ export default function AddCrewMemberScreen() {
         <PrimaryButton
           label={t("common.save")}
           icon="checkmark"
-          onPress={() => router.back()}
+          onPress={handleSubmit(() => router.back())}
         />
       </Card>
     </Screen>

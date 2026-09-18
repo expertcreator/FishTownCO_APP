@@ -1,14 +1,20 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { StyleSheet } from "react-native";
 import {
   BackHeader,
   Card,
-  Field,
+  FormField,
   PrimaryButton,
   Screen,
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+import {
+  createAddDocumentSchema,
+  type AddDocumentSchema,
+} from "@/features/wallet/validation/addDocumentSchema";
 
 /**
  * Add Document screen matching prototype screen 17.
@@ -16,10 +22,13 @@ import { useTranslation } from "@/ui/translations";
  */
 export default function AddDocumentScreen() {
   const { t } = useTranslation();
-  const [title, setTitle] = useState("");
-  const [issuer, setIssuer] = useState("");
-  const [expires, setExpires] = useState("");
-  const [code, setCode] = useState("");
+  const schema = useMemo(() => createAddDocumentSchema(t), [t]);
+  const { control, handleSubmit } = useForm<AddDocumentSchema>({
+    resolver: zodResolver(schema),
+    defaultValues: { title: "", issuer: "", expires: "", code: "" },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
 
   return (
     <Screen>
@@ -28,38 +37,38 @@ export default function AddDocumentScreen() {
         subtitle={t("wallet.add-doc-subtitle")}
       />
       <Card style={styles.card}>
-        <Field
+        <FormField
+          control={control}
+          name="title"
           label={t("wallet.doc-title")}
           icon="document-text-outline"
-          value={title}
-          onChangeText={setTitle}
           placeholder="Safety Certificate"
         />
-        <Field
+        <FormField
+          control={control}
+          name="issuer"
           label={t("wallet.issuer")}
           icon="business-outline"
-          value={issuer}
-          onChangeText={setIssuer}
           placeholder="MCA"
         />
-        <Field
+        <FormField
+          control={control}
+          name="expires"
           label={t("wallet.expires")}
           icon="calendar-outline"
-          value={expires}
-          onChangeText={setExpires}
           placeholder="22 Nov 2026"
         />
-        <Field
+        <FormField
+          control={control}
+          name="code"
           label={t("wallet.doc-code")}
           icon="key-outline"
-          value={code}
-          onChangeText={setCode}
           placeholder="SC-NS-2024"
         />
         <PrimaryButton
           label={t("wallet.upload-save")}
           icon="cloud-upload-outline"
-          onPress={() => router.back()}
+          onPress={handleSubmit(() => router.back())}
         />
       </Card>
     </Screen>

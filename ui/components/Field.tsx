@@ -14,6 +14,7 @@ type FieldProps = TextInputProps & {
   label: string;
   icon?: keyof typeof Ionicons.glyphMap;
   secureToggle?: boolean;
+  error?: string;
 };
 
 /**
@@ -22,6 +23,7 @@ type FieldProps = TextInputProps & {
  * @param props.label - Uppercase field label
  * @param props.icon - Optional leading Ionicons name
  * @param props.secureToggle - Show eye toggle for passwords
+ * @param props.error - Validation message shown under the field
  * @returns Field element
  */
 export function Field({
@@ -30,6 +32,7 @@ export function Field({
   secureToggle,
   secureTextEntry,
   style,
+  error,
   ...rest
 }: FieldProps) {
   const colors = useColors();
@@ -40,7 +43,7 @@ export function Field({
   return (
     <View style={styles.wrap}>
       <AppText style={styles.label}>{label}</AppText>
-      <View style={styles.inputRow}>
+      <View style={[styles.inputRow, error ? styles.inputError : null]}>
         {icon ? (
           <Ionicons name={icon} size={18} color={colors.muted} style={styles.icon} />
         ) : null}
@@ -60,6 +63,7 @@ export function Field({
           </Pressable>
         ) : null}
       </View>
+      {error ? <AppText style={styles.error}>{error}</AppText> : null}
     </View>
   );
 }
@@ -95,6 +99,14 @@ function getStyles(colors: ThemeColors) {
       color: colors.navy,
       fontSize: 15,
       paddingVertical: 12,
+    },
+    inputError: {
+      borderColor: colors.statusOverdueText,
+    },
+    error: {
+      color: colors.statusOverdueText,
+      fontSize: 12,
+      fontWeight: "600",
     },
   });
 }

@@ -1,17 +1,23 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
   BackHeader,
   Card,
-  Field,
+  FormField,
   OutlineButton,
   PrimaryButton,
   Screen,
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+import {
+  createAccountSchema,
+  type CreateAccountSchema,
+} from "@/features/auth/validation/authSchema";
 
 /**
  * Create Account screen matching prototype screen 6.
@@ -22,10 +28,20 @@ export default function CreateAccountScreen() {
   const styles = getStyles(colors);
 
   const { t } = useTranslation();
-  const [name, setName] = useState("");
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [agreed, setAgreed] = useState(false);
+  const schema = useMemo(() => createAccountSchema(t), [t]);
+  const {
+    control,
+    handleSubmit,
+    setValue,
+    watch,
+    formState: { errors },
+  } = useForm<CreateAccountSchema>({
+    resolver: zodResolver(schema),
+    defaultValues: { name: "", email: "", password: "", agreed: false },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
+  const agreed = watch("agreed");
 
   return (
     <Screen>
@@ -35,27 +51,27 @@ export default function CreateAccountScreen() {
       />
 
       <Card style={styles.card}>
-        <Field
+        <FormField
+          control={control}
+          name="name"
           label={t("auth.full-name")}
           icon="id-card-outline"
-          value={name}
-          onChangeText={setName}
           placeholder="Capt. John Davies"
         />
-        <Field
+        <FormField
+          control={control}
+          name="email"
           label={t("auth.email-address")}
           icon="mail-outline"
-          value={email}
-          onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
           placeholder="skipper@northernstar.co.uk"
         />
-        <Field
+        <FormField
+          control={control}
+          name="password"
           label={t("auth.password")}
           icon="lock-closed-outline"
-          value={password}
-          onChangeText={setPassword}
           secureTextEntry
           secureToggle
           placeholder="••••••••••••"
@@ -64,7 +80,9 @@ export default function CreateAccountScreen() {
 
         <Pressable
           style={styles.agreeRow}
-          onPress={() => setAgreed((v) => !v)}
+          onPress={() =>
+            setValue("agreed", !agreed, { shouldValidate: true })
+          }
         >
           <View style={[styles.checkbox, agreed && styles.checkboxOn]} />
           <AppText style={styles.agreeText}>
@@ -73,12 +91,14 @@ export default function CreateAccountScreen() {
             <AppText style={styles.link}>{t("auth.privacy")}</AppText>
           </AppText>
         </Pressable>
+        {errors.agreed?.message ? (
+          <AppText style={styles.error}>{errors.agreed.message}</AppText>
+        ) : null}
 
         <PrimaryButton
           label={t("auth.create-account")}
           icon="boat-outline"
-          disabled={!agreed}
-          onPress={() => router.push("/vessel/setup")}
+          onPress={handleSubmit(() => router.push("/vessel/setup"))}
         />
       </Card>
 
@@ -104,6 +124,7 @@ function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
   card: { gap: 14, marginBottom: 18 },
   hint: { color: colors.muted, fontSize: 12, marginTop: -4 },
+  error: { color: colors.statusOverdueText, fontSize: 12, fontWeight: "600" },
   agreeRow: { flexDirection: "row", gap: 10, alignItems: "flex-start" },
   checkbox: {
     width: 20,

@@ -1,18 +1,21 @@
+import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useMemo } from "react";
+import { useForm } from "react-hook-form";
 import { Image, StyleSheet, View } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
   BackHeader,
   Card,
-  Field,
+  FormField,
   OutlineButton,
   PrimaryButton,
   Screen,
   TextLink,
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+import { createLoginSchema, type LoginSchema } from "@/features/auth/validation/authSchema";
 
 /**
  * Log In screen matching prototype screen 5.
@@ -23,8 +26,13 @@ export default function LoginScreen() {
   const styles = getStyles(colors);
 
   const { t } = useTranslation();
-  const [email, setEmail] = useState("skipper@northernstar.co.uk");
-  const [password, setPassword] = useState("");
+  const schema = useMemo(() => createLoginSchema(t), [t]);
+  const { control, handleSubmit } = useForm<LoginSchema>({
+    resolver: zodResolver(schema),
+    defaultValues: { email: "skipper@northernstar.co.uk", password: "" },
+    mode: "onChange",
+    reValidateMode: "onChange",
+  });
 
   return (
     <Screen>
@@ -48,20 +56,20 @@ export default function LoginScreen() {
       </Card>
 
       <Card style={styles.form}>
-        <Field
+        <FormField
+          control={control}
+          name="email"
           label={t("auth.email-address")}
           icon="mail-outline"
-          value={email}
-          onChangeText={setEmail}
           autoCapitalize="none"
           keyboardType="email-address"
           placeholder="skipper@northernstar.co.uk"
         />
-        <Field
+        <FormField
+          control={control}
+          name="password"
           label={t("auth.password")}
           icon="lock-closed-outline"
-          value={password}
-          onChangeText={setPassword}
           secureTextEntry
           secureToggle
           placeholder="••••••••••••"
@@ -74,7 +82,7 @@ export default function LoginScreen() {
         </TextLink>
         <PrimaryButton
           label={t("auth.log-in")}
-          onPress={() => router.replace("/(tabs)/home")}
+          onPress={handleSubmit(() => router.replace("/(tabs)/home"))}
         />
       </Card>
 
