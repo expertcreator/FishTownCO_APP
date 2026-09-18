@@ -1,15 +1,8 @@
 import type { ReactNode } from "react";
-import {
-  KeyboardAvoidingView,
-  Platform,
-  ScrollView,
-  StyleSheet,
-  View,
-  type StyleProp,
-  type ViewStyle,
-} from "react-native";
+import { StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
+import { KeyboardAwareContainer } from "./KeyboardAwareContainer";
 
 type ScreenProps = {
   children: ReactNode;
@@ -20,7 +13,7 @@ type ScreenProps = {
 };
 
 /**
- * Cream-backed screen shell matching the Fishtownco prototype.
+ * Cream-backed screen shell. Scrolling screens use Foori's keyboard-aware container.
  * @param props - Screen props
  * @param props.children - Screen content
  * @param props.scroll - Whether content scrolls
@@ -36,26 +29,20 @@ export function Screen({
   contentStyle,
   edges = ["top", "left", "right", "bottom"],
 }: ScreenProps) {
-  const body = scroll ? (
-    <ScrollView
-      contentContainerStyle={[styles.content, contentStyle]}
-      keyboardShouldPersistTaps="handled"
-      showsVerticalScrollIndicator={false}
-    >
-      {children}
-    </ScrollView>
-  ) : (
-    <View style={[styles.content, styles.flex, contentStyle]}>{children}</View>
-  );
-
   return (
     <SafeAreaView style={[styles.safe, style]} edges={edges}>
-      <KeyboardAvoidingView
-        style={styles.flex}
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-      >
-        {body}
-      </KeyboardAvoidingView>
+      {scroll ? (
+        <KeyboardAwareContainer
+          useSafeAreaWrapper={false}
+          style={styles.flex}
+          contentContainerStyle={[styles.content, contentStyle]}
+          keyboardDismissMode="on-drag"
+        >
+          {children}
+        </KeyboardAwareContainer>
+      ) : (
+        <View style={[styles.content, styles.flex, contentStyle]}>{children}</View>
+      )}
     </SafeAreaView>
   );
 }

@@ -1,4 +1,5 @@
 import { BrandLogoWarmup } from "@/features/auth/components/BrandLogoWarmup/BrandLogoWarmup";
+import { SafeKeyboardProvider } from "@/features/common/ui";
 import { prefetchBrandLogos } from "@/features/auth/utils/prefetchBrandLogos";
 import { colors } from "@/constants/theme";
 import { Stack } from "expo-router";
@@ -48,7 +49,9 @@ export default function RootLayout() {
       <SafeAreaProvider>
         <StatusBar style="dark" />
         <BrandLogoWarmup />
-        <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
+        <SafeKeyboardProvider>
+          <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
+        </SafeKeyboardProvider>
       </SafeAreaProvider>
     </GestureHandlerRootView>
   );

@@ -1,22 +1,7 @@
 const { getDefaultConfig } = require("expo/metro-config");
 
 /**
- * Metro bundler config with SVG transformer support.
- * @returns {Promise<object>} Metro config
+ * Metro bundler config for Fishtownco.
+ * @returns {import('expo/metro-config').MetroConfig} Metro config
  */
-module.exports = (() => {
-  const config = getDefaultConfig(__dirname);
-  const { transformer, resolver } = config;
-
-  config.transformer = {
-    ...transformer,
-    babelTransformerPath: require.resolve("react-native-svg-transformer"),
-  };
-  config.resolver = {
-    ...resolver,
-    assetExts: resolver.assetExts.filter((ext) => ext !== "svg"),
-    sourceExts: [...resolver.sourceExts, "svg"],
-  };
-
-  return config;
-})();
+module.exports = getDefaultConfig(__dirname);
