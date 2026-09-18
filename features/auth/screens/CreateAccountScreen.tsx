@@ -10,8 +10,8 @@ import {
   OutlineButton,
   PrimaryButton,
   Screen,
-} from "@/shared/components";
-import { useTranslation } from "@/shared/translations";
+} from "@/ui/components";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * Create Account screen matching prototype screen 6.

@@ -8,8 +8,8 @@ import {
   Card,
   PrimaryButton,
   Screen,
-} from "@/shared/components";
-import { useTranslation } from "@/shared/translations";
+} from "@/ui/components";
+import { useTranslation } from "@/ui/translations";
 
 const PLANS = [
   {

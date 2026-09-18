@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { createZustandMMKVStorage } from "@/shared/stores/mmkvStorage";
+import { createZustandMMKVStorage } from "@/ui/stores/mmkvStorage";
 
 type OnboardingState = {
   hasCompletedOnboarding: boolean;

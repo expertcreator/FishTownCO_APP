@@ -1,5 +1,5 @@
 import { StyleSheet, View, Image } from "react-native";
-import { AppText } from "@/shared/components";
+import { AppText } from "@/ui/components";
 import { colors } from "@/constants/theme";
 
 type BrandLogoProps = {

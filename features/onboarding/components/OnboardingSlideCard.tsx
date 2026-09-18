@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image, StyleSheet, View } from "react-native";
-import { AppText } from "@/shared/components";
+import { AppText } from "@/ui/components";
 import { colors } from "@/constants/theme";
 import type { OnboardingSlideData } from "@/features/onboarding/data/slides";
-import { useTranslation } from "@/shared/translations";
+import { useTranslation } from "@/ui/translations";
 
 type OnboardingSlideCardProps = {
   slide: OnboardingSlideData;

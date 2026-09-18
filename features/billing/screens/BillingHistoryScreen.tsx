@@ -9,8 +9,8 @@ import {
   PrimaryButton,
   Screen,
   StatusPill,
-} from "@/shared/components";
-import { useTranslation } from "@/shared/translations";
+} from "@/ui/components";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * Billing History screen matching prototype screen 22.

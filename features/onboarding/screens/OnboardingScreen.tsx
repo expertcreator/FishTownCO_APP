@@ -10,7 +10,7 @@ import {
   StyleSheet,
   View,
 } from "react-native";
-import { AppText } from "@/shared/components";
+import { AppText } from "@/ui/components";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
 import { BrandWordmark } from "@/features/onboarding/components/BrandLogo";
@@ -20,7 +20,7 @@ import {
   type OnboardingSlideData,
 } from "@/features/onboarding/data/slides";
 import { useOnboardingStore } from "@/features/onboarding/store/onboardingStore";
-import { useTranslation } from "@/shared/translations";
+import { useTranslation } from "@/ui/translations";
 
 const { width: SCREEN_WIDTH } = Dimensions.get("window");
 const CARD_WIDTH = SCREEN_WIDTH - 40;

@@ -1,5 +1,5 @@
 import { BrandLogoWarmup } from "@/features/auth/components/BrandLogoWarmup/BrandLogoWarmup";
-import { SafeKeyboardProvider } from "@/shared/components";
+import { SafeKeyboardProvider } from "@/ui/components";
 import { prefetchBrandLogos } from "@/features/auth/utils/prefetchBrandLogos";
 import { colors } from "@/constants/theme";
 import { Stack } from "expo-router";

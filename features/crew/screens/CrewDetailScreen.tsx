@@ -9,8 +9,8 @@ import {
   Card,
   Screen,
   StatusPill,
-} from "@/shared/components";
-import { useTranslation } from "@/shared/translations";
+} from "@/ui/components";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * Crew Detail screen matching prototype screen 21.

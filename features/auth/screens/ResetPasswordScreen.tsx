@@ -9,8 +9,8 @@ import {
   Field,
   PrimaryButton,
   Screen,
-} from "@/shared/components";
-import { useTranslation } from "@/shared/translations";
+} from "@/ui/components";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * Reset Password screen matching prototype screen 7.

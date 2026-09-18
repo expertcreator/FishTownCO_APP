@@ -3,8 +3,8 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_WALLET } from "@/features/common/data/demo";
-import { AppText, Card, Screen, StatusPill } from "@/shared/components";
-import { useTranslation } from "@/shared/translations";
+import { AppText, Card, Screen, StatusPill } from "@/ui/components";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * Wallet tab matching prototype screen 14.

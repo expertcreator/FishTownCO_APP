@@ -10,8 +10,8 @@ import {
   Field,
   PrimaryButton,
   Screen,
-} from "@/shared/components";
-import { useTranslation } from "@/shared/translations";
+} from "@/ui/components";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * Vessel Setup screen matching prototype screen 8.

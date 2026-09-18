@@ -3,8 +3,8 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { colors } from "@/constants/theme";
 import { DEMO_VESSEL } from "@/features/common/data/demo";
-import { AppText, Card, Screen } from "@/shared/components";
-import { useTranslation } from "@/shared/translations";
+import { AppText, Card, Screen } from "@/ui/components";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * My Vessel tab matching prototype screen 13.

@@ -1,4 +1,4 @@
-import { createZustandMMKVStorage, mmkv } from "@/shared/stores/mmkvStorage";
+import { createZustandMMKVStorage, mmkv } from "@/ui/stores/mmkvStorage";
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
 import type { Language } from "./translations";

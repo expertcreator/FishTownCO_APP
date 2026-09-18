@@ -11,8 +11,8 @@ import {
   PrimaryButton,
   Screen,
   TextLink,
-} from "@/shared/components";
-import { useTranslation } from "@/shared/translations";
+} from "@/ui/components";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * Log In screen matching prototype screen 5.

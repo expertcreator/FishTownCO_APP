@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Link } from "expo-router";
 import { Image, Pressable, StyleSheet, View } from "react-native";
-import { AppText } from "@/shared/components";
+import { AppText } from "@/ui/components";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/constants/theme";
-import { useTranslation } from "@/shared/translations";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * Welcome / entry screen matching https://fishtownco.itoasis.co/ screen 1.

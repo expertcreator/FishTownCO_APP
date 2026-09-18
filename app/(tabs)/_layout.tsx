@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs } from "expo-router";
 import { colors } from "@/constants/theme";
-import { useTranslation } from "@/shared/translations";
+import { useTranslation } from "@/ui/translations";
 
 /**
  * Main app bottom tabs from the Fishtownco prototype.
