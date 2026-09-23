@@ -2,9 +2,11 @@ import { router } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_BILLING } from "@/features/common/data/demo";
+import { useInitialSkeleton } from "@/features/common/hooks/useInitialSkeleton";
 import {
   AppText,
   BackHeader,
+  BillingListSkeleton,
   Card,
   PrimaryButton,
   Screen,
@@ -19,8 +21,17 @@ import { useTranslation } from "@/ui/translations";
 export default function BillingHistoryScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
+  const isPending = useInitialSkeleton();
 
   const { t } = useTranslation();
+
+  if (isPending) {
+    return (
+      <Screen>
+        <BillingListSkeleton />
+      </Screen>
+    );
+  }
 
   return (
     <Screen>

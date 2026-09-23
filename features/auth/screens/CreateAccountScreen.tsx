@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Alert, Pressable, StyleSheet, View } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
@@ -14,6 +14,8 @@ import {
   Screen,
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+import { createAccount } from "@/features/auth/services/createAccount";
+import { mapAuthError } from "@/features/auth/utils/mapAuthError";
 import {
   createAccountSchema,
   type CreateAccountSchema,
@@ -21,11 +23,13 @@ import {
 
 /**
  * Create Account screen matching prototype screen 6.
+ * Creates a Firebase Auth user and writes `users/{uid}` in Firestore.
  * @returns Create account UI
  */
 export default function CreateAccountScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { t } = useTranslation();
   const schema = useMemo(() => createAccountSchema(t), [t]);
@@ -42,6 +46,32 @@ export default function CreateAccountScreen() {
     reValidateMode: "onChange",
   });
   const agreed = watch("agreed");
+
+  /**
+   * Submits create-account form to Firebase Auth + Firestore profile.
+   * @param values - Validated form values
+   * @returns Promise that resolves when navigation starts or an alert is shown
+   */
+  const onSubmit = async (values: CreateAccountSchema) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await createAccount({
+        name: values.name,
+        email: values.email,
+        password: values.password,
+      });
+      router.push("/vessel/setup");
+    } catch (error) {
+      console.error("[CreateAccountScreen] submit failed", error);
+      Alert.alert(
+        t("auth.create-account-failed-title"),
+        mapAuthError(error, t)
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Screen>
@@ -98,7 +128,8 @@ export default function CreateAccountScreen() {
         <PrimaryButton
           label={t("auth.create-account")}
           icon="boat-outline"
-          onPress={handleSubmit(() => router.push("/vessel/setup"))}
+          loading={isSubmitting}
+          onPress={handleSubmit(onSubmit)}
         />
       </Card>
 

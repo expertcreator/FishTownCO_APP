@@ -5,7 +5,8 @@ Expo SDK 57 app for vessel compliance / safety inventory.
 ## Stack
 
 - Expo Router, React Native, TypeScript
-- Zustand, MMKV, Zod, react-hook-form
+- Zustand, MMKV, Zod, react-hook-form, TanStack Query
+- Firebase Auth + Firestore (Android via `google-services.json`)
 - In-repo modules: `ui`, `assets`
 
 ## Bundle

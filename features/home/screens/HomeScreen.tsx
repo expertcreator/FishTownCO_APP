@@ -8,7 +8,14 @@ import {
   DEMO_VESSEL,
   type StatusTone,
 } from "@/features/common/data/demo";
-import { AppText, Card, Screen, StatusPill } from "@/ui/components";
+import { useInitialSkeleton } from "@/features/common/hooks/useInitialSkeleton";
+import {
+  AppText,
+  Card,
+  HomeDashboardSkeleton,
+  Screen,
+  StatusPill,
+} from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
 
 type FilterKey = "all" | "ok" | "due" | "overdue";
@@ -20,6 +27,7 @@ type FilterKey = "all" | "ok" | "due" | "overdue";
 export default function HomeScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
+  const isPending = useInitialSkeleton();
 
   const { t } = useTranslation();
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -37,6 +45,14 @@ export default function HomeScreen() {
   }, [filter]);
 
   const attention = counts.due + counts.overdue;
+
+  if (isPending) {
+    return (
+      <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
+        <HomeDashboardSkeleton />
+      </Screen>
+    );
+  }
 
   return (
     <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>

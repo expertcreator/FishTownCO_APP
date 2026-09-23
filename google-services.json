@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "687496220200",
+    "project_id": "fishtownco-5093a",
+    "storage_bucket": "fishtownco-5093a.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:687496220200:android:2248480ca5dbfe3a222f1d",
+        "android_client_info": {
+          "package_name": "com.itoasis.Fishtownco"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "687496220200-ujs1t4q9rfl3lsolfempii14tc970l3f.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.itoasis.Fishtownco",
+            "certificate_hash": "545ce3f0d83425dd0109bd47b5d78f67a73957f3"
+          }
+        },
+        {
+          "client_id": "687496220200-pkpn76udifim9j3kojekp45h2lgku84o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyA7fcIg2OggXI4GpOiP0Sd4vmhgVTVDS_c"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "687496220200-pkpn76udifim9j3kojekp45h2lgku84o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

@@ -4,7 +4,14 @@ import { useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_SAFETY_ITEMS, DEMO_VESSEL } from "@/features/common/data/demo";
-import { AppText, Card, Screen, StatusPill } from "@/ui/components";
+import { useInitialSkeleton } from "@/features/common/hooks/useInitialSkeleton";
+import {
+  AppText,
+  Card,
+  SafetyListSkeleton,
+  Screen,
+  StatusPill,
+} from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
 
 type FilterKey = "all" | "ok" | "due" | "overdue";
@@ -16,6 +23,7 @@ type FilterKey = "all" | "ok" | "due" | "overdue";
 export default function SafetyScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
+  const isPending = useInitialSkeleton();
 
   const { t } = useTranslation();
   const [filter, setFilter] = useState<FilterKey>("all");
@@ -31,6 +39,14 @@ export default function SafetyScreen() {
     if (filter === "all") return DEMO_SAFETY_ITEMS;
     return DEMO_SAFETY_ITEMS.filter((i) => i.tone === filter);
   }, [filter]);
+
+  if (isPending) {
+    return (
+      <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
+        <SafetyListSkeleton />
+      </Screen>
+    );
+  }
 
   return (
     <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>

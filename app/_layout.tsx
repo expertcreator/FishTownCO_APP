@@ -1,7 +1,10 @@
 import { BrandLogoWarmup } from "@/features/auth/components/BrandLogoWarmup/BrandLogoWarmup";
+import { configureGoogleSignIn } from "@/features/auth/utils/configureGoogleSignIn";
+import { queryClient } from "@/features/common/firebase";
 import { SafeKeyboardProvider } from "@/ui/components";
 import { prefetchBrandLogos } from "@/features/auth/utils/prefetchBrandLogos";
 import { ThemeProvider, useColors, useTheme } from "@/ui/theme";
+import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { useLayoutEffect } from "react";
@@ -20,6 +23,10 @@ const SPLASH_HIDE_DELAY_MS = 1000;
  * @returns Root navigation tree
  */
 export default function RootLayout() {
+  useLayoutEffect(() => {
+    configureGoogleSignIn();
+  }, []);
+
   useLayoutEffect(() => {
     let cancelled = false;
 
@@ -46,13 +53,15 @@ export default function RootLayout() {
   }, []);
 
   return (
-    <GestureHandlerRootView style={{ flex: 1 }}>
-      <SafeAreaProvider>
-        <ThemeProvider>
-          <ThemedShell />
-        </ThemeProvider>
-      </SafeAreaProvider>
-    </GestureHandlerRootView>
+    <QueryClientProvider client={queryClient}>
+      <GestureHandlerRootView style={{ flex: 1 }}>
+        <SafeAreaProvider>
+          <ThemeProvider>
+            <ThemedShell />
+          </ThemeProvider>
+        </SafeAreaProvider>
+      </GestureHandlerRootView>
+    </QueryClientProvider>
   );
 }
 

@@ -12,6 +12,7 @@ Goal: Vessel Companion mobile app.
 ## Patterns
 
 - Path alias: `@/*` → repo root
+- Backend: Firebase Auth + Firestore (Android first)
 - Colors: cream `#F5F0E6`, navy, teal, orange CTA
 - Bundle ID: `com.itoasis.Fishtownco`
 - Brand id: `fishtownco` only — do not add other marketplace brands

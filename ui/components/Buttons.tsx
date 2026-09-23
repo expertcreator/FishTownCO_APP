@@ -1,6 +1,13 @@
 import { Ionicons } from "@expo/vector-icons";
 import type { ReactNode } from "react";
-import { Pressable, StyleSheet, View, type StyleProp, type ViewStyle } from "react-native";
+import {
+  ActivityIndicator,
+  Pressable,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import AppText from "./Text";
 
@@ -10,6 +17,7 @@ type PrimaryButtonProps = {
   icon?: keyof typeof Ionicons.glyphMap;
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
+  loading?: boolean;
 };
 
 /**
@@ -20,6 +28,7 @@ type PrimaryButtonProps = {
  * @param props.icon - Optional trailing icon
  * @param props.style - Optional style
  * @param props.disabled - Disabled state
+ * @param props.loading - Shows a spinner and disables the button
  * @returns Button element
  */
 export function PrimaryButton({
@@ -28,18 +37,26 @@ export function PrimaryButton({
   icon = "arrow-forward",
   style,
   disabled,
+  loading = false,
 }: PrimaryButtonProps) {
   const colors = useColors();
   const styles = getStyles(colors);
+  const isDisabled = disabled || loading;
 
   return (
     <Pressable
       onPress={onPress}
-      disabled={disabled}
-      style={[styles.primary, disabled && styles.disabled, style]}
+      disabled={isDisabled}
+      style={[styles.primary, isDisabled && styles.disabled, style]}
     >
-      <AppText style={styles.primaryText}>{label}</AppText>
-      {icon ? <Ionicons name={icon} size={18} color={colors.white} /> : null}
+      {loading ? (
+        <ActivityIndicator color={colors.white} />
+      ) : (
+        <>
+          <AppText style={styles.primaryText}>{label}</AppText>
+          {icon ? <Ionicons name={icon} size={18} color={colors.white} /> : null}
+        </>
+      )}
     </Pressable>
   );
 }

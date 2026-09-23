@@ -62,7 +62,17 @@
     "terms": "Terms",
     "and": "and",
     "privacy": "Privacy Policy",
-    "hero-badge": "Vessel Companion"
+    "hero-badge": "Vessel Companion",
+    "error-create-failed": "Could not create your account. Please try again.",
+    "error-email-in-use": "An account already exists for this email.",
+    "error-invalid-email": "That email address looks invalid.",
+    "error-weak-password": "Choose a stronger password (at least 8 characters).",
+    "error-network": "Network error. Check your connection and try again.",
+    "error-too-many-requests": "Too many attempts. Please wait and try again.",
+    "error-permission": "Could not save your profile. Check Firestore security rules.",
+    "error-operation-not-allowed": "Email/password sign-in is disabled in the Firebase console.",
+    "error-firebase-config": "Firebase Auth is not configured correctly for this build.",
+    "create-account-failed-title": "Create account failed"
   },
   "tabs": {
     "home": "Home",

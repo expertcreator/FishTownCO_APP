@@ -3,7 +3,14 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { DEMO_WALLET } from "@/features/common/data/demo";
-import { AppText, Card, Screen, StatusPill } from "@/ui/components";
+import { useInitialSkeleton } from "@/features/common/hooks/useInitialSkeleton";
+import {
+  AppText,
+  Card,
+  Screen,
+  StatusPill,
+  WalletListSkeleton,
+} from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
 
 /**
@@ -13,8 +20,17 @@ import { useTranslation } from "@/ui/translations";
 export default function WalletScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
+  const isPending = useInitialSkeleton();
 
   const { t } = useTranslation();
+
+  if (isPending) {
+    return (
+      <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
+        <WalletListSkeleton />
+      </Screen>
+    );
+  }
 
   return (
     <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>

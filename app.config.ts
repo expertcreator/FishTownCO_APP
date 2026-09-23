@@ -31,6 +31,7 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       monochromeImage: `${BRAND_ROOT}/adaptive-icon.png`,
     },
     package: "com.itoasis.Fishtownco",
+    googleServicesFile: "./google-services.json",
   },
   web: {
     bundler: "metro",
@@ -41,6 +42,9 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "expo-secure-store",
     "expo-font",
+    "@react-native-firebase/app",
+    "@react-native-firebase/auth",
+    "@react-native-google-signin/google-signin",
     [
       "expo-splash-screen",
       {
@@ -55,6 +59,15 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
           image: `${BRAND_ROOT}/splash.png`,
           backgroundColor: SPLASH_BG,
           imageWidth: 240,
+        },
+      },
+    ],
+    [
+      "expo-build-properties",
+      {
+        android: {
+          // Required by recent Google / Firebase Android stacks
+          minSdkVersion: 24,
         },
       },
     ],
