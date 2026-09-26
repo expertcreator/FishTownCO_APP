@@ -1,166 +1,191 @@
-import { Ionicons } from "@expo/vector-icons";
-import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useColors, type ThemeColors } from "@/ui/theme";
-import { DEMO_SAFETY_ITEMS, DEMO_VESSEL } from "@/features/common/data/demo";
-import { useInitialSkeleton } from "@/features/common/hooks/useInitialSkeleton";
+import { SafetyItemCard } from "@/features/safety/components/SafetyItemCard";
+import { useSafetyItems } from "@/features/safety/hooks/useSafetyItems";
+import type { SafetyFilterKey } from "@/features/safety/types/safetyItem";
+import { useVesselProfile } from "@/features/vessel/hooks/useVesselProfile";
 import {
+  AppHeader,
   AppText,
-  Card,
+  FloatingActionButton,
+  KeyboardAwareContainer,
   SafetyListSkeleton,
   Screen,
-  StatusPill,
 } from "@/ui/components";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 
-type FilterKey = "all" | "ok" | "due" | "overdue";
-
 /**
- * Safety Inventory tab matching prototype screen 12.
+ * Safety Inventory tab matching prototype screen 12
+ * (https://fishtownco.itoasis.co/).
+ * Loads items from Firestore and computes Overdue / Due soon / OK.
  * @returns Safety tab UI
  */
 export default function SafetyScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
-  const isPending = useInitialSkeleton();
-
   const { t } = useTranslation();
-  const [filter, setFilter] = useState<FilterKey>("all");
+  const [filter, setFilter] = useState<SafetyFilterKey>("all");
+  const { data = [], isLoading, isFetching, refetch, isError } = useSafetyItems();
+  const { data: vessel } = useVesselProfile();
+  const vesselName = vessel?.name?.trim() || t("home.vessel-fallback");
+
+  useFocusEffect(
+    useCallback(() => {
+      void refetch();
+    }, [refetch])
+  );
 
   const counts = useMemo(() => {
-    const ok = DEMO_SAFETY_ITEMS.filter((i) => i.tone === "ok").length;
-    const due = DEMO_SAFETY_ITEMS.filter((i) => i.tone === "due").length;
-    const overdue = DEMO_SAFETY_ITEMS.filter((i) => i.tone === "overdue").length;
-    return { ok, due, overdue, all: DEMO_SAFETY_ITEMS.length };
-  }, []);
+    const ok = data.filter((i) => i.tone === "ok").length;
+    const due = data.filter((i) => i.tone === "due").length;
+    const overdue = data.filter((i) => i.tone === "overdue").length;
+    return { ok, due, overdue, all: data.length };
+  }, [data]);
 
   const items = useMemo(() => {
-    if (filter === "all") return DEMO_SAFETY_ITEMS;
-    return DEMO_SAFETY_ITEMS.filter((i) => i.tone === filter);
-  }, [filter]);
+    if (filter === "all") return data;
+    return data.filter((i) => i.tone === filter);
+  }, [data, filter]);
 
-  if (isPending) {
+  if (isLoading && data.length === 0) {
     return (
-      <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
-        <SafetyListSkeleton />
+      <Screen
+        scroll={false}
+        edges={["top", "left", "right"]}
+        contentStyle={styles.screenContent}
+      >
+        <AppHeader title={t("tabs.safety")} />
+        <View style={styles.body}>
+          <SafetyListSkeleton />
+        </View>
       </Screen>
     );
   }
 
   return (
-    <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
-      <AppText style={styles.title}>{t("safety.title").toUpperCase()}</AppText>
-      <AppText style={styles.sub}>
-        {t("safety.tracked-on", { count: counts.all, vessel: DEMO_VESSEL.name })}
-      </AppText>
+    <Screen
+      scroll={false}
+      edges={["top", "left", "right"]}
+      contentStyle={styles.screenContent}
+    >
+      <AppHeader title={t("tabs.safety")} />
 
-      <View style={styles.filters}>
-        {(
-          [
-            ["all", t("home.filter-all"), counts.all],
-            ["overdue", t("home.filter-overdue"), counts.overdue],
-            ["due", t("home.filter-due"), counts.due],
-            ["ok", t("home.filter-ok"), counts.ok],
-          ] as const
-        ).map(([key, label, count]) => {
-          const on = filter === key;
-          return (
-            <Pressable
-              key={key}
-              onPress={() => setFilter(key)}
-              style={[styles.chip, on && styles.chipOn]}
-            >
-              <AppText style={[styles.chipText, on && styles.chipTextOn]}>
-                {label} ({count})
-              </AppText>
-            </Pressable>
-          );
-        })}
-      </View>
+      <KeyboardAwareContainer
+        useSafeAreaWrapper={false}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardDismissMode="on-drag"
+      >
+        <AppText style={styles.title}>{t("tabs.safety").toUpperCase()}</AppText>
+        <AppText style={styles.sub}>
+          {t("safety.tracked-on", {
+            count: counts.all,
+            vessel: vesselName,
+          })}
+        </AppText>
 
-      {items.map((item) => (
-        <Pressable
-          key={item.id}
-          onPress={() => router.push(`/safety/${item.id}`)}
-        >
-          <Card style={styles.row}>
-            <View style={styles.iconWrap}>
-              <Ionicons name="help-buoy-outline" size={22} color={colors.orange} />
-            </View>
-            <View style={styles.body}>
-              <AppText style={styles.name}>{item.name}</AppText>
-              <AppText style={styles.meta}>
-                Next due: {item.dueDate} · {item.location}
-              </AppText>
-            </View>
-            <StatusPill label={item.status} tone={item.tone} />
-          </Card>
-        </Pressable>
-      ))}
+        <View style={styles.filters}>
+          {(
+            [
+              ["all", t("home.filter-all"), counts.all],
+              ["overdue", t("home.filter-overdue"), counts.overdue],
+              ["due", t("home.filter-due"), counts.due],
+              ["ok", t("home.filter-ok"), counts.ok],
+            ] as const
+          ).map(([key, label, count]) => {
+            const on = filter === key;
+            return (
+              <Pressable
+                key={key}
+                onPress={() => setFilter(key)}
+                style={[styles.chip, on && styles.chipOn]}
+              >
+                <AppText style={[styles.chipText, on && styles.chipTextOn]}>
+                  {label} ({count})
+                </AppText>
+              </Pressable>
+            );
+          })}
+        </View>
 
-      <Pressable style={styles.fab} onPress={() => router.push("/safety/add")}>
-        <Ionicons name="add" size={20} color={colors.white} />
-        <AppText style={styles.fabText}>{t("safety.add-title")}</AppText>
-      </Pressable>
+        {isError ? (
+          <AppText style={styles.empty}>{t("safety.load-failed")}</AppText>
+        ) : null}
+
+        {!isError && items.length === 0 ? (
+          <AppText style={styles.empty}>
+            {filter === "all" ? t("safety.empty") : t("safety.empty-filter")}
+          </AppText>
+        ) : null}
+
+        {items.map((item) => (
+          <SafetyItemCard key={item.id} item={item} />
+        ))}
+
+        {isFetching && data.length > 0 ? (
+          <AppText style={styles.refreshing}>{t("common.loading")}</AppText>
+        ) : null}
+      </KeyboardAwareContainer>
+
+      <FloatingActionButton
+        label={t("safety.add-title")}
+        onPress={() => router.push("/safety/add")}
+      />
     </Screen>
   );
 }
 
+/**
+ * Builds Safety screen styles for the active palette.
+ * @param colors - Active theme colors
+ * @returns Style sheet
+ */
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  content: { paddingBottom: 36 },
-  title: {
-    color: colors.navy,
-    fontSize: 28,
-    fontWeight: "800",
-    letterSpacing: 0.5,
-  },
-  sub: { color: colors.muted, marginTop: 6, marginBottom: 16 },
-  filters: {
-    flexDirection: "row",
-    flexWrap: "wrap",
-    gap: 8,
-    marginBottom: 14,
-  },
-  chip: {
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    backgroundColor: colors.chipIdle,
-  },
-  chipOn: { backgroundColor: colors.inverse },
-  chipText: { color: colors.navy, fontSize: 12, fontWeight: "700" },
-  chipTextOn: { color: colors.onInverse },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 12,
-    marginBottom: 10,
-  },
-  iconWrap: {
-    width: 42,
-    height: 42,
-    borderRadius: 12,
-    backgroundColor: colors.softOrange,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  body: { flex: 1, gap: 4 },
-  name: { color: colors.navy, fontWeight: "700", fontSize: 14 },
-  meta: { color: colors.muted, fontSize: 12 },
-  fab: {
-    marginTop: 8,
-    alignSelf: "stretch",
-    backgroundColor: colors.orange,
-    borderRadius: 16,
-    minHeight: 52,
-    paddingHorizontal: 16,
-    flexDirection: "row",
-    alignItems: "center",
-    justifyContent: "center",
-    gap: 8,
-  },
-  fabText: { color: colors.white, fontWeight: "800", fontSize: 13 },
-});
+    screenContent: {
+      flex: 1,
+      paddingBottom: 0,
+    },
+    body: { flex: 1 },
+    scroll: { flex: 1 },
+    scrollContent: {
+      paddingBottom: 96,
+    },
+    title: {
+      color: colors.navy,
+      fontSize: 30,
+      fontWeight: "800",
+      letterSpacing: 0.8,
+    },
+    sub: { color: colors.muted, marginTop: 6, marginBottom: 16, fontSize: 14 },
+    filters: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 8,
+      marginBottom: 14,
+    },
+    chip: {
+      borderRadius: 999,
+      paddingHorizontal: 14,
+      paddingVertical: 8,
+      backgroundColor: colors.chipIdle,
+    },
+    chipOn: { backgroundColor: colors.inverse },
+    chipText: { color: colors.navy, fontSize: 12, fontWeight: "700" },
+    chipTextOn: { color: colors.onInverse },
+    empty: {
+      color: colors.muted,
+      textAlign: "center",
+      marginVertical: 24,
+      fontSize: 14,
+    },
+    refreshing: {
+      color: colors.muted,
+      textAlign: "center",
+      fontSize: 12,
+      marginBottom: 8,
+    },
+  });
 }

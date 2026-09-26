@@ -65,6 +65,13 @@ export function mapAuthError(error: unknown, t: Translate): string {
       return t("auth.error-too-many-requests");
     case "auth/operation-not-allowed":
       return t("auth.error-operation-not-allowed");
+    case "auth/user-not-found":
+    case "auth/wrong-password":
+    case "auth/invalid-credential":
+    case "auth/invalid-login-credentials":
+      return t("auth.error-invalid-credentials");
+    case "auth/user-disabled":
+      return t("auth.error-user-disabled");
     case "auth/configuration-not-found":
     case "auth/invalid-api-key":
     case "auth/app-not-authorized":
@@ -74,7 +81,7 @@ export function mapAuthError(error: unknown, t: Translate): string {
       return t("auth.error-permission");
     default: {
       const detail = getAuthErrorMessage(error);
-      const fallback = t("auth.error-create-failed");
+      const fallback = t("auth.error-auth-failed");
       if (code || detail) {
         return `${fallback}\n\n[${code || "unknown"}] ${detail}`.trim();
       }

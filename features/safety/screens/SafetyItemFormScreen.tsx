@@ -1,0 +1,523 @@
+import { zodResolver } from "@hookform/resolvers/zod";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { useForm } from "react-hook-form";
+import { useQuery } from "@tanstack/react-query";
+import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { mapAuthError } from "@/features/auth/utils/mapAuthError";
+import {
+  isLocalMediaUri,
+  pickDisplayMediaUri,
+} from "@/features/common/media/mediaStatus";
+import { addSafetyItem } from "@/features/safety/services/addSafetyItem";
+import { fetchSafetyItem } from "@/features/safety/services/fetchSafetyItem";
+import { getCurrentLocationLabel } from "@/features/safety/services/getCurrentLocationLabel";
+import { updateSafetyItem } from "@/features/safety/services/updateSafetyItem";
+import { uploadSafetyMediaInBackground } from "@/features/safety/services/uploadSafetyMediaInBackground";
+import { useSafetyCategoriesStore } from "@/features/safety/store/safetyCategoriesStore";
+import {
+  formatSafetyDueDate,
+  parseSafetyDueDate,
+} from "@/features/safety/utils/formatSafetyDueDate";
+import {
+  createAddSafetySchema,
+  type AddSafetySchema,
+} from "@/features/safety/validation/addSafetySchema";
+import {
+  AppText,
+  BackHeader,
+  CertificatePhotoUpload,
+  DatePickerModal,
+  FormCard,
+  FormField,
+  FormSelectField,
+  ImagePickerSheet,
+  InlineAction,
+  KeyboardAwareContainer,
+  OptionsPickerModal,
+  PrimaryButton,
+  Screen,
+  SectionHeader,
+  StickyFormFooter,
+  useToast,
+} from "@/ui/components";
+import { useColors, type ThemeColors } from "@/ui/theme";
+import { useTranslation } from "@/ui/translations";
+
+type DateFieldKey = "lastServiceDate" | "nextDueDate" | "expiryDate";
+type MediaTarget = "certificate" | "photo";
+
+const EMPTY_FORM: AddSafetySchema = {
+  itemType: "",
+  name: "",
+  makeModel: "",
+  serial: "",
+  locationAboard: "",
+  lastServiceDate: "",
+  nextDueDate: "",
+  expiryDate: "",
+};
+
+/**
+ * Converts a stored date into `dd/mm/yyyy` for the shared form.
+ * @param value - ISO, dd/mm/yyyy, or long display date
+ * @returns Form date string, or empty
+ */
+function toFormDate(value?: string | null): string {
+  if (!value) return "";
+  const parsed = parseSafetyDueDate(value);
+  return parsed ? formatSafetyDueDate(parsed) : value;
+}
+
+/**
+ * Shared Add / Edit Safety Item form matching prototype screen 16.
+ * - `/safety/add` → create
+ * - `/safety/edit/[id]` → update existing Firestore item
+ * @returns Safety item form screen
+ */
+export default function SafetyItemFormScreen() {
+  const { t } = useTranslation();
+  const toast = useToast();
+  const colors = useColors();
+  const styles = getStyles(colors);
+  const schema = useMemo(() => createAddSafetySchema(t), [t]);
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const itemId = typeof id === "string" && id.length > 0 ? id : "";
+  const isEdit = Boolean(itemId);
+
+  const categories = useSafetyCategoriesStore((s) => s.categories);
+  const categoriesLoading = useSafetyCategoriesStore((s) => s.isLoading);
+  const loadCategories = useSafetyCategoriesStore((s) => s.loadCategories);
+
+  const {
+    data: item,
+    isLoading: isItemLoading,
+    isError: isItemError,
+  } = useQuery({
+    queryKey: ["safety", "item", itemId],
+    enabled: isEdit,
+    queryFn: () => fetchSafetyItem(itemId),
+  });
+
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [activeDateField, setActiveDateField] = useState<DateFieldKey | null>(
+    null
+  );
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [submitAttempted, setSubmitAttempted] = useState(false);
+  const [pickerTarget, setPickerTarget] = useState<MediaTarget | null>(null);
+  const [certificateUri, setCertificateUri] = useState<string | null>(null);
+  const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [coords, setCoords] = useState<{
+    latitude: number;
+    longitude: number;
+  } | null>(null);
+  const [hydrated, setHydrated] = useState(false);
+
+  const { control, handleSubmit, setValue, watch, reset, formState } =
+    useForm<AddSafetySchema>({
+      resolver: zodResolver(schema),
+      defaultValues: EMPTY_FORM,
+      mode: "onChange",
+      reValidateMode: "onChange",
+    });
+
+  const itemType = watch("itemType");
+  const lastServiceDate = watch("lastServiceDate") ?? "";
+  const nextDueDate = watch("nextDueDate");
+  const expiryDate = watch("expiryDate") ?? "";
+
+  const footerError =
+    submitAttempted && Object.keys(formState.errors).length > 0
+      ? t("safety.form-error")
+      : null;
+
+  useFocusEffect(
+    useCallback(() => {
+      if (isEdit) return;
+      reset(EMPTY_FORM);
+      setCoords(null);
+      setIsSubmitting(false);
+      setActiveDateField(null);
+      setSubmitAttempted(false);
+      setPickerTarget(null);
+      setCertificateUri(null);
+      setPhotoUri(null);
+      setHydrated(false);
+    }, [isEdit, reset])
+  );
+
+  useEffect(() => {
+    if (!isEdit || !item || hydrated) return;
+    reset({
+      itemType: item.category || "",
+      name: item.name || "",
+      makeModel: item.makeModel || "",
+      serial: item.serial || "",
+      locationAboard: item.location || "",
+      lastServiceDate: toFormDate(item.lastServiceDate),
+      nextDueDate: toFormDate(item.dueDateIso) || toFormDate(item.dueDate) || "",
+      expiryDate: toFormDate(item.expiryDate),
+    });
+    setPhotoUri(
+      pickDisplayMediaUri({
+        thumbURL: item.photoThumbURL,
+        downloadURL: item.photoDownloadURL,
+        localUri: item.photoLocalUri,
+      })
+    );
+    setCertificateUri(
+      pickDisplayMediaUri({
+        thumbURL: item.certThumbURL,
+        downloadURL: item.certDownloadURL,
+        localUri: item.certLocalUri,
+      })
+    );
+    setHydrated(true);
+  }, [isEdit, item, hydrated, reset]);
+
+  /**
+   * Opens ITEM TYPE sheet using categories from Firestore.
+   * @returns Promise that resolves when the sheet can open
+   */
+  const openCategoryPicker = async () => {
+    setCategoryOpen(true);
+    if (categories.length === 0) {
+      await loadCategories();
+    }
+  };
+
+  /**
+   * Fills LOCATION ABOARD from device GPS.
+   * @returns Promise that resolves when location is applied or a toast is shown
+   */
+  const onUseCurrentLocation = async () => {
+    if (locationLoading) return;
+    setLocationLoading(true);
+    try {
+      const result = await getCurrentLocationLabel();
+      setValue("locationAboard", result.label, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+      setCoords({
+        latitude: result.latitude,
+        longitude: result.longitude,
+      });
+      toast.success(t("safety.location-updated"));
+    } catch (error) {
+      console.error("[SafetyItemFormScreen] location failed", error);
+      const code = error instanceof Error ? error.message : "LOCATION_FAILED";
+      toast.error(
+        code === "LOCATION_PERMISSION_DENIED"
+          ? t("safety.location-permission-denied")
+          : t("safety.location-failed")
+      );
+    } finally {
+      setLocationLoading(false);
+    }
+  };
+
+  /**
+   * Creates or updates the safety item in Firestore, kicks off background
+   * media uploads, then navigates back without waiting for Storage.
+   * @param values - Validated form values
+   * @returns Promise that resolves when navigation starts or a toast is shown
+   */
+  const onSubmit = async (values: AddSafetySchema) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      const due = parseSafetyDueDate(values.nextDueDate) ?? new Date();
+      const newPhoto = isLocalMediaUri(photoUri) ? photoUri : null;
+      const newCert = isLocalMediaUri(certificateUri) ? certificateUri : null;
+      const hadPhoto = Boolean(
+        item?.photoDownloadURL || item?.photoThumbURL || item?.photoLocalUri
+      );
+      const hadCert = Boolean(
+        item?.certDownloadURL || item?.certThumbURL || item?.certLocalUri
+      );
+      const clearPhoto = isEdit && !photoUri && hadPhoto;
+      const clearCertificate = isEdit && !certificateUri && hadCert;
+
+      const payload = {
+        itemType: values.itemType,
+        name: values.name,
+        makeModel: values.makeModel,
+        serial: values.serial,
+        locationAboard: values.locationAboard,
+        lastServiceDate: values.lastServiceDate,
+        nextDueDate: values.nextDueDate,
+        nextDueDateIso: due.toISOString(),
+        expiryDate: values.expiryDate,
+        latitude: coords?.latitude ?? null,
+        longitude: coords?.longitude ?? null,
+        photoLocalUri: newPhoto,
+        certLocalUri: newCert,
+      };
+
+      if (isEdit) {
+        await updateSafetyItem({
+          id: itemId,
+          ...payload,
+          clearPhoto,
+          clearCertificate,
+        });
+        if (newPhoto) {
+          void uploadSafetyMediaInBackground(itemId, "photo", newPhoto);
+        }
+        if (newCert) {
+          void uploadSafetyMediaInBackground(itemId, "certificate", newCert);
+        }
+        toast.success(t("safety.update-success"));
+      } else {
+        const { id } = await addSafetyItem(payload);
+        if (newPhoto) {
+          void uploadSafetyMediaInBackground(id, "photo", newPhoto);
+        }
+        if (newCert) {
+          void uploadSafetyMediaInBackground(id, "certificate", newCert);
+        }
+        toast.success(t("safety.add-success"));
+      }
+      router.back();
+    } catch (error) {
+      console.error("[SafetyItemFormScreen] save failed", error);
+      if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
+        toast.error(t("safety.sign-in-required"));
+      } else {
+        toast.error(mapAuthError(error, t));
+      }
+      setIsSubmitting(false);
+    }
+  };
+
+  const dateFieldValue =
+    activeDateField === "lastServiceDate"
+      ? lastServiceDate
+      : activeDateField === "expiryDate"
+        ? expiryDate
+        : nextDueDate;
+
+  if (isEdit && (isItemLoading || (!hydrated && !isItemError))) {
+    return (
+      <Screen
+        scroll={false}
+        contentStyle={styles.screenContent}
+        edges={["top", "left", "right"]}
+      >
+        <View style={styles.headerPad}>
+          <BackHeader title={t("safety.edit-title")} />
+        </View>
+        <ActivityIndicator color={colors.teal} style={styles.loader} />
+      </Screen>
+    );
+  }
+
+  if (isEdit && (isItemError || !item)) {
+    return (
+      <Screen
+        scroll={false}
+        contentStyle={styles.screenContent}
+        edges={["top", "left", "right"]}
+      >
+        <View style={styles.headerPad}>
+          <BackHeader title={t("safety.edit-title")} />
+        </View>
+        <AppText style={styles.empty}>{t("safety.item-missing")}</AppText>
+      </Screen>
+    );
+  }
+
+  return (
+    <Screen
+      scroll={false}
+      contentStyle={styles.screenContent}
+      edges={["top", "left", "right"]}
+    >
+      <View style={styles.headerPad}>
+        <BackHeader
+          title={isEdit ? t("safety.edit-title") : t("safety.add-title")}
+        />
+      </View>
+
+      <KeyboardAwareContainer
+        useSafeAreaWrapper={false}
+        style={styles.scroll}
+        contentContainerStyle={styles.scrollContent}
+        keyboardDismissMode="on-drag"
+      >
+        <FormCard>
+          <FormSelectField
+            control={control}
+            name="itemType"
+            label={t("safety.item-type")}
+            placeholder={t("safety.category-placeholder")}
+            onPress={openCategoryPicker}
+          />
+
+          <FormField
+            control={control}
+            name="name"
+            label={t("safety.item-name")}
+            placeholder={t("safety.item-name-placeholder")}
+          />
+
+          <FormField
+            control={control}
+            name="makeModel"
+            label={t("safety.make-model")}
+            placeholder={t("safety.make-model-placeholder")}
+          />
+
+          <FormField
+            control={control}
+            name="serial"
+            label={t("safety.serial")}
+            placeholder={t("safety.serial-placeholder")}
+          />
+
+          <View>
+            <FormField
+              control={control}
+              name="locationAboard"
+              label={t("safety.location-aboard")}
+              placeholder={t("safety.location-aboard-placeholder")}
+            />
+            <InlineAction
+              label={t("safety.use-current-location")}
+              icon="locate-outline"
+              loading={locationLoading}
+              onPress={onUseCurrentLocation}
+            />
+          </View>
+
+          <FormSelectField
+            control={control}
+            name="lastServiceDate"
+            label={t("safety.last-service-date")}
+            placeholder={t("safety.date-placeholder")}
+            onPress={() => setActiveDateField("lastServiceDate")}
+          />
+
+          <FormSelectField
+            control={control}
+            name="nextDueDate"
+            label={t("safety.next-due-date")}
+            placeholder={t("safety.date-placeholder")}
+            onPress={() => setActiveDateField("nextDueDate")}
+          />
+
+          <FormSelectField
+            control={control}
+            name="expiryDate"
+            label={t("safety.expiry-date")}
+            placeholder={t("safety.date-placeholder")}
+            onPress={() => setActiveDateField("expiryDate")}
+          />
+        </FormCard>
+
+        <FormCard>
+          <SectionHeader title={t("safety.certificates-photos")} />
+          <CertificatePhotoUpload
+            certificateTitle={t("safety.add-certificate")}
+            certificateHint={t("safety.add-certificate-hint")}
+            photoTitle={t("safety.add-photo")}
+            photoHint={t("safety.add-photo-hint")}
+            certificateUri={certificateUri}
+            photoUri={photoUri}
+            onAddCertificate={() => setPickerTarget("certificate")}
+            onAddPhoto={() => setPickerTarget("photo")}
+            onRemoveCertificate={() => setCertificateUri(null)}
+            onRemovePhoto={() => setPhotoUri(null)}
+          />
+        </FormCard>
+      </KeyboardAwareContainer>
+
+      <StickyFormFooter error={footerError}>
+        <PrimaryButton
+          label={isEdit ? t("safety.update-item") : t("safety.save-item")}
+          icon="save-outline"
+          loading={isSubmitting}
+          onPress={handleSubmit(onSubmit, () => setSubmitAttempted(true))}
+        />
+      </StickyFormFooter>
+
+      <ImagePickerSheet
+        visible={pickerTarget !== null}
+        onClose={() => setPickerTarget(null)}
+        onImageSelected={(uri) => {
+          if (pickerTarget === "certificate") {
+            setCertificateUri(uri);
+          } else if (pickerTarget === "photo") {
+            setPhotoUri(uri);
+          }
+          setPickerTarget(null);
+        }}
+      />
+
+      <OptionsPickerModal
+        visible={categoryOpen}
+        title={t("safety.select-category")}
+        options={categories}
+        selectedId={categories.find((c) => c.label === itemType)?.id}
+        loading={categoriesLoading}
+        onClose={() => setCategoryOpen(false)}
+        onSelect={(option) => {
+          setValue("itemType", option.label, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        }}
+      />
+
+      <DatePickerModal
+        visible={activeDateField !== null}
+        initialDate={parseSafetyDueDate(dateFieldValue) ?? new Date()}
+        onClose={() => setActiveDateField(null)}
+        onConfirm={(date) => {
+          if (!activeDateField) return;
+          setValue(activeDateField, formatSafetyDueDate(date), {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+          setActiveDateField(null);
+        }}
+      />
+    </Screen>
+  );
+}
+
+/**
+ * Builds shared form-screen styles for the active palette.
+ * @param colors - Active theme colors
+ * @returns Style sheet
+ */
+function getStyles(colors: ThemeColors) {
+  return StyleSheet.create({
+    screenContent: {
+      paddingHorizontal: 0,
+      paddingBottom: 0,
+      flex: 1,
+    },
+    headerPad: {
+      paddingHorizontal: 20,
+    },
+    scroll: {
+      flex: 1,
+    },
+    scrollContent: {
+      paddingHorizontal: 20,
+      paddingBottom: 24,
+      gap: 14,
+    },
+    loader: { marginTop: 40 },
+    empty: {
+      color: colors.muted,
+      textAlign: "center",
+      marginTop: 32,
+      paddingHorizontal: 20,
+    },
+  });
+}

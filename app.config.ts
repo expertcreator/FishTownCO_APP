@@ -42,6 +42,17 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
     "expo-router",
     "expo-secure-store",
     "expo-font",
+    "expo-location",
+    [
+      "expo-image-picker",
+      {
+        photosPermission:
+          "Allow Fishtownco to access your photos for certificates and safety item images.",
+        cameraPermission:
+          "Allow Fishtownco to use the camera to take photos of certificates and safety items.",
+      },
+    ],
+    "expo-image",
     "@react-native-firebase/app",
     "@react-native-firebase/auth",
     "@react-native-google-signin/google-signin",

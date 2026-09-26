@@ -30,7 +30,7 @@ export type VesselSetupSchema = z.infer<
 >;
 
 /**
- * Edit-vessel schema, including particulars from the vessel screen.
+ * Edit-vessel schema matching prototype screen 18 fields.
  * @param t - Translation function
  * @returns Zod edit-vessel schema
  */
@@ -39,11 +39,11 @@ export const createEditVesselSchema = (t: Translate) =>
     name: required(t),
     type: required(t),
     length: required(t),
-    tonnage: required(t),
-    flag: required(t),
-    mmsi: mmsi(t),
-    callSign: required(t),
     homePort: required(t),
+    mmsi: mmsi(t),
+    registrationNo: z.string().trim(),
+    engineHours: z.string().trim(),
+    usage: z.string().trim(),
   });
 
 export type EditVesselSchema = z.infer<

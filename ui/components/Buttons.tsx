@@ -47,7 +47,17 @@ export function PrimaryButton({
     <Pressable
       onPress={onPress}
       disabled={isDisabled}
-      style={[styles.primary, isDisabled && styles.disabled, style]}
+      android_ripple={
+        isDisabled
+          ? undefined
+          : { color: "rgba(255,255,255,0.28)", borderless: false }
+      }
+      style={({ pressed }) => [
+        styles.primary,
+        pressed && !isDisabled && styles.primaryPressed,
+        isDisabled && styles.disabled,
+        style,
+      ]}
     >
       {loading ? (
         <ActivityIndicator color={colors.white} />
@@ -82,7 +92,15 @@ export function OutlineButton({ label, onPress, icon, style }: OutlineButtonProp
   const styles = getStyles(colors);
 
   return (
-    <Pressable onPress={onPress} style={[styles.outline, style]}>
+    <Pressable
+      onPress={onPress}
+      android_ripple={{ color: "rgba(13,44,65,0.12)", borderless: false }}
+      style={({ pressed }) => [
+        styles.outline,
+        pressed && styles.outlinePressed,
+        style,
+      ]}
+    >
       {icon ? <Ionicons name={icon} size={18} color={colors.navy} /> : null}
       <AppText style={styles.outlineText}>{label}</AppText>
     </Pressable>
@@ -144,6 +162,11 @@ function getStyles(colors: ThemeColors) {
     alignItems: "center",
     justifyContent: "center",
     gap: 8,
+    overflow: "hidden",
+  },
+  primaryPressed: {
+    opacity: 0.88,
+    transform: [{ scale: 0.985 }],
   },
   primaryText: {
     color: colors.white,
@@ -161,6 +184,12 @@ function getStyles(colors: ThemeColors) {
     alignItems: "center",
     justifyContent: "center",
     gap: 10,
+    overflow: "hidden",
+  },
+  outlinePressed: {
+    opacity: 0.82,
+    backgroundColor: colors.cardSoft,
+    transform: [{ scale: 0.985 }],
   },
   outlineText: {
     color: colors.navy,

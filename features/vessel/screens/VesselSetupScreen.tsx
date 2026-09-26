@@ -1,10 +1,14 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
-import { useColors, type ThemeColors } from "@/ui/theme";
-import { DEMO_VESSEL } from "@/features/common/data/demo";
+import { mapAuthError } from "@/features/auth/utils/mapAuthError";
+import { saveVesselProfile } from "@/features/vessel/services/saveVesselProfile";
+import {
+  createVesselSetupSchema,
+  type VesselSetupSchema,
+} from "@/features/vessel/validation/vesselSchema";
 import {
   AppText,
   BackHeader,
@@ -12,35 +16,65 @@ import {
   FormField,
   PrimaryButton,
   Screen,
+  useToast,
 } from "@/ui/components";
+import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
-import {
-  createVesselSetupSchema,
-  type VesselSetupSchema,
-} from "@/features/vessel/validation/vesselSchema";
 
 /**
  * Vessel Setup screen matching prototype screen 8.
+ * Saves the vessel profile to Firestore, then continues to the checklist.
  * @returns Vessel setup UI
  */
 export default function VesselSetupScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
-
   const { t } = useTranslation();
+  const toast = useToast();
   const schema = useMemo(() => createVesselSetupSchema(t), [t]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
   const { control, handleSubmit } = useForm<VesselSetupSchema>({
     resolver: zodResolver(schema),
     defaultValues: {
-      name: DEMO_VESSEL.name,
-      type: DEMO_VESSEL.type,
-      length: DEMO_VESSEL.length,
-      homePort: DEMO_VESSEL.homePort,
-      mmsi: DEMO_VESSEL.mmsi,
+      name: "",
+      type: "",
+      length: "",
+      homePort: "",
+      mmsi: "",
     },
     mode: "onChange",
     reValidateMode: "onChange",
   });
+
+  /**
+   * Saves vessel basics to Firestore and opens the build checklist.
+   * @param values - Validated setup form values
+   * @returns Promise that resolves when navigation starts or a toast is shown
+   */
+  const onSubmit = async (values: VesselSetupSchema) => {
+    if (isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await saveVesselProfile({
+        name: values.name,
+        type: values.type,
+        length: values.length,
+        homePort: values.homePort,
+        mmsi: values.mmsi,
+      });
+      toast.success(t("vessel.save-success"));
+      router.push("/vessel/build-checklist");
+    } catch (error) {
+      console.error("[VesselSetupScreen] save failed", error);
+      if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
+        toast.error(t("vessel.sign-in-required"));
+      } else {
+        toast.error(mapAuthError(error, t));
+      }
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Screen>
@@ -87,24 +121,30 @@ export default function VesselSetupScreen() {
         />
         <PrimaryButton
           label={t("setup.continue-checklist")}
-          onPress={handleSubmit(() => router.push("/vessel/build-checklist"))}
+          loading={isSubmitting}
+          onPress={handleSubmit(onSubmit)}
         />
       </Card>
     </Screen>
   );
 }
 
+/**
+ * Builds vessel-setup styles for the active palette.
+ * @param colors - Active theme colors
+ * @returns Style sheet
+ */
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
-  step: {
-    alignSelf: "flex-start",
-    backgroundColor: colors.softTeal,
-    borderRadius: 999,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    marginBottom: 14,
-  },
-  stepText: { color: colors.teal, fontWeight: "700", fontSize: 12 },
-  card: { gap: 14 },
-});
+    step: {
+      alignSelf: "flex-start",
+      backgroundColor: colors.softTeal,
+      borderRadius: 999,
+      paddingHorizontal: 12,
+      paddingVertical: 6,
+      marginBottom: 14,
+    },
+    stepText: { color: colors.teal, fontWeight: "700", fontSize: 12 },
+    card: { gap: 14 },
+  });
 }

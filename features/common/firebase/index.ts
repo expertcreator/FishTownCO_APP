@@ -1,5 +1,6 @@
 import { getAuth } from "@react-native-firebase/auth";
 import { getFirestore } from "@react-native-firebase/firestore";
+import { getStorage } from "@react-native-firebase/storage";
 
 export { FIRESTORE_PAGE_SIZE } from "./pagination";
 export {
@@ -23,6 +24,11 @@ export const firebaseAuth = getAuth();
  * Shared Firestore instance used by client helpers across the app.
  */
 export const firebaseFirestore = getFirestore();
+
+/**
+ * Shared Firebase Storage instance for user media uploads.
+ */
+export const firebaseStorage = getStorage();
 
 /**
  * Returns the signed-in Firebase user, or null when logged out.

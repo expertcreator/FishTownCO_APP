@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { router, useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Alert, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
@@ -12,6 +12,7 @@ import {
   OutlineButton,
   PrimaryButton,
   Screen,
+  useToast,
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
 import { createAccount } from "@/features/auth/services/createAccount";
@@ -29,6 +30,7 @@ import {
 export default function CreateAccountScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
+  const toast = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const { t } = useTranslation();
@@ -38,6 +40,7 @@ export default function CreateAccountScreen() {
     handleSubmit,
     setValue,
     watch,
+    reset,
     formState: { errors },
   } = useForm<CreateAccountSchema>({
     resolver: zodResolver(schema),
@@ -47,10 +50,17 @@ export default function CreateAccountScreen() {
   });
   const agreed = watch("agreed");
 
+  useFocusEffect(
+    useCallback(() => {
+      reset({ name: "", email: "", password: "", agreed: false });
+      setIsSubmitting(false);
+    }, [reset])
+  );
+
   /**
    * Submits create-account form to Firebase Auth + Firestore profile.
    * @param values - Validated form values
-   * @returns Promise that resolves when navigation starts or an alert is shown
+   * @returns Promise that resolves when navigation starts or a toast is shown
    */
   const onSubmit = async (values: CreateAccountSchema) => {
     if (isSubmitting) return;
@@ -61,14 +71,12 @@ export default function CreateAccountScreen() {
         email: values.email,
         password: values.password,
       });
-      router.push("/vessel/setup");
+      toast.success(t("auth.create-account-success"));
+      router.replace("/(auth)/login");
+      // Keep loader visible until this screen unmounts after navigation.
     } catch (error) {
       console.error("[CreateAccountScreen] submit failed", error);
-      Alert.alert(
-        t("auth.create-account-failed-title"),
-        mapAuthError(error, t)
-      );
-    } finally {
+      toast.error(mapAuthError(error, t));
       setIsSubmitting(false);
     }
   };
@@ -95,7 +103,7 @@ export default function CreateAccountScreen() {
           icon="mail-outline"
           autoCapitalize="none"
           keyboardType="email-address"
-          placeholder="skipper@northernstar.co.uk"
+          placeholder={t("auth.email-placeholder")}
         />
         <FormField
           control={control}

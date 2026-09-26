@@ -1,7 +1,8 @@
 import { BrandLogoWarmup } from "@/features/auth/components/BrandLogoWarmup/BrandLogoWarmup";
 import { configureGoogleSignIn } from "@/features/auth/utils/configureGoogleSignIn";
 import { queryClient } from "@/features/common/firebase";
-import { SafeKeyboardProvider } from "@/ui/components";
+import { prefetchSafetyCategories } from "@/features/safety/services/prefetchSafetyCategories";
+import { SafeKeyboardProvider, ToastifyProvider } from "@/ui/components";
 import { prefetchBrandLogos } from "@/features/auth/utils/prefetchBrandLogos";
 import { ThemeProvider, useColors, useTheme } from "@/ui/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -20,6 +21,7 @@ const SPLASH_HIDE_DELAY_MS = 1000;
 
 /**
  * Root layout for Fishtownco — native splash hide matches Foori pattern.
+ * Prefetches brand logos and Firestore safety categories while splash is up.
  * @returns Root navigation tree
  */
 export default function RootLayout() {
@@ -31,9 +33,15 @@ export default function RootLayout() {
     let cancelled = false;
 
     (async () => {
-      await Promise.race([
-        prefetchBrandLogos(),
-        new Promise<void>((resolve) => setTimeout(resolve, 2500)),
+      await Promise.all([
+        Promise.race([
+          prefetchBrandLogos(),
+          new Promise<void>((resolve) => setTimeout(resolve, 2500)),
+        ]),
+        Promise.race([
+          prefetchSafetyCategories(),
+          new Promise<void>((resolve) => setTimeout(resolve, 4000)),
+        ]),
       ]);
       await new Promise<void>((resolve) =>
         setTimeout(resolve, SPLASH_HIDE_DELAY_MS)
@@ -80,6 +88,7 @@ function ThemedShell() {
       <SafeKeyboardProvider>
         <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
       </SafeKeyboardProvider>
+      <ToastifyProvider />
     </View>
   );
 }

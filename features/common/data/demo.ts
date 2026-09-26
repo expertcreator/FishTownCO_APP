@@ -31,17 +31,28 @@ export type WalletDoc = {
 };
 
 /**
- * Crew member row / detail.
+ * Certificate on a crew member profile.
+ */
+export type CrewCertificate = {
+  id: string;
+  title: string;
+  expires: string;
+  tone: StatusTone;
+  hasAttachment?: boolean;
+};
+
+/**
+ * Crew member row / detail (prototype screens 19-21).
  */
 export type CrewMember = {
   id: string;
   name: string;
   role: string;
-  cert: string;
-  expires: string;
   phone: string;
   email: string;
   tone: StatusTone;
+  medicalLabel: string;
+  certificates: CrewCertificate[];
 };
 
 /**
@@ -57,11 +68,14 @@ export type BillingRow = {
 
 /**
  * Demo vessel used by setup / home / vessel screens.
+ * Display strings aligned with https://fishtownco.itoasis.co/ My Vessel.
  */
 export const DEMO_VESSEL = {
   name: "Northern Star",
   type: "Fishing Vessel",
-  length: "18.5 m",
+  length: "42 ft / 12.8 m",
+  lengthLabel: "42 ft / 12.8 m Fishing Vessel",
+  usage: "Commercial Fishing & Day Charters",
   tonnage: "42 GT",
   flag: "United Kingdom",
   mmsi: "235098761",
@@ -69,6 +83,8 @@ export const DEMO_VESSEL = {
   homePort: "Grimsby",
   yearBuilt: "2009",
   skipper: "Capt. John Davies",
+  engineHours: "1,420 hrs",
+  nextServiceIn: "80 hrs",
 };
 
 /**
@@ -157,38 +173,87 @@ export const DEMO_WALLET: WalletDoc[] = [
 ];
 
 /**
- * Demo crew roster.
+ * Demo crew roster matching prototype screen 19.
  */
 export const DEMO_CREW: CrewMember[] = [
   {
-    id: "john",
-    name: "Capt. John Davies",
-    role: "Skipper",
-    cert: "Master < 200 GT",
-    expires: "Expires 11 Oct 2026",
-    phone: "+44 7700 900123",
-    email: "skipper@northernstar.co.uk",
-    tone: "ok",
+    id: "james",
+    name: "James Hart",
+    role: "Skipper & Master 200gt",
+    phone: "+44 7700 900412",
+    email: "james.hart@fishtown.co.uk",
+    tone: "overdue",
+    medicalLabel: "ENG1 Medical: 14 Oct 2024 (Expired)",
+    certificates: [
+      { id: "jh-1", title: "Medical (ENG1)", expires: "14 Oct 2024", tone: "overdue", hasAttachment: true },
+      { id: "jh-2", title: "Sea Survival", expires: "28 Nov 2025", tone: "due", hasAttachment: true },
+      { id: "jh-3", title: "Fire Fighting", expires: "12 Aug 2026", tone: "ok", hasAttachment: true },
+      { id: "jh-4", title: "First Aid at Sea", expires: "04 May 2027", tone: "ok", hasAttachment: true },
+      { id: "jh-5", title: "Health & Safety", expires: "19 Jan 2027", tone: "ok", hasAttachment: true },
+      { id: "jh-6", title: "Radio (GMDSS / VHF)", expires: "30 Sep 2028", tone: "ok", hasAttachment: true },
+    ],
   },
   {
-    id: "emma",
-    name: "Emma Clarke",
-    role: "Deckhand",
-    cert: "STCW Basic Safety",
-    expires: "Expires 02 Feb 2026",
-    phone: "+44 7700 900456",
-    email: "emma@northernstar.co.uk",
+    id: "callum",
+    name: "Callum Reid",
+    role: "Chief Engineer (MEOL)",
+    phone: "+44 7700 900413",
+    email: "callum.reid@fishtown.co.uk",
     tone: "due",
+    medicalLabel: "ENG1 Medical: 01 Sep 2026",
+    certificates: [
+      { id: "cr-1", title: "Medical (ENG1)", expires: "01 Sep 2026", tone: "due", hasAttachment: true },
+      { id: "cr-2", title: "MEOL / Engineering", expires: "15 Mar 2028", tone: "ok", hasAttachment: true },
+    ],
+  },
+  {
+    id: "elena",
+    name: "Elena Rostova",
+    role: "Lead Deckhand & Safety Officer",
+    phone: "+44 7700 900414",
+    email: "elena.rostova@fishtown.co.uk",
+    tone: "ok",
+    medicalLabel: "ENG1 Medical: 18 May 2027",
+    certificates: [
+      { id: "er-1", title: "Medical (ENG1)", expires: "18 May 2027", tone: "ok", hasAttachment: true },
+      { id: "er-2", title: "Advanced Fire Fighting", expires: "22 Oct 2027", tone: "ok", hasAttachment: true },
+    ],
+  },
+  {
+    id: "marcus",
+    name: "Marcus Vance",
+    role: "Deckhand & Winchman",
+    phone: "+44 7700 900415",
+    email: "marcus.vance@fishtown.co.uk",
+    tone: "ok",
+    medicalLabel: "ENG1 Medical: 20 Jan 2029",
+    certificates: [
+      { id: "mv-1", title: "Medical (ENG1)", expires: "20 Jan 2029", tone: "ok", hasAttachment: true },
+    ],
   },
   {
     id: "tom",
-    name: "Tom Hughes",
-    role: "Engineer",
-    cert: "EOW / Engineering",
-    expires: "Expires 19 Jul 2026",
-    phone: "+44 7700 900789",
-    email: "tom@northernstar.co.uk",
+    name: "Tom Fletcher",
+    role: "Deckhand",
+    phone: "+44 7700 900416",
+    email: "tom.fletcher@fishtown.co.uk",
+    tone: "due",
+    medicalLabel: "ENG1 Medical: 14 Jul 2026",
+    certificates: [
+      { id: "tf-1", title: "Medical (ENG1)", expires: "14 Jul 2026", tone: "due", hasAttachment: true },
+    ],
+  },
+  {
+    id: "sarah",
+    name: "Sarah Bell",
+    role: "Cook & Steward",
+    phone: "+44 7700 900417",
+    email: "sarah.bell@fishtown.co.uk",
     tone: "ok",
+    medicalLabel: "ENG1 Medical: 14 Feb 2028",
+    certificates: [
+      { id: "sb-1", title: "Medical (ENG1)", expires: "14 Feb 2028", tone: "ok", hasAttachment: true },
+    ],
   },
 ];
 
