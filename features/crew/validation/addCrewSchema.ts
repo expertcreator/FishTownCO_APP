@@ -9,7 +9,8 @@ const required = (t: Translate) =>
   z.string().trim().min(1, t("validation.required"));
 
 /**
- * Add-crew schema matching prototype screen 20 fields.
+ * Add-crew person-fields schema matching prototype screen 20.
+ * Certificates are validated separately as a multi-entry list.
  * @param t - Translation function
  * @returns Zod crew member schema
  */
@@ -26,10 +27,6 @@ export const createAddCrewSchema = (t: Translate) =>
       .trim()
       .min(1, t("validation.email-required"))
       .email(t("validation.email-invalid")),
-    certType: required(t),
-    certTitle: z.string().trim(),
-    issueDate: required(t),
-    expiryDate: required(t),
   });
 
 export type AddCrewSchema = z.infer<ReturnType<typeof createAddCrewSchema>>;

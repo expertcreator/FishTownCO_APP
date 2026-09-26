@@ -1,50 +1,119 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useMemo, useState } from "react";
+import { useFocusEffect } from "expo-router";
+import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { DEMO_BILLING } from "@/features/billing/data/demoBilling";
+import { useBillingPayments } from "@/features/billing/hooks/useBillingPayments";
 import { useInitialSkeleton } from "@/features/common/hooks/useInitialSkeleton";
+import {
+  formatSafetyDueDate,
+  parseSafetyDueDate,
+} from "@/features/safety/utils/formatSafetyDueDate";
 import {
   AppText,
   BackHeader,
   BillingListSkeleton,
   Card,
+  DatePickerModal,
+  PrimaryButton,
   Screen,
   SelectField,
-  useToast,
 } from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 
 type DateFilter = "3m" | "year" | "all";
+type RangeField = "from" | "to";
 
 /**
  * Billing History screen matching prototype screen 22
  * (https://fishtownco.itoasis.co/).
+ * Loads payments from Firestore `users/{uid}/billing`.
  * @returns Billing history UI
  */
 export default function BillingHistoryScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
-  const toast = useToast();
-  const isPending = useInitialSkeleton();
+  const skeletonPending = useInitialSkeleton();
   const [filter, setFilter] = useState<DateFilter>("all");
+  const [fromDate, setFromDate] = useState("");
+  const [toDate, setToDate] = useState("");
+  const [activeRange, setActiveRange] = useState<RangeField | null>(null);
 
-  const rows = DEMO_BILLING;
+  const {
+    data: payments = [],
+    isLoading,
+    isError,
+    refetch,
+  } = useBillingPayments();
+
+  useFocusEffect(
+    useCallback(() => {
+      void refetch();
+    }, [refetch])
+  );
+
+  const rows = useMemo(() => {
+    const now = new Date();
+    const fromParsed = parseSafetyDueDate(fromDate);
+    const toParsed = parseSafetyDueDate(toDate);
+
+    return payments.filter((row) => {
+      const paidAt = new Date(row.dateIso);
+      if (Number.isNaN(paidAt.getTime())) return false;
+
+      if (filter === "3m") {
+        const cutoff = new Date(now);
+        cutoff.setMonth(cutoff.getMonth() - 3);
+        if (paidAt < cutoff) return false;
+      } else if (filter === "year") {
+        if (paidAt.getFullYear() !== now.getFullYear()) return false;
+      }
+
+      if (fromParsed) {
+        const start = new Date(fromParsed);
+        start.setHours(0, 0, 0, 0);
+        if (paidAt < start) return false;
+      }
+      if (toParsed) {
+        const end = new Date(toParsed);
+        end.setHours(23, 59, 59, 999);
+        if (paidAt > end) return false;
+      }
+      return true;
+    });
+  }, [payments, filter, fromDate, toDate]);
+
   const paidTotal = useMemo(() => {
     const sum = rows
       .filter((r) => r.status === "Paid")
-      .reduce((acc, row) => {
-        const n = Number(row.amount.replace(/[£,\s]/g, ""));
-        return acc + (Number.isFinite(n) ? n : 0);
-      }, 0);
+      .reduce((acc, row) => acc + row.amountValue, 0);
     return sum.toFixed(2);
   }, [rows]);
 
-  if (isPending) {
+  const rangeValue =
+    activeRange === "from" ? fromDate : activeRange === "to" ? toDate : "";
+
+  if ((isLoading || skeletonPending) && payments.length === 0 && !isError) {
     return (
       <Screen>
         <BillingListSkeleton />
+      </Screen>
+    );
+  }
+
+  if (isError) {
+    return (
+      <Screen>
+        <BackHeader
+          title={t("billing.title")}
+          subtitle={t("billing.subtitle")}
+        />
+        <AppText style={styles.empty}>{t("billing.load-failed")}</AppText>
+        <PrimaryButton
+          label={t("common.try-again")}
+          onPress={() => void refetch()}
+        />
       </Screen>
     );
   }
@@ -83,17 +152,17 @@ export default function BillingHistoryScreen() {
 
         <SelectField
           label={t("billing.from")}
-          value=""
+          value={fromDate}
           placeholder={t("billing.date-placeholder")}
           icon="calendar-outline"
-          onPress={() => toast.info(t("common.coming-soon"))}
+          onPress={() => setActiveRange("from")}
         />
         <SelectField
           label={t("billing.to")}
-          value=""
+          value={toDate}
           placeholder={t("billing.date-placeholder")}
           icon="calendar-outline"
-          onPress={() => toast.info(t("common.coming-soon"))}
+          onPress={() => setActiveRange("to")}
         />
       </Card>
 
@@ -104,15 +173,13 @@ export default function BillingHistoryScreen() {
         })}
       </AppText>
 
-      {rows.map((row) => {
-        const paid = row.status === "Paid";
-        return (
-          <Pressable
-            key={row.id}
-            onPress={() => toast.info(t("common.coming-soon"))}
-            style={({ pressed }) => [pressed && styles.pressed]}
-          >
-            <Card style={styles.row}>
+      {rows.length === 0 ? (
+        <AppText style={styles.empty}>{t("billing.empty")}</AppText>
+      ) : (
+        rows.map((row) => {
+          const paid = row.status === "Paid";
+          return (
+            <Card key={row.id} style={styles.row}>
               <View style={styles.rowLeft}>
                 <AppText style={styles.amount}>{row.amount}</AppText>
                 <AppText style={styles.date}>{row.date}</AppText>
@@ -134,9 +201,21 @@ export default function BillingHistoryScreen() {
                 />
               </View>
             </Card>
-          </Pressable>
-        );
-      })}
+          );
+        })
+      )}
+
+      <DatePickerModal
+        visible={activeRange !== null}
+        initialDate={parseSafetyDueDate(rangeValue) ?? new Date()}
+        onClose={() => setActiveRange(null)}
+        onConfirm={(date) => {
+          const value = formatSafetyDueDate(date);
+          if (activeRange === "from") setFromDate(value);
+          if (activeRange === "to") setToDate(value);
+          setActiveRange(null);
+        }}
+      />
     </Screen>
   );
 }
@@ -210,6 +289,11 @@ function getStyles(colors: ThemeColors) {
       fontSize: 13,
       fontWeight: "700",
     },
-    pressed: { opacity: 0.96 },
+    empty: {
+      color: colors.muted,
+      textAlign: "center",
+      marginVertical: 24,
+      fontSize: 14,
+    },
   });
 }

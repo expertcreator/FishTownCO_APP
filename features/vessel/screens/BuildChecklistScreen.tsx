@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { DEMO_BUILD_CHECKLIST } from "@/features/vessel/data/demoChecklist";
+import { mapAuthError } from "@/features/auth/utils/mapAuthError";
+import { BUILD_CHECKLIST_ITEMS } from "@/features/vessel/data/demoChecklist";
 import { useVesselProfile } from "@/features/vessel/hooks/useVesselProfile";
+import { saveVesselChecklist } from "@/features/vessel/services/saveVesselChecklist";
 import {
   AppText,
   BackHeader,
@@ -12,6 +14,7 @@ import {
   PrimaryButton,
   Screen,
   StickyFormFooter,
+  useToast,
 } from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
@@ -19,22 +22,42 @@ import { useTranslation } from "@/ui/translations";
 /**
  * Build Checklist screen matching prototype screen 9
  * (https://fishtownco.itoasis.co/).
+ * Persists selected item ids on the vessel profile, then opens Subscription.
  * @returns Checklist builder UI
  */
 export default function BuildChecklistScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
+  const toast = useToast();
   const { data: vessel } = useVesselProfile();
   const allIds = useMemo(
-    () => DEMO_BUILD_CHECKLIST.map((item) => item.id),
+    () => BUILD_CHECKLIST_ITEMS.map((item) => item.id),
     []
   );
   const [checked, setChecked] = useState<Record<string, boolean>>(() =>
     Object.fromEntries(allIds.map((id) => [id, true]))
   );
+  const [hydrated, setHydrated] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-  const selectedCount = Object.values(checked).filter(Boolean).length;
+  useEffect(() => {
+    if (!vessel || hydrated) return;
+    if (vessel.checklistIds.length > 0) {
+      setChecked(
+        Object.fromEntries(
+          allIds.map((id) => [id, vessel.checklistIds.includes(id)])
+        )
+      );
+    }
+    setHydrated(true);
+  }, [vessel, hydrated, allIds]);
+
+  const selectedIds = useMemo(
+    () => allIds.filter((id) => checked[id]),
+    [allIds, checked]
+  );
+  const selectedCount = selectedIds.length;
   const vesselLabel = vessel?.name?.trim()
     ? t("setup.checklist-vessel-sub", {
         name: vessel.name,
@@ -42,6 +65,32 @@ export default function BuildChecklistScreen() {
         type: vessel.type || "—",
       })
     : t("setup.checklist-subtitle");
+
+  /**
+   * Saves selected checklist ids to Firestore, then opens Subscription.
+   * @returns Promise that resolves when navigation starts or a toast is shown
+   */
+  const onBuildVessel = async () => {
+    if (isSubmitting) return;
+    if (selectedCount === 0) {
+      toast.error(t("setup.checklist-required"));
+      return;
+    }
+    setIsSubmitting(true);
+    try {
+      await saveVesselChecklist(selectedIds);
+      toast.success(t("setup.checklist-saved"));
+      router.push("/subscription");
+    } catch (error) {
+      console.error("[BuildChecklistScreen] save failed", error);
+      if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
+        toast.error(t("vessel.sign-in-required"));
+      } else {
+        toast.error(mapAuthError(error, t));
+      }
+      setIsSubmitting(false);
+    }
+  };
 
   return (
     <Screen
@@ -57,7 +106,7 @@ export default function BuildChecklistScreen() {
         contentContainerStyle={styles.scrollContent}
         keyboardDismissMode="on-drag"
       >
-        {DEMO_BUILD_CHECKLIST.map((item) => {
+        {BUILD_CHECKLIST_ITEMS.map((item) => {
           const on = Boolean(checked[item.id]);
           return (
             <Pressable
@@ -89,7 +138,8 @@ export default function BuildChecklistScreen() {
         <PrimaryButton
           label={t("setup.build-vessel", { count: selectedCount })}
           icon="arrow-forward"
-          onPress={() => router.push("/subscription")}
+          loading={isSubmitting}
+          onPress={() => void onBuildVessel()}
         />
       </StickyFormFooter>
     </Screen>

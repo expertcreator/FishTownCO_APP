@@ -40,15 +40,26 @@ export async function updateCrewMember(
     name: input.name,
   });
 
-  const certificates = input.certificates.map((cert, index) => ({
-    id: cert.id?.trim() || `cert-${Date.now()}-${index}`,
-    type: cert.type.trim(),
-    title: (cert.title?.trim() || cert.type).trim(),
-    issueDate: cert.issueDate?.trim() || null,
-    expiryDate: cert.expiryDate.trim(),
-    expiryDateIso: cert.expiryDateIso,
-    hasAttachment: Boolean(cert.hasAttachment),
-  }));
+  const certificates = input.certificates.map((cert, index) => {
+    const hasLocal = Boolean(cert.localUri?.trim());
+    const hasRemote = Boolean(cert.downloadURL?.trim());
+    return {
+      id: cert.id?.trim() || `cert-${Date.now()}-${index}`,
+      type: cert.type.trim(),
+      title: (cert.title?.trim() || cert.type).trim(),
+      issueDate: cert.issueDate?.trim() || null,
+      expiryDate: cert.expiryDate.trim(),
+      expiryDateIso: cert.expiryDateIso,
+      hasAttachment: Boolean(cert.hasAttachment || hasLocal || hasRemote),
+      localUri: cert.localUri?.trim() || null,
+      downloadURL: cert.downloadURL?.trim() || null,
+      thumbURL: cert.thumbURL?.trim() || null,
+      storagePath: cert.storagePath?.trim() || null,
+      mediaStatus:
+        cert.mediaStatus ??
+        (hasLocal ? "pending" : hasRemote ? "ready" : "none"),
+    };
+  });
 
   const primaryExpiryIso =
     certificates

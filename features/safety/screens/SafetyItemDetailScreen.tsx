@@ -3,17 +3,23 @@ import * as Clipboard from "expo-clipboard";
 import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
+import { useState } from "react";
 import {
   ActivityIndicator,
   Pressable,
   StyleSheet,
   View,
 } from "react-native";
+import { mapAuthError } from "@/features/auth/utils/mapAuthError";
 import type { StatusTone } from "@/features/common/data/demo";
 import { pickDisplayMediaUri } from "@/features/common/media/mediaStatus";
 import { fetchSafetyItem } from "@/features/safety/services/fetchSafetyItem";
 import { getSafetyCategoryIcon } from "@/features/safety/services/mapSafetyItemDoc";
-import { parseSafetyDueDate } from "@/features/safety/utils/formatSafetyDueDate";
+import { markSafetyItemServiced } from "@/features/safety/services/markSafetyItemServiced";
+import {
+  formatSafetyDueDateLong,
+  parseSafetyDueDate,
+} from "@/features/safety/utils/formatSafetyDueDate";
 import {
   daysUntilDue,
   getComplianceProgress,
@@ -43,8 +49,9 @@ export default function SafetyItemDetailScreen() {
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const itemId = typeof id === "string" ? id : "";
+  const [isServicing, setIsServicing] = useState(false);
 
-  const { data: item, isLoading, isError } = useQuery({
+  const { data: item, isLoading, isError, refetch } = useQuery({
     queryKey: ["safety", "item", itemId],
     enabled: Boolean(itemId),
     queryFn: () => fetchSafetyItem(itemId),
@@ -101,6 +108,33 @@ export default function SafetyItemDetailScreen() {
       toast.success(t("safety.serial-copied"));
     } catch {
       toast.error(t("safety.serial-copy-failed"));
+    }
+  };
+
+  /**
+   * Marks the item as serviced and advances the next due date.
+   * @returns Promise that resolves when the update finishes or a toast is shown
+   */
+  const onMarkServiced = async () => {
+    if (isServicing) return;
+    setIsServicing(true);
+    try {
+      const result = await markSafetyItemServiced(item.id);
+      await refetch();
+      toast.success(
+        t("safety.mark-serviced-success", {
+          date: formatSafetyDueDateLong(new Date(result.nextDueDateIso)),
+        })
+      );
+    } catch (error) {
+      console.error("[SafetyItemDetailScreen] mark serviced failed", error);
+      if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
+        toast.error(t("safety.sign-in-required"));
+      } else {
+        toast.error(mapAuthError(error, t));
+      }
+    } finally {
+      setIsServicing(false);
     }
   };
 
@@ -393,7 +427,8 @@ export default function SafetyItemDetailScreen() {
       <PrimaryButton
         label={t("safety.mark-serviced")}
         icon="checkmark-circle-outline"
-        onPress={() => toast.info(t("common.coming-soon"))}
+        loading={isServicing}
+        onPress={() => void onMarkServiced()}
         style={styles.servicedBtn}
       />
     </Screen>

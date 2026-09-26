@@ -91,7 +91,16 @@ export function mapCrewCertificate(
     expiresIso: expiryDate ? expiryDate.toISOString() : null,
     issueDate: raw.issueDate ? String(raw.issueDate) : undefined,
     tone: resolvedTone,
-    hasAttachment: Boolean(raw.hasAttachment),
+    hasAttachment: Boolean(
+      raw.hasAttachment || raw.downloadURL || raw.localUri || raw.thumbURL
+    ),
+    localUri: raw.localUri ? String(raw.localUri) : null,
+    downloadURL: raw.downloadURL ? String(raw.downloadURL) : null,
+    thumbURL: raw.thumbURL ? String(raw.thumbURL) : null,
+    storagePath: raw.storagePath ? String(raw.storagePath) : null,
+    mediaStatus:
+      (raw.mediaStatus as CrewCertificate["mediaStatus"]) ??
+      (raw.downloadURL ? "ready" : raw.localUri ? "pending" : "none"),
   };
 }
 

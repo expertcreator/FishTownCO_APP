@@ -1,5 +1,6 @@
 /**
  * Build-checklist item matching prototype screen 9.
+ * Static catalog (not user-generated demo data).
  */
 export type ChecklistItem = {
   id: string;
@@ -8,9 +9,9 @@ export type ChecklistItem = {
 };
 
 /**
- * Demo build checklist matching https://fishtownco.itoasis.co/ screen 9.
+ * Statutory build checklist catalog from https://fishtownco.itoasis.co/ screen 9.
  */
-export const DEMO_BUILD_CHECKLIST: ChecklistItem[] = [
+export const BUILD_CHECKLIST_ITEMS: ChecklistItem[] = [
   {
     id: "liferaft",
     title: "SOLAS A / ISO 9650 Liferaft & Hydrostatic Release",
@@ -97,3 +98,6 @@ export const DEMO_BUILD_CHECKLIST: ChecklistItem[] = [
     standard: "ILO Work in Fishing (C188)",
   },
 ];
+
+/** @deprecated Use BUILD_CHECKLIST_ITEMS */
+export const DEMO_BUILD_CHECKLIST = BUILD_CHECKLIST_ITEMS;

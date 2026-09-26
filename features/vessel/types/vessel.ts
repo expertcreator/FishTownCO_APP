@@ -16,6 +16,8 @@ export type VesselProfile = {
   skipper: string;
   engineHours: string;
   nextServiceIn: string;
+  /** Selected build-checklist item ids from prototype screen 9. */
+  checklistIds: string[];
 };
 
 /**

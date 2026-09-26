@@ -13,6 +13,11 @@ export type CrewCertificate = {
   type?: string;
   issueDate?: string;
   expiresIso?: string | null;
+  localUri?: string | null;
+  downloadURL?: string | null;
+  thumbURL?: string | null;
+  storagePath?: string | null;
+  mediaStatus?: MediaStatus;
 };
 
 /**

@@ -1,10 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback } from "react";
+import { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Linking,
+  Modal,
   Pressable,
   StyleSheet,
   View,
@@ -12,6 +13,7 @@ import {
 import type { StatusTone } from "@/features/common/data/demo";
 import { pickDisplayMediaUri } from "@/features/common/media/mediaStatus";
 import { useCrewMember } from "@/features/crew/hooks/useCrewMember";
+import type { CrewCertificate } from "@/features/crew/types/crew";
 import { getCrewInitials } from "@/features/crew/types/crew";
 import { getCrewStatusLabel } from "@/features/crew/utils/crewStatus";
 import { useVesselProfile } from "@/features/vessel/hooks/useVesselProfile";
@@ -39,6 +41,7 @@ export default function CrewDetailScreen() {
   const toast = useToast();
   const { id } = useLocalSearchParams<{ id: string }>();
   const memberId = typeof id === "string" ? id : "";
+  const [viewingCert, setViewingCert] = useState<CrewCertificate | null>(null);
   const {
     data: member,
     isLoading,
@@ -147,10 +150,25 @@ export default function CrewDetailScreen() {
           member.certificates.map((cert, index) => {
             const toneStyle = getToneStyle(colors, cert.tone);
             const expired = cert.tone === "overdue";
+            const certUri = pickDisplayMediaUri({
+              thumbURL: cert.thumbURL,
+              downloadURL: cert.downloadURL,
+              localUri: cert.localUri,
+            });
             return (
               <Pressable
                 key={cert.id}
-                onPress={() => toast.info(t("common.coming-soon"))}
+                onPress={() => {
+                  if (certUri) {
+                    setViewingCert(cert);
+                    return;
+                  }
+                  toast.info(t("crew.no-cert-file"));
+                }}
+                accessibilityRole="button"
+                accessibilityLabel={t("crew.view-certificate", {
+                  title: cert.title,
+                })}
                 style={[
                   styles.certRow,
                   index < member.certificates.length - 1 && styles.certBorder,
@@ -159,7 +177,7 @@ export default function CrewDetailScreen() {
                 <View style={styles.certBody}>
                   <View style={styles.certTitleRow}>
                     <AppText style={styles.certTitle}>{cert.title}</AppText>
-                    {cert.hasAttachment ? (
+                    {cert.hasAttachment || certUri ? (
                       <Ionicons
                         name="attach-outline"
                         size={16}
@@ -199,6 +217,11 @@ export default function CrewDetailScreen() {
                     {getCrewStatusLabel(cert.tone)}
                   </AppText>
                 </View>
+                <Ionicons
+                  name="chevron-forward"
+                  size={18}
+                  color={colors.muted}
+                />
               </Pressable>
             );
           })
@@ -209,7 +232,11 @@ export default function CrewDetailScreen() {
         label={t("crew.edit-member")}
         icon="create-outline"
         onPress={() => router.push(`/crew/edit/${member.id}`)}
-        style={styles.editBtn}
+      />
+
+      <CertificateViewerModal
+        cert={viewingCert}
+        onClose={() => setViewingCert(null)}
       />
     </Screen>
   );
@@ -220,6 +247,70 @@ type ToneStyle = {
   pillText: string;
   pillBorder: string;
 };
+
+type CertificateViewerModalProps = {
+  cert: CrewCertificate | null;
+  onClose: () => void;
+};
+
+/**
+ * Full-screen image viewer for a crew certificate attachment.
+ * @param props - Modal props
+ * @param props.cert - Certificate to preview, or null when closed
+ * @param props.onClose - Dismiss handler
+ * @returns Certificate viewer modal
+ */
+function CertificateViewerModal({
+  cert,
+  onClose,
+}: CertificateViewerModalProps) {
+  const colors = useColors();
+  const styles = getStyles(colors);
+  const { t } = useTranslation();
+  const uri = cert
+    ? pickDisplayMediaUri({
+        thumbURL: null,
+        downloadURL: cert.downloadURL,
+        localUri: cert.localUri || cert.thumbURL,
+      })
+    : null;
+
+  return (
+    <Modal
+      visible={Boolean(cert && uri)}
+      transparent
+      animationType="fade"
+      onRequestClose={onClose}
+    >
+      <View style={styles.viewerBackdrop}>
+        <View style={styles.viewerHeader}>
+          <AppText style={styles.viewerTitle} numberOfLines={1}>
+            {cert?.title ?? t("crew.certificate")}
+          </AppText>
+          <Pressable onPress={onClose} hitSlop={10}>
+            <Ionicons name="close" size={24} color={colors.onInverse} />
+          </Pressable>
+        </View>
+        {uri ? (
+          <Image
+            source={{ uri }}
+            style={styles.viewerImage}
+            contentFit="contain"
+            cachePolicy="memory-disk"
+          />
+        ) : null}
+        {uri && uri.startsWith("http") ? (
+          <PrimaryButton
+            label={t("crew.open-cert-external")}
+            icon="open-outline"
+            onPress={() => void Linking.openURL(uri)}
+            style={styles.viewerOpenBtn}
+          />
+        ) : null}
+      </View>
+    </Modal>
+  );
+}
 
 /**
  * Resolves certificate pill colors for a status tone.
@@ -390,6 +481,34 @@ function getStyles(colors: ThemeColors) {
     editBtn: {
       borderRadius: 16,
       minHeight: 56,
+    },
+    viewerBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.92)",
+      paddingTop: 56,
+      paddingHorizontal: 16,
+      paddingBottom: 24,
+    },
+    viewerHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "space-between",
+      gap: 12,
+      marginBottom: 16,
+    },
+    viewerTitle: {
+      flex: 1,
+      color: colors.onInverse,
+      fontSize: 16,
+      fontWeight: "700",
+    },
+    viewerImage: {
+      flex: 1,
+      width: "100%",
+      borderRadius: 12,
+    },
+    viewerOpenBtn: {
+      marginTop: 16,
     },
   });
 }

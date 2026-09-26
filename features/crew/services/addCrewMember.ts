@@ -10,6 +10,8 @@ import {
 } from "@/features/common/firebase";
 import { CREW_MEMBERS_QUERY_KEY } from "@/features/crew/hooks/useCrewMembers";
 
+import type { MediaStatus } from "@/features/common/media/mediaStatus";
+
 export type CrewCertificateInput = {
   id?: string;
   type: string;
@@ -18,6 +20,11 @@ export type CrewCertificateInput = {
   expiryDate: string;
   expiryDateIso: string;
   hasAttachment?: boolean;
+  localUri?: string | null;
+  downloadURL?: string | null;
+  thumbURL?: string | null;
+  storagePath?: string | null;
+  mediaStatus?: MediaStatus;
 };
 
 export type AddCrewMemberInput = {
@@ -57,15 +64,26 @@ export async function addCrewMember(
   );
   const consolePath = `users/${user.uid}/crew`;
 
-  const certificates = input.certificates.map((cert, index) => ({
-    id: cert.id?.trim() || `cert-${Date.now()}-${index}`,
-    type: cert.type.trim(),
-    title: (cert.title?.trim() || cert.type).trim(),
-    issueDate: cert.issueDate?.trim() || null,
-    expiryDate: cert.expiryDate.trim(),
-    expiryDateIso: cert.expiryDateIso,
-    hasAttachment: Boolean(cert.hasAttachment),
-  }));
+  const certificates = input.certificates.map((cert, index) => {
+    const hasLocal = Boolean(cert.localUri?.trim());
+    const hasRemote = Boolean(cert.downloadURL?.trim());
+    return {
+      id: cert.id?.trim() || `cert-${Date.now()}-${index}`,
+      type: cert.type.trim(),
+      title: (cert.title?.trim() || cert.type).trim(),
+      issueDate: cert.issueDate?.trim() || null,
+      expiryDate: cert.expiryDate.trim(),
+      expiryDateIso: cert.expiryDateIso,
+      hasAttachment: Boolean(cert.hasAttachment || hasLocal || hasRemote),
+      localUri: cert.localUri?.trim() || null,
+      downloadURL: cert.downloadURL?.trim() || null,
+      thumbURL: cert.thumbURL?.trim() || null,
+      storagePath: cert.storagePath?.trim() || null,
+      mediaStatus:
+        cert.mediaStatus ??
+        (hasLocal ? "pending" : hasRemote ? "ready" : "none"),
+    };
+  });
 
   const primaryExpiryIso =
     certificates

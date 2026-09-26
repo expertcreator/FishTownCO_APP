@@ -107,7 +107,9 @@
     "continue-subscription": "Continue to Subscription",
     "checklist-vessel-sub": "Tailored statutory safety schedule for {{name}} ({{length}} • {{type}}).",
     "checklist-standard": "Standard: {{standard}}",
-    "build-vessel": "Build My Vessel ({{count}} Items)"
+    "build-vessel": "Build My Vessel ({{count}} Items)",
+    "checklist-saved": "Checklist saved",
+    "checklist-required": "Select at least one checklist item."
   },
   "subscription": {
     "title": "SUBSCRIPTION",
@@ -122,7 +124,9 @@
     "perk-2": "• Due-date reminders at 90 / 60 / 30 / 7 days",
     "perk-3": "• Crew roster & inspection-ready share pack",
     "start": "Start Subscription",
-    "skip": "Skip for now"
+    "skip": "Skip for now",
+    "start-success": "Subscription started",
+    "sign-in-required": "Please log in to start a subscription."
   },
   "home": {
     "title": "Home",
@@ -227,7 +231,8 @@
     "item-missing": "This safety item was not found.",
     "add-success": "Safety item saved",
     "sign-in-required": "Please log in to save safety items.",
-    "file-on-file": "On file"
+    "file-on-file": "On file",
+    "mark-serviced-success": "Marked as serviced. Next due {{date}}."
   },
   "vessel": {
     "title": "My Vessel",
@@ -368,7 +373,12 @@
     "edit-title": "EDIT CREW",
     "update-member": "Update Crew Member",
     "vessel-fallback": "Your vessel",
-    "no-certificates": "No certificates on file yet."
+    "no-certificates": "No certificates on file yet.",
+    "cert-file-added": "Certificate file selected",
+    "remove-cert-file": "Remove certificate file",
+    "no-cert-file": "No certificate file uploaded yet.",
+    "view-certificate": "View certificate for {{title}}",
+    "open-cert-external": "Open full image"
   },
   "billing": {
     "title": "BILLING HISTORY",
@@ -385,7 +395,9 @@
     "plan-name": "Vessel Companion - Annual",
     "renews": "Renews 12 Jan 2027",
     "manage": "Manage plan",
-    "history": "Payment history"
+    "history": "Payment history",
+    "empty": "No payments yet. Start a subscription to see history here.",
+    "load-failed": "Could not load billing history. Try again."
   },
   "common": {
     "continue": "Continue",

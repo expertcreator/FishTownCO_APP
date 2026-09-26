@@ -41,6 +41,9 @@ export function mapVesselProfile(
     skipper: String(data.skipper ?? "").trim(),
     engineHours: String(data.engineHours ?? "").trim(),
     nextServiceIn: String(data.nextServiceIn ?? "").trim(),
+    checklistIds: Array.isArray(data.checklistIds)
+      ? data.checklistIds.map((id) => String(id)).filter(Boolean)
+      : [],
   };
 }
 
