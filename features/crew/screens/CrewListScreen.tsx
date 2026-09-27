@@ -1,13 +1,13 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
-import { useInitialSkeleton } from "@/features/common/hooks/useInitialSkeleton";
+import { StyleSheet, View } from "react-native";
 import { CrewMemberCard } from "@/features/crew/components/CrewMemberCard";
 import { useCrewMembers } from "@/features/crew/hooks/useCrewMembers";
 import {
   AppText,
   BackHeader,
   CrewListSkeleton,
+  EmptyState,
   FloatingActionButton,
   KeyboardAwareContainer,
   PrimaryButton,
@@ -26,14 +26,13 @@ export default function CrewListScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
-  const skeletonPending = useInitialSkeleton();
-  const {
-    data: members = [],
-    isLoading,
-    isFetching,
-    refetch,
-    isError,
-  } = useCrewMembers();
+  const { data, isLoading, isFetching, refetch, isError } = useCrewMembers();
+  const members = data ?? [];
+  /**
+   * `data` is `undefined` until the first fetch settles.
+   * Do not default that to `[]` for UI gates — that flashed EmptyState before the skeleton.
+   */
+  const isInitialLoad = data === undefined;
 
   useFocusEffect(
     useCallback(() => {
@@ -41,19 +40,23 @@ export default function CrewListScreen() {
     }, [refetch])
   );
 
-  if ((isLoading || skeletonPending) && members.length === 0 && !isError) {
+  if (isInitialLoad && (isLoading || isFetching || !isError)) {
     return (
       <Screen scroll={false} edges={["top", "left", "right"]}>
-        <BackHeader title={t("crew.title")} />
+        <View style={styles.headerPad}>
+          <BackHeader title={t("crew.title")} />
+        </View>
         <CrewListSkeleton />
       </Screen>
     );
   }
 
-  if (isError) {
+  if (isInitialLoad && isError) {
     return (
       <Screen edges={["top", "left", "right"]}>
-        <BackHeader title={t("crew.title")} />
+        <View style={styles.headerPad}>
+          <BackHeader title={t("crew.title")} />
+        </View>
         <AppText style={styles.empty}>{t("crew.load-failed")}</AppText>
         <PrimaryButton
           label={t("common.try-again")}
@@ -69,22 +72,27 @@ export default function CrewListScreen() {
       edges={["top", "left", "right"]}
       contentStyle={styles.screen}
     >
-      <BackHeader
-        title={t("crew.title")}
-        subtitle={t("crew.registered-aboard", { count: members.length })}
-      />
+      <View style={styles.headerPad}>
+        <BackHeader
+          title={t("crew.title")}
+          subtitle={t("crew.registered-aboard", { count: members.length })}
+        />
+      </View>
 
       <KeyboardAwareContainer
         useSafeAreaWrapper={false}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
       >
         {members.length === 0 ? (
-          <View style={styles.emptyWrap}>
-            <AppText style={styles.emptyTitle}>{t("crew.empty-title")}</AppText>
-            <AppText style={styles.emptyBody}>{t("crew.empty-body")}</AppText>
-          </View>
+          <EmptyState
+            icon="people-outline"
+            title={t("crew.empty-title")}
+            body={t("crew.empty-body")}
+            actionLabel={t("crew.add-member")}
+            actionIcon="person-add-outline"
+            onActionPress={() => router.push("/crew/add")}
+          />
         ) : (
           <View style={styles.list}>
             {members.map((member) => (
@@ -92,17 +100,10 @@ export default function CrewListScreen() {
             ))}
           </View>
         )}
-        {isFetching && members.length > 0 ? (
-          <ActivityIndicator
-            color={colors.teal}
-            style={styles.refresh}
-            size="small"
-          />
-        ) : null}
       </KeyboardAwareContainer>
 
       <FloatingActionButton
-        label={t("crew.add-member")}
+        accessibilityLabel={t("crew.add-member")}
         icon="person-add-outline"
         onPress={() => router.push("/crew/add")}
       />
@@ -119,10 +120,16 @@ function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: {
       flex: 1,
+      paddingHorizontal: 0,
       paddingBottom: 0,
+    },
+    headerPad: {
+      paddingHorizontal: 16,
+      paddingTop: 4,
     },
     scroll: { flex: 1 },
     scrollContent: {
+      paddingHorizontal: 16,
       paddingBottom: 100,
     },
     list: {
@@ -132,23 +139,7 @@ function getStyles(colors: ThemeColors) {
       color: colors.muted,
       textAlign: "center",
       marginVertical: 24,
+      paddingHorizontal: 16,
     },
-    emptyWrap: {
-      paddingVertical: 40,
-      alignItems: "center",
-      gap: 8,
-    },
-    emptyTitle: {
-      color: colors.navy,
-      fontSize: 18,
-      fontWeight: "800",
-      textAlign: "center",
-    },
-    emptyBody: {
-      color: colors.muted,
-      fontSize: 14,
-      textAlign: "center",
-    },
-    refresh: { marginTop: 8 },
   });
 }

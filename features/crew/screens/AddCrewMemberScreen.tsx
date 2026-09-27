@@ -1,8 +1,8 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
-import { useForm } from "react-hook-form";
-import { ActivityIndicator, Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { useForm, type Resolver } from "react-hook-form";
+import { Pressable, StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
 import type { MediaStatus } from "@/features/common/media/mediaStatus";
 import {
@@ -26,13 +26,16 @@ import {
 import {
   AppText,
   BackHeader,
+  CountryPickerSheet,
   DatePickerModal,
   Field,
   FormCard,
   FormField,
+  FormScreenSkeleton,
   ImagePickerSheet,
   KeyboardAwareContainer,
   OptionsPickerModal,
+  PhoneInput,
   PrimaryButton,
   Screen,
   SectionHeader,
@@ -42,6 +45,9 @@ import {
   useToast,
   type PickerOption,
 } from "@/ui/components";
+import type { Country, CountryCode } from "@/ui/types/country";
+import { DEFAULT_PHONE_COUNTRY } from "@/ui/types/country";
+import { formatPhoneE164, splitStoredPhone } from "@/ui/utils/phone";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 
@@ -103,6 +109,7 @@ function toFormDate(value?: string | null): string {
 
 /**
  * Shared Add / Edit Crew Member form matching prototype screen 20.
+ * Mobile number uses the customer-app country-code + national layout.
  * Supports multiple certificates and certificate image uploads.
  * @returns Crew member form screen
  */
@@ -111,7 +118,6 @@ export default function AddCrewMemberScreen() {
   const styles = getStyles(colors);
   const { t } = useTranslation();
   const toast = useToast();
-  const schema = useMemo(() => createAddCrewSchema(t), [t]);
   const { id } = useLocalSearchParams<{ id?: string }>();
   const memberId = typeof id === "string" && id.length > 0 ? id : "";
   const isEdit = Boolean(memberId);
@@ -119,6 +125,7 @@ export default function AddCrewMemberScreen() {
   const {
     data: member,
     isLoading: isMemberLoading,
+    isFetching: isMemberFetching,
     isError: isMemberError,
   } = useCrewMember(memberId);
 
@@ -132,13 +139,32 @@ export default function AddCrewMemberScreen() {
   const [dateTarget, setDateTarget] = useState<DateTarget | null>(null);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [countryCode, setCountryCode] =
+    useState<CountryCode>(DEFAULT_PHONE_COUNTRY);
+  const [selectedCountry, setSelectedCountry] = useState<Country | null>(null);
+  const [countryPickerOpen, setCountryPickerOpen] = useState(false);
 
-  const { control, handleSubmit, reset, formState } = useForm<AddCrewSchema>({
-    resolver: zodResolver(schema),
-    defaultValues: EMPTY_FORM,
-    mode: "onChange",
-    reValidateMode: "onChange",
-  });
+  const resolver = useCallback<Resolver<AddCrewSchema>>(
+    async (values, context, options) =>
+      zodResolver(createAddCrewSchema(t, countryCode))(
+        values,
+        context,
+        options
+      ),
+    [t, countryCode]
+  );
+
+  const { control, handleSubmit, reset, formState, trigger } =
+    useForm<AddCrewSchema>({
+      resolver,
+      defaultValues: EMPTY_FORM,
+      mode: "onChange",
+      reValidateMode: "onChange",
+    });
+
+  useEffect(() => {
+    void trigger("phone");
+  }, [countryCode, trigger]);
 
   useFocusEffect(
     useCallback(() => {
@@ -147,16 +173,21 @@ export default function AddCrewMemberScreen() {
       setPhotoUri(null);
       setCertificates([createEmptyCertDraft()]);
       setSubmitAttempted(false);
+      setCountryCode(DEFAULT_PHONE_COUNTRY);
+      setSelectedCountry(null);
       setHydrated(true);
     }, [isEdit, reset])
   );
 
   useEffect(() => {
     if (!isEdit || !member || hydrated) return;
+    const phoneParts = splitStoredPhone(member.phone);
+    setCountryCode(phoneParts.countryCode);
+    setSelectedCountry(null);
     reset({
       name: member.name,
       role: member.role,
-      phone: member.phone,
+      phone: phoneParts.nationalNumber,
       email: member.email,
     });
     setPhotoUri(
@@ -272,7 +303,7 @@ export default function AddCrewMemberScreen() {
       const payload = {
         name: values.name,
         role: values.role,
-        phone: values.phone,
+        phone: formatPhoneE164(values.phone, countryCode),
         email: values.email,
         certificates: certPayload,
         localUri: newLocalPhoto,
@@ -316,11 +347,18 @@ export default function AddCrewMemberScreen() {
     }
   };
 
-  if (isEdit && (isMemberLoading || (!hydrated && !isMemberError))) {
+  if (
+    (!isEdit && !hydrated) ||
+    (isEdit &&
+      (!member || !hydrated) &&
+      (isMemberLoading || isMemberFetching || !isMemberError))
+  ) {
     return (
       <Screen scroll={false} edges={["top", "left", "right"]}>
-        <BackHeader title={t("crew.edit-title")} />
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
+        <BackHeader
+          title={isEdit ? t("crew.edit-title") : t("crew.add-title")}
+        />
+        <FormScreenSkeleton />
       </Screen>
     );
   }
@@ -352,7 +390,6 @@ export default function AddCrewMemberScreen() {
         useSafeAreaWrapper={false}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
       >
         <FormCard style={styles.card}>
           <FormField
@@ -367,12 +404,14 @@ export default function AddCrewMemberScreen() {
             label={t("crew.role")}
             placeholder={t("crew.role-placeholder")}
           />
-          <FormField
+          <PhoneInput
             control={control}
             name="phone"
             label={t("crew.mobile")}
-            keyboardType="phone-pad"
             placeholder={t("crew.mobile-placeholder")}
+            countryCode={countryCode}
+            selectedCountry={selectedCountry}
+            onCountryCodePress={() => setCountryPickerOpen(true)}
           />
           <FormField
             control={control}
@@ -386,21 +425,15 @@ export default function AddCrewMemberScreen() {
           <View style={styles.fieldBlock}>
             <AppText style={styles.fieldLabel}>{t("crew.photo")}</AppText>
             <UploadDropzone
-              title={photoUri ? t("crew.photo-added") : t("crew.add-photo")}
+              variant="photo"
+              title={t("crew.add-photo")}
               hint={t("crew.photo-hint")}
               icon="camera-outline"
+              imageUri={photoUri}
               onPress={() => setMediaTarget({ kind: "photo" })}
+              onRemove={photoUri ? () => setPhotoUri(null) : undefined}
+              removeAccessibilityLabel={t("crew.remove-photo")}
             />
-            {photoUri ? (
-              <Pressable
-                onPress={() => setPhotoUri(null)}
-                style={styles.removePhoto}
-              >
-                <AppText style={styles.removePhotoText}>
-                  {t("crew.remove-photo")}
-                </AppText>
-              </Pressable>
-            ) : null}
           </View>
         </FormCard>
 
@@ -462,33 +495,29 @@ export default function AddCrewMemberScreen() {
                   }
                 />
                 <UploadDropzone
+                  variant="document"
                   title={
                     certUri ? t("crew.cert-file-added") : t("crew.upload-cert")
                   }
-                  hint={t("crew.upload-cert-hint")}
                   icon="document-text-outline"
+                  imageUri={certUri}
                   onPress={() =>
                     setMediaTarget({ kind: "certificate", certKey: cert.key })
                   }
+                  onRemove={
+                    certUri
+                      ? () =>
+                          patchCert(cert.key, {
+                            localUri: null,
+                            downloadURL: null,
+                            thumbURL: null,
+                            storagePath: null,
+                            mediaStatus: "none",
+                          })
+                      : undefined
+                  }
+                  removeAccessibilityLabel={t("crew.remove-cert-file")}
                 />
-                {certUri ? (
-                  <Pressable
-                    onPress={() =>
-                      patchCert(cert.key, {
-                        localUri: null,
-                        downloadURL: null,
-                        thumbURL: null,
-                        storagePath: null,
-                        mediaStatus: "none",
-                      })
-                    }
-                    style={styles.removePhoto}
-                  >
-                    <AppText style={styles.removePhotoText}>
-                      {t("crew.remove-cert-file")}
-                    </AppText>
-                  </Pressable>
-                ) : null}
               </View>
             );
           })}
@@ -557,6 +586,16 @@ export default function AddCrewMemberScreen() {
           setDateTarget(null);
         }}
       />
+
+      <CountryPickerSheet
+        visible={countryPickerOpen}
+        selectedCountryCode={countryCode}
+        onClose={() => setCountryPickerOpen(false)}
+        onSelectCountry={(country) => {
+          setSelectedCountry(country);
+          setCountryCode(country.cca2);
+        }}
+      />
     </Screen>
   );
 }
@@ -591,12 +630,6 @@ function getStyles(colors: ThemeColors) {
       fontSize: 11,
       fontWeight: "800",
       letterSpacing: 0.6,
-    },
-    removePhoto: { alignSelf: "flex-start" },
-    removePhotoText: {
-      color: colors.statusOverdueText,
-      fontSize: 13,
-      fontWeight: "700",
     },
     certBlock: {
       gap: 12,

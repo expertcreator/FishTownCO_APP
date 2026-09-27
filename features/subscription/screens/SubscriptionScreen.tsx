@@ -8,7 +8,9 @@ import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppText,
   BackHeader,
+  CARD_RIPPLE,
   Card,
+  getPressedItemStyle,
   PrimaryButton,
   Screen,
   useToast,
@@ -40,7 +42,8 @@ export default function SubscriptionScreen() {
   const styles = getStyles(colors);
   const { t } = useTranslation();
   const toast = useToast();
-  const [plan, setPlan] = useState<BillingPlanId>("annual");
+  /** Prototype defaults to the Skipper Plan (£10/month). */
+  const [plan, setPlan] = useState<BillingPlanId>("monthly");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
@@ -75,7 +78,14 @@ export default function SubscriptionScreen() {
       {PLANS.map((p) => {
         const selected = plan === p.id;
         return (
-          <Pressable key={p.id} onPress={() => setPlan(p.id)}>
+          <Pressable
+            key={p.id}
+            onPress={() => setPlan(p.id)}
+            android_ripple={CARD_RIPPLE}
+            style={({ pressed }) => [getPressedItemStyle(pressed)]}
+            accessibilityRole="radio"
+            accessibilityState={{ selected }}
+          >
             <Card style={[styles.plan, selected && styles.planOn]}>
               <View style={styles.planTop}>
                 <AppText style={styles.planTitle}>{t(p.titleKey)}</AppText>
@@ -95,13 +105,19 @@ export default function SubscriptionScreen() {
       </Card>
 
       <PrimaryButton
-        label={t("subscription.start")}
+        label={
+          plan === "monthly"
+            ? t("subscription.start-monthly")
+            : t("subscription.start")
+        }
         loading={isSubmitting}
         onPress={() => void onStart()}
       />
       <Pressable
         disabled={isSubmitting}
         onPress={() => router.replace("/(tabs)/home")}
+        style={({ pressed }) => [getPressedItemStyle(pressed)]}
+        accessibilityRole="button"
       >
         <AppText style={styles.skip}>{t("subscription.skip")}</AppText>
       </Pressable>

@@ -3,7 +3,6 @@ import { Image } from "expo-image";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
 import { useCallback, useState } from "react";
 import {
-  ActivityIndicator,
   Linking,
   Modal,
   Pressable,
@@ -21,6 +20,7 @@ import {
   AppText,
   BackHeader,
   Card,
+  CrewDetailSkeleton,
   PrimaryButton,
   Screen,
   useToast,
@@ -45,6 +45,7 @@ export default function CrewDetailScreen() {
   const {
     data: member,
     isLoading,
+    isFetching,
     isError,
     refetch,
   } = useCrewMember(memberId);
@@ -64,16 +65,16 @@ export default function CrewDetailScreen() {
     }, [refetch])
   );
 
-  if (isLoading && !member) {
+  if (!member && (isLoading || isFetching || !isError)) {
     return (
       <Screen>
         <BackHeader title={t("crew.detail-title")} />
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
+        <CrewDetailSkeleton />
       </Screen>
     );
   }
 
-  if (isError || !member) {
+  if (!member) {
     return (
       <Screen>
         <BackHeader title={t("crew.detail-title")} />
@@ -391,7 +392,7 @@ function getStyles(colors: ThemeColors) {
       letterSpacing: 0.4,
     },
     role: {
-      color: colors.navy,
+      color: colors.muted,
       fontSize: 14,
       fontWeight: "600",
     },

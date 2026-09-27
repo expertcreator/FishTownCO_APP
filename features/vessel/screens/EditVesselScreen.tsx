@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { ActivityIndicator, StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
 import { useVesselProfile } from "@/features/vessel/hooks/useVesselProfile";
 import { saveVesselProfile } from "@/features/vessel/services/saveVesselProfile";
@@ -15,6 +15,7 @@ import {
   BackHeader,
   FormCard,
   FormField,
+  FormScreenSkeleton,
   KeyboardAwareContainer,
   PrimaryButton,
   Screen,
@@ -25,9 +26,9 @@ import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 
 /**
- * Edit Vessel screen matching prototype screen 18
- * (https://fishtownco.itoasis.co/).
+ * Edit Vessel screen matching https://fishtownco.itoasis.co/ (prototype screen 18).
  * Loads and saves `users/{uid}/vessel/profile` in Firestore.
+ * Dismisses the keyboard when the form is scrolled (same as Add Safety Item).
  * @returns Edit vessel form
  */
 export default function EditVesselScreen() {
@@ -36,9 +37,17 @@ export default function EditVesselScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
   const schema = useMemo(() => createEditVesselSchema(t), [t]);
-  const { data: vessel, isLoading, refetch } = useVesselProfile();
+  const {
+    data: vessel,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useVesselProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  /** `undefined` until first fetch settles — never paint an empty form early. */
+  const isInitialLoad = vessel === undefined;
 
   const { control, handleSubmit, reset } = useForm<EditVesselSchema>({
     resolver: zodResolver(schema),
@@ -59,12 +68,12 @@ export default function EditVesselScreen() {
   useFocusEffect(
     useCallback(() => {
       void refetch();
-      setHydrated(false);
     }, [refetch])
   );
 
   useEffect(() => {
-    if (isLoading || hydrated) return;
+    // Wait for query settle (`null` = no profile, object = existing).
+    if (vessel === undefined || hydrated) return;
     if (vessel) {
       reset({
         name: vessel.name,
@@ -78,10 +87,11 @@ export default function EditVesselScreen() {
       });
     }
     setHydrated(true);
-  }, [vessel, isLoading, hydrated, reset]);
+  }, [vessel, hydrated, reset]);
 
   /**
    * Saves the vessel profile to Firestore and returns to My Vessel.
+   * Preserves photo / next-service / checklist fields not shown on this form.
    * @param values - Validated form values
    * @returns Promise that resolves when navigation starts or a toast is shown
    */
@@ -104,6 +114,8 @@ export default function EditVesselScreen() {
         yearBuilt: vessel?.yearBuilt,
         skipper: vessel?.skipper,
         nextServiceIn: vessel?.nextServiceIn,
+        photoUrl: vessel?.photoUrl,
+        photoThumbUrl: vessel?.photoThumbUrl,
       });
       toast.success(t("vessel.save-success"));
       router.back();
@@ -118,11 +130,45 @@ export default function EditVesselScreen() {
     }
   };
 
-  if (isLoading || !hydrated) {
+  if (
+    isInitialLoad &&
+    (isLoading || isFetching || !isError)
+  ) {
     return (
       <Screen>
-        <BackHeader title={t("vessel.edit-title")} />
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
+        <View style={styles.headerPad}>
+          <BackHeader title={t("vessel.edit-title")} />
+        </View>
+        <FormScreenSkeleton />
+      </Screen>
+    );
+  }
+
+  if (isInitialLoad && isError) {
+    return (
+      <Screen>
+        <View style={styles.headerPad}>
+          <BackHeader title={t("vessel.edit-title")} />
+        </View>
+        <AppText style={styles.hint}>{t("vessel.load-failed")}</AppText>
+        <PrimaryButton
+          label={t("common.try-again")}
+          onPress={() => {
+            setHydrated(false);
+            void refetch();
+          }}
+        />
+      </Screen>
+    );
+  }
+
+  if (!hydrated) {
+    return (
+      <Screen>
+        <View style={styles.headerPad}>
+          <BackHeader title={t("vessel.edit-title")} />
+        </View>
+        <FormScreenSkeleton />
       </Screen>
     );
   }
@@ -133,12 +179,14 @@ export default function EditVesselScreen() {
       edges={["top", "left", "right"]}
       contentStyle={styles.screen}
     >
-      <BackHeader title={t("vessel.edit-title")} />
+      <View style={styles.headerPad}>
+        <BackHeader title={t("vessel.edit-title")} />
+      </View>
+
       <KeyboardAwareContainer
         useSafeAreaWrapper={false}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
       >
         <FormCard style={styles.card}>
           <FormField
@@ -202,6 +250,7 @@ export default function EditVesselScreen() {
         <PrimaryButton
           label={t("vessel.save-profile")}
           icon="save-outline"
+          iconPosition="leading"
           loading={isSubmitting}
           onPress={handleSubmit(onSubmit)}
         />
@@ -211,7 +260,7 @@ export default function EditVesselScreen() {
 }
 
 /**
- * Builds edit-vessel styles for the active palette.
+ * Builds edit-vessel styles matching the prototype header and form card.
  * @param colors - Active theme colors
  * @returns Style sheet
  */
@@ -222,16 +271,21 @@ function getStyles(colors: ThemeColors) {
       paddingHorizontal: 0,
       paddingBottom: 0,
     },
+    headerPad: {
+      paddingHorizontal: 16,
+      paddingTop: 4,
+    },
     scroll: { flex: 1 },
     scrollContent: {
-      paddingHorizontal: 20,
+      paddingHorizontal: 16,
       paddingBottom: 24,
     },
     card: {
       marginBottom: 12,
       gap: 14,
+      padding: 20,
+      borderRadius: 16,
     },
-    loader: { marginTop: 40 },
     hint: {
       color: colors.muted,
       fontSize: 13,

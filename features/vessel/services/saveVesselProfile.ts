@@ -53,6 +53,8 @@ export async function saveVesselProfile(
       skipper: input.skipper?.trim() || null,
       engineHours: input.engineHours?.trim() || null,
       nextServiceIn: input.nextServiceIn?.trim() || null,
+      photoUrl: input.photoUrl?.trim() || null,
+      photoThumbUrl: input.photoThumbUrl?.trim() || null,
       updatedAt: serverTimestamp(),
     };
     if (!existing.exists()) {

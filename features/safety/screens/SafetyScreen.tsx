@@ -1,14 +1,19 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { SafetyItemCard } from "@/features/safety/components/SafetyItemCard";
+import {
+  AddSafetyFab,
+  SafetyEmptyState,
+  SafetyItemCard,
+} from "@/features/safety/components";
 import { useSafetyItems } from "@/features/safety/hooks/useSafetyItems";
 import type { SafetyFilterKey } from "@/features/safety/types/safetyItem";
 import { useVesselProfile } from "@/features/vessel/hooks/useVesselProfile";
 import {
   AppHeader,
   AppText,
-  FloatingActionButton,
+  CARD_RIPPLE,
+  getPressedItemStyle,
   KeyboardAwareContainer,
   SafetyListSkeleton,
   Screen,
@@ -17,9 +22,8 @@ import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 
 /**
- * Safety Inventory tab matching prototype screen 12
- * (https://fishtownco.itoasis.co/).
- * Loads items from Firestore and computes Overdue / Due soon / OK.
+ * Safety Inventory tab matching https://fishtownco.itoasis.co/ (screen 12).
+ * Loads live items from Firestore and computes Overdue / Due soon / OK.
  * @returns Safety tab UI
  */
 export default function SafetyScreen() {
@@ -27,9 +31,12 @@ export default function SafetyScreen() {
   const styles = getStyles(colors);
   const { t } = useTranslation();
   const [filter, setFilter] = useState<SafetyFilterKey>("all");
-  const { data = [], isLoading, isFetching, refetch, isError } = useSafetyItems();
+  const { data, isLoading, isFetching, refetch, isError } = useSafetyItems();
+  const itemsData = data ?? [];
+  /** `undefined` until first fetch settles — never treat that as an empty list. */
+  const isInitialLoad = data === undefined;
   const { data: vessel } = useVesselProfile();
-  const vesselName = vessel?.name?.trim() || t("home.vessel-fallback");
+  const vesselName = vessel?.name?.trim() || t("app.name");
 
   useFocusEffect(
     useCallback(() => {
@@ -38,18 +45,23 @@ export default function SafetyScreen() {
   );
 
   const counts = useMemo(() => {
-    const ok = data.filter((i) => i.tone === "ok").length;
-    const due = data.filter((i) => i.tone === "due").length;
-    const overdue = data.filter((i) => i.tone === "overdue").length;
-    return { ok, due, overdue, all: data.length };
-  }, [data]);
+    const ok = itemsData.filter((i) => i.tone === "ok").length;
+    const due = itemsData.filter((i) => i.tone === "due").length;
+    const overdue = itemsData.filter((i) => i.tone === "overdue").length;
+    return { ok, due, overdue, all: itemsData.length };
+  }, [itemsData]);
 
   const items = useMemo(() => {
-    if (filter === "all") return data;
-    return data.filter((i) => i.tone === filter);
-  }, [data, filter]);
+    if (filter === "all") return itemsData;
+    return itemsData.filter((i) => i.tone === filter);
+  }, [itemsData, filter]);
 
-  if (isLoading && data.length === 0) {
+  const trackedCopy =
+    counts.all === 1
+      ? t("safety.tracked-on-one", { count: counts.all, vessel: vesselName })
+      : t("safety.tracked-on", { count: counts.all, vessel: vesselName });
+
+  if (isInitialLoad && (isLoading || isFetching || !isError)) {
     return (
       <Screen
         scroll={false}
@@ -76,23 +88,17 @@ export default function SafetyScreen() {
         useSafeAreaWrapper={false}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
       >
         <AppText style={styles.title}>{t("tabs.safety").toUpperCase()}</AppText>
-        <AppText style={styles.sub}>
-          {t("safety.tracked-on", {
-            count: counts.all,
-            vessel: vesselName,
-          })}
-        </AppText>
+        <AppText style={styles.sub}>{trackedCopy}</AppText>
 
         <View style={styles.filters}>
           {(
             [
               ["all", t("home.filter-all"), counts.all],
-              ["overdue", t("home.filter-overdue"), counts.overdue],
-              ["due", t("home.filter-due"), counts.due],
               ["ok", t("home.filter-ok"), counts.ok],
+              ["due", t("home.filter-due"), counts.due],
+              ["overdue", t("home.filter-overdue"), counts.overdue],
             ] as const
           ).map(([key, label, count]) => {
             const on = filter === key;
@@ -100,7 +106,12 @@ export default function SafetyScreen() {
               <Pressable
                 key={key}
                 onPress={() => setFilter(key)}
-                style={[styles.chip, on && styles.chipOn]}
+                android_ripple={CARD_RIPPLE}
+                style={({ pressed }) => [
+                  styles.chip,
+                  on && styles.chipOn,
+                  getPressedItemStyle(pressed),
+                ]}
               >
                 <AppText style={[styles.chipText, on && styles.chipTextOn]}>
                   {label} ({count})
@@ -114,31 +125,34 @@ export default function SafetyScreen() {
           <AppText style={styles.empty}>{t("safety.load-failed")}</AppText>
         ) : null}
 
-        {!isError && items.length === 0 ? (
-          <AppText style={styles.empty}>
-            {filter === "all" ? t("safety.empty") : t("safety.empty-filter")}
-          </AppText>
+        {!isError && !isInitialLoad && items.length === 0 ? (
+          <SafetyEmptyState
+            variant={counts.all === 0 ? "inventory" : "filter"}
+          />
         ) : null}
 
-        {items.map((item) => (
-          <SafetyItemCard key={item.id} item={item} />
-        ))}
+        <View style={styles.list}>
+          {items.map((item) => (
+            <SafetyItemCard
+              key={item.id}
+              item={item}
+              showReplacement="action"
+            />
+          ))}
+        </View>
 
-        {isFetching && data.length > 0 ? (
+        {isFetching && itemsData.length > 0 ? (
           <AppText style={styles.refreshing}>{t("common.loading")}</AppText>
         ) : null}
       </KeyboardAwareContainer>
 
-      <FloatingActionButton
-        label={t("safety.add-title")}
-        onPress={() => router.push("/safety/add")}
-      />
+      <AddSafetyFab />
     </Screen>
   );
 }
 
 /**
- * Builds Safety screen styles for the active palette.
+ * Builds Safety screen styles matching the prototype inventory layout.
  * @param colors - Active theme colors
  * @returns Style sheet
  */
@@ -155,7 +169,7 @@ function getStyles(colors: ThemeColors) {
     },
     title: {
       color: colors.navy,
-      fontSize: 30,
+      fontSize: 28,
       fontWeight: "800",
       letterSpacing: 0.8,
     },
@@ -175,6 +189,7 @@ function getStyles(colors: ThemeColors) {
     chipOn: { backgroundColor: colors.inverse },
     chipText: { color: colors.navy, fontSize: 12, fontWeight: "700" },
     chipTextOn: { color: colors.onInverse },
+    list: { gap: 14 },
     empty: {
       color: colors.muted,
       textAlign: "center",

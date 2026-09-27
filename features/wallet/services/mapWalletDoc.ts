@@ -16,6 +16,54 @@ import {
 } from "@/features/wallet/types/wallet";
 
 /**
+ * Builds the wallet card detail line (`Label: value`) without duplicates.
+ * Prototype seed data sometimes sets the same string for subCategory and ref.
+ * @param input - Raw detail fields from Firestore
+ * @param input.reference - Reference / ref number
+ * @param input.subCategory - Optional label before the colon
+ * @param input.docType - Fallback when no reference exists
+ * @param input.title - Document title (used to avoid repeating the title)
+ * @returns Detail line for the card footer, or empty when there is nothing useful
+ */
+export function buildWalletDetailLine(input: {
+  reference: string;
+  subCategory?: string;
+  docType: string;
+  title: string;
+}): string {
+  const reference = input.reference.trim();
+  const subCategory = (input.subCategory ?? "").trim();
+  const docType = input.docType.trim();
+  const title = input.title.trim();
+
+  if (reference) {
+    if (subCategory) {
+      if (subCategory.toLowerCase() === reference.toLowerCase()) {
+        return reference;
+      }
+      return `${subCategory}: ${reference}`;
+    }
+    if (reference.toLowerCase().startsWith("policy")) {
+      return reference;
+    }
+    if (title && reference.toLowerCase() === title.toLowerCase()) {
+      return "";
+    }
+    return `Ref: ${reference}`;
+  }
+
+  if (subCategory && subCategory.toLowerCase() !== title.toLowerCase()) {
+    return subCategory;
+  }
+
+  if (docType && docType.toLowerCase() !== title.toLowerCase()) {
+    return docType;
+  }
+
+  return "";
+}
+
+/**
  * Maps a Firestore wallet document into the list / card model.
  * @param docSnap - Firestore document snapshot
  * @returns Wallet document for UI
@@ -25,7 +73,10 @@ export function mapWalletDoc(docSnap: QueryDocumentSnapshot): WalletDoc {
   const docType = String(data.docType ?? data.category ?? "Other").trim();
   const category = mapDocTypeToCategory(docType);
   const title = String(data.title ?? "").trim() || "Untitled document";
-  const reference = String(data.reference ?? data.code ?? "").trim();
+  const reference = String(data.reference ?? data.refNumber ?? data.code ?? "").trim();
+  const subCategory = String(
+    data.subCategory ?? data.detailLabel ?? ""
+  ).trim();
   const expiryRaw = String(
     data.expiryDateIso ?? data.expiryDate ?? data.expires ?? ""
   );
@@ -46,11 +97,12 @@ export function mapWalletDoc(docSnap: QueryDocumentSnapshot): WalletDoc {
   const expiresMeta =
     days !== null && days >= 0 && days <= 90 ? `${days} days` : undefined;
 
-  const detail = reference
-    ? reference.toLowerCase().startsWith("policy")
-      ? reference
-      : `Ref: ${reference}`
-    : docType;
+  const detail = buildWalletDetailLine({
+    reference,
+    subCategory,
+    docType,
+    title,
+  });
 
   return {
     id: docSnap.id,

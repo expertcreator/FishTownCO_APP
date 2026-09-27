@@ -18,6 +18,8 @@ export type SafetyItem = {
   lastServiceDate?: string;
   expiryDate?: string;
   notes?: string;
+  latitude?: number | null;
+  longitude?: number | null;
   photoLocalUri?: string | null;
   photoDownloadURL?: string | null;
   photoThumbURL?: string | null;

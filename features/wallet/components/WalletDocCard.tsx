@@ -1,10 +1,16 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
+import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { StatusTone } from "@/features/common/data/demo";
 import { getCrewStatusIcon } from "@/features/crew/utils/crewStatus";
 import type { WalletDoc } from "@/features/wallet/types/wallet";
-import { AppText, Card, useToast } from "@/ui/components";
+import {
+  AppText,
+  CARD_RIPPLE,
+  Card,
+  getPressedItemStyle,
+} from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 
@@ -22,9 +28,7 @@ type WalletDocCardProps = {
 export function WalletDocCard({ doc }: WalletDocCardProps) {
   const colors = useColors();
   const styles = getStyles(colors);
-  const { t } = useTranslation();
-  const toast = useToast();
-  const toneStyle = getToneStyle(colors, doc.tone);
+  const { t } = useTranslation();  const toneStyle = getToneStyle(colors, doc.tone);
   const statusIcon = getCrewStatusIcon(doc.tone);
   const categoryIcon = getCategoryIcon(doc.category);
   const imageUri = doc.thumbURL || doc.downloadURL || doc.localUri || null;
@@ -38,8 +42,11 @@ export function WalletDocCard({ doc }: WalletDocCardProps) {
 
   return (
     <Pressable
-      onPress={() => toast.info(t("common.coming-soon"))}
-      style={({ pressed }) => [pressed && styles.pressed]}
+      onPress={() => router.push(`/wallet/${doc.id}`)}
+      android_ripple={CARD_RIPPLE}
+      style={({ pressed }) => [getPressedItemStyle(pressed)]}
+      accessibilityRole="button"
+      accessibilityLabel={doc.title}
     >
       <Card style={styles.card}>
         <View style={styles.topRow}>
@@ -259,6 +266,5 @@ function getStyles(colors: ThemeColors) {
       fontSize: 12,
       fontWeight: "600",
     },
-    pressed: { opacity: 0.96 },
   });
 }

@@ -1,9 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { useFocusEffect } from "expo-router";
+import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useBillingPayments } from "@/features/billing/hooks/useBillingPayments";
-import { useInitialSkeleton } from "@/features/common/hooks/useInitialSkeleton";
+import type { BillingRow } from "@/features/billing/types/billing";
 import {
   formatSafetyDueDate,
   parseSafetyDueDate,
@@ -12,11 +12,15 @@ import {
   AppText,
   BackHeader,
   BillingListSkeleton,
+  CARD_RIPPLE,
   Card,
   DatePickerModal,
+  EmptyState,
+  getPressedItemStyle,
   PrimaryButton,
   Screen,
   SelectField,
+  useToast,
 } from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
@@ -27,25 +31,23 @@ type RangeField = "from" | "to";
 /**
  * Billing History screen matching prototype screen 22
  * (https://fishtownco.itoasis.co/).
- * Loads payments from Firestore `users/{uid}/billing`.
+ * Loads live payments from Firestore `users/{uid}/billing`.
  * @returns Billing history UI
  */
 export default function BillingHistoryScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
-  const skeletonPending = useInitialSkeleton();
+  const toast = useToast();
   const [filter, setFilter] = useState<DateFilter>("all");
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [activeRange, setActiveRange] = useState<RangeField | null>(null);
 
-  const {
-    data: payments = [],
-    isLoading,
-    isError,
-    refetch,
-  } = useBillingPayments();
+  const { data, isLoading, isFetching, isError, refetch } = useBillingPayments();
+  const payments = data ?? [];
+  /** `undefined` until first fetch settles — never treat that as an empty list. */
+  const isInitialLoad = data === undefined;
 
   useFocusEffect(
     useCallback(() => {
@@ -94,15 +96,33 @@ export default function BillingHistoryScreen() {
   const rangeValue =
     activeRange === "from" ? fromDate : activeRange === "to" ? toDate : "";
 
-  if ((isLoading || skeletonPending) && payments.length === 0 && !isError) {
+  /**
+   * Receipt detail is not in the prototype yet — show the same coming-soon cue.
+   * @param row - Payment row that was pressed
+   * @returns void
+   */
+  const onPaymentPress = (row: BillingRow) => {
+    toast.info(
+      t("billing.receipt-coming-soon", {
+        amount: row.amount,
+        date: row.date,
+      })
+    );
+  };
+
+  if (isInitialLoad && (isLoading || isFetching || !isError)) {
     return (
       <Screen>
+        <BackHeader
+          title={t("billing.title")}
+          subtitle={t("billing.subtitle")}
+        />
         <BillingListSkeleton />
       </Screen>
     );
   }
 
-  if (isError) {
+  if (isInitialLoad && isError) {
     return (
       <Screen>
         <BackHeader
@@ -140,7 +160,12 @@ export default function BillingHistoryScreen() {
               <Pressable
                 key={key}
                 onPress={() => setFilter(key)}
-                style={[styles.chip, on && styles.chipOn]}
+                android_ripple={CARD_RIPPLE}
+                style={({ pressed }) => [
+                  styles.chip,
+                  on && styles.chipOn,
+                  getPressedItemStyle(pressed),
+                ]}
               >
                 <AppText style={[styles.chipText, on && styles.chipTextOn]}>
                   {label}
@@ -150,20 +175,26 @@ export default function BillingHistoryScreen() {
           })}
         </View>
 
-        <SelectField
-          label={t("billing.from")}
-          value={fromDate}
-          placeholder={t("billing.date-placeholder")}
-          icon="calendar-outline"
-          onPress={() => setActiveRange("from")}
-        />
-        <SelectField
-          label={t("billing.to")}
-          value={toDate}
-          placeholder={t("billing.date-placeholder")}
-          icon="calendar-outline"
-          onPress={() => setActiveRange("to")}
-        />
+        <View style={styles.dateRow}>
+          <View style={styles.dateField}>
+            <SelectField
+              label={t("billing.from")}
+              value={fromDate}
+              placeholder={t("billing.date-placeholder")}
+              trailingIcon="calendar-outline"
+              onPress={() => setActiveRange("from")}
+            />
+          </View>
+          <View style={styles.dateField}>
+            <SelectField
+              label={t("billing.to")}
+              value={toDate}
+              placeholder={t("billing.date-placeholder")}
+              trailingIcon="calendar-outline"
+              onPress={() => setActiveRange("to")}
+            />
+          </View>
+        </View>
       </Card>
 
       <AppText style={styles.summary}>
@@ -174,33 +205,53 @@ export default function BillingHistoryScreen() {
       </AppText>
 
       {rows.length === 0 ? (
-        <AppText style={styles.empty}>{t("billing.empty")}</AppText>
+        <EmptyState
+          icon="receipt-outline"
+          title={t("billing.empty-title")}
+          body={t("billing.empty")}
+          actionLabel={t("billing.start-subscription")}
+          actionIcon="arrow-forward"
+          onActionPress={() => router.push("/subscription")}
+        />
       ) : (
         rows.map((row) => {
           const paid = row.status === "Paid";
           return (
-            <Card key={row.id} style={styles.row}>
-              <View style={styles.rowLeft}>
-                <AppText style={styles.amount}>{row.amount}</AppText>
-                <AppText style={styles.date}>{row.date}</AppText>
-                <AppText style={styles.method}>{row.method}</AppText>
-              </View>
-              <View style={styles.rowRight}>
-                <AppText
-                  style={[
-                    styles.status,
-                    { color: paid ? colors.teal : colors.statusOverdueText },
-                  ]}
-                >
-                  {row.status}
-                </AppText>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={colors.muted}
-                />
-              </View>
-            </Card>
+            <Pressable
+              key={row.id}
+              onPress={() => onPaymentPress(row)}
+              android_ripple={CARD_RIPPLE}
+              style={({ pressed }) => [getPressedItemStyle(pressed)]}
+              accessibilityRole="button"
+              accessibilityLabel={`${row.amount}, ${row.status}`}
+            >
+              <Card style={styles.row}>
+                <View style={styles.rowLeft}>
+                  <AppText style={styles.amount}>{row.amount}</AppText>
+                  <AppText style={styles.date}>{row.date}</AppText>
+                  <AppText style={styles.method}>{row.method}</AppText>
+                </View>
+                <View style={styles.rowRight}>
+                  <AppText
+                    style={[
+                      styles.status,
+                      {
+                        color: paid
+                          ? colors.teal
+                          : colors.statusOverdueText,
+                      },
+                    ]}
+                  >
+                    {row.status}
+                  </AppText>
+                  <Ionicons
+                    name="chevron-forward"
+                    size={18}
+                    color={colors.muted}
+                  />
+                </View>
+              </Card>
+            </Pressable>
           );
         })
       )}
@@ -221,7 +272,7 @@ export default function BillingHistoryScreen() {
 }
 
 /**
- * Builds billing-history styles for the active palette.
+ * Builds billing-history styles matching the prototype filter + payment cards.
  * @param colors - Active theme colors
  * @returns Style sheet
  */
@@ -237,11 +288,11 @@ function getStyles(colors: ThemeColors) {
       color: colors.teal,
       fontSize: 11,
       fontWeight: "800",
-      letterSpacing: 0.6,
+      letterSpacing: 1.8,
     },
     chips: {
       flexDirection: "row",
-      flexWrap: "wrap",
+      flexWrap: "nowrap",
       gap: 8,
     },
     chip: {
@@ -253,6 +304,15 @@ function getStyles(colors: ThemeColors) {
     chipOn: { backgroundColor: colors.inverse },
     chipText: { color: colors.navy, fontSize: 12, fontWeight: "700" },
     chipTextOn: { color: colors.onInverse },
+    dateRow: {
+      flexDirection: "row",
+      gap: 12,
+      marginTop: 4,
+    },
+    dateField: {
+      flex: 1,
+      minWidth: 0,
+    },
     summary: {
       color: colors.muted,
       fontSize: 13,
@@ -265,25 +325,28 @@ function getStyles(colors: ThemeColors) {
       gap: 12,
       marginBottom: 10,
       borderRadius: 16,
+      padding: 16,
     },
     rowLeft: { flex: 1, minWidth: 0, gap: 2 },
     amount: {
       color: colors.navy,
-      fontSize: 18,
+      fontSize: 16,
       fontWeight: "800",
     },
     date: {
-      color: colors.muted,
-      fontSize: 13,
+      color: "rgba(11, 42, 69, 0.6)",
+      fontSize: 12,
+      marginTop: 2,
     },
     method: {
-      color: colors.muted,
-      fontSize: 12,
+      color: "rgba(11, 42, 69, 0.45)",
+      fontSize: 11,
+      marginTop: 2,
     },
     rowRight: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 6,
+      gap: 4,
     },
     status: {
       fontSize: 13,

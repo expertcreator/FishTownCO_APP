@@ -1,6 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { useState } from "react";
 import {
+  ActivityIndicator,
   Pressable,
   StyleSheet,
   TextInput,
@@ -10,11 +11,26 @@ import {
 import { useColors, type ThemeColors } from "@/ui/theme";
 import AppText from "./Text";
 
+export type FieldTrailingAction = {
+  /** Ionicons glyph shown as the icon-only button. */
+  icon: keyof typeof Ionicons.glyphMap;
+  /** Accessibility label for the icon button. */
+  accessibilityLabel: string;
+  /** Press handler. */
+  onPress: () => void;
+  /** Shows a spinner instead of the icon. */
+  loading?: boolean;
+  /** Disables the action. */
+  disabled?: boolean;
+};
+
 type FieldProps = TextInputProps & {
   label: string;
   icon?: keyof typeof Ionicons.glyphMap;
   secureToggle?: boolean;
   error?: string;
+  /** Optional icon-only buttons rendered on the right of the input. */
+  trailingActions?: FieldTrailingAction[];
 };
 
 /**
@@ -24,6 +40,7 @@ type FieldProps = TextInputProps & {
  * @param props.icon - Optional leading Ionicons name
  * @param props.secureToggle - Show eye toggle for passwords
  * @param props.error - Validation message shown under the field
+ * @param props.trailingActions - Optional icon-only buttons on the right
  * @returns Field element
  */
 export function Field({
@@ -33,6 +50,7 @@ export function Field({
   secureTextEntry,
   style,
   error,
+  trailingActions,
   ...rest
 }: FieldProps) {
   const colors = useColors();
@@ -62,6 +80,30 @@ export function Field({
             />
           </Pressable>
         ) : null}
+        {trailingActions?.map((action) => {
+          const isDisabled = Boolean(action.disabled || action.loading);
+          return (
+            <Pressable
+              key={`${action.icon}-${action.accessibilityLabel}`}
+              onPress={action.onPress}
+              disabled={isDisabled}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={action.accessibilityLabel}
+              style={({ pressed }) => [
+                styles.trailingBtn,
+                pressed && !isDisabled && styles.trailingBtnPressed,
+                isDisabled && styles.trailingBtnDisabled,
+              ]}
+            >
+              {action.loading ? (
+                <ActivityIndicator size="small" color={colors.teal} />
+              ) : (
+                <Ionicons name={action.icon} size={22} color={colors.teal} />
+              )}
+            </Pressable>
+          );
+        })}
       </View>
       {error ? <AppText style={styles.error}>{error}</AppText> : null}
     </View>
@@ -88,10 +130,11 @@ function getStyles(colors: ThemeColors) {
       borderColor: colors.inputBorder,
       borderRadius: 12,
       backgroundColor: colors.card,
-      paddingHorizontal: 14,
+      paddingLeft: 14,
+      paddingRight: 8,
       flexDirection: "row",
       alignItems: "center",
-      gap: 10,
+      gap: 6,
     },
     icon: { marginTop: 1 },
     input: {
@@ -99,6 +142,21 @@ function getStyles(colors: ThemeColors) {
       color: colors.navy,
       fontSize: 15,
       paddingVertical: 12,
+      paddingRight: 4,
+    },
+    trailingBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    trailingBtnPressed: {
+      backgroundColor: colors.cardSoft,
+      opacity: 0.9,
+    },
+    trailingBtnDisabled: {
+      opacity: 0.45,
     },
     inputError: {
       borderColor: colors.statusOverdueText,
@@ -110,4 +168,3 @@ function getStyles(colors: ThemeColors) {
     },
   });
 }
-

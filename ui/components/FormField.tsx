@@ -6,7 +6,7 @@ import {
   type FieldValues,
 } from "react-hook-form";
 import type { TextInputProps } from "react-native";
-import { Field } from "./Field";
+import { Field, type FieldTrailingAction } from "./Field";
 
 type FormFieldProps<T extends FieldValues> = Omit<
   TextInputProps,
@@ -17,6 +17,7 @@ type FormFieldProps<T extends FieldValues> = Omit<
   label: string;
   icon?: keyof typeof Ionicons.glyphMap;
   secureToggle?: boolean;
+  trailingActions?: FieldTrailingAction[];
 };
 
 /**
@@ -27,6 +28,7 @@ type FormFieldProps<T extends FieldValues> = Omit<
  * @param props.label - Uppercase field label
  * @param props.icon - Optional leading icon
  * @param props.secureToggle - Show the password eye toggle
+ * @param props.trailingActions - Optional icon buttons on the right
  * @returns Controlled field with its validation error
  */
 export function FormField<T extends FieldValues>({
@@ -35,6 +37,7 @@ export function FormField<T extends FieldValues>({
   label,
   icon,
   secureToggle,
+  trailingActions,
   ...rest
 }: FormFieldProps<T>) {
   return (
@@ -47,6 +50,7 @@ export function FormField<T extends FieldValues>({
           label={label}
           icon={icon}
           secureToggle={secureToggle}
+          trailingActions={trailingActions}
           value={typeof value === "string" ? value : ""}
           onChangeText={onChange}
           onBlur={onBlur}

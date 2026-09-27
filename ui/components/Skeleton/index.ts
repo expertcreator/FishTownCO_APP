@@ -11,3 +11,12 @@ export {
   VesselScreenSkeleton,
   WalletListSkeleton,
 } from "./ListSkeletons";
+export {
+  AppBootSkeleton,
+  AuthFormSkeleton,
+  CrewDetailSkeleton,
+  FormScreenSkeleton,
+  ItemDetailSkeleton,
+  MapPickerSkeleton,
+  SubscriptionSkeleton,
+} from "./DetailSkeletons";

@@ -8,6 +8,7 @@ import {
   View,
 } from "react-native";
 import { useColors, type ThemeColors } from "@/ui/theme";
+import { CARD_RIPPLE, getPressedItemStyle } from "./pressableStyles";
 import AppText from "./Text";
 
 export type PickerOption = {
@@ -90,11 +91,11 @@ export function OptionsPickerModal({
                       onSelect(item);
                       onClose();
                     }}
-                    android_ripple={{ color: "rgba(13,44,65,0.08)" }}
+                    android_ripple={CARD_RIPPLE}
                     style={({ pressed }) => [
                       styles.row,
                       selected && styles.rowSelected,
-                      pressed && styles.pressed,
+                      getPressedItemStyle(pressed),
                     ]}
                   >
                     <AppText

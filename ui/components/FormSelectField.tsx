@@ -11,8 +11,10 @@ type FormSelectFieldProps<T extends FieldValues> = {
   control: Control<T>;
   name: FieldPath<T>;
   label: string;
+  labelHint?: string;
   placeholder: string;
   icon?: keyof typeof Ionicons.glyphMap;
+  trailingIcon?: keyof typeof Ionicons.glyphMap;
   loading?: boolean;
   onPress: () => void;
 };
@@ -23,8 +25,10 @@ type FormSelectFieldProps<T extends FieldValues> = {
  * @param props.control - Form control from `useForm`
  * @param props.name - Field name in the schema
  * @param props.label - Uppercase field label
+ * @param props.labelHint - Optional muted label suffix
  * @param props.placeholder - Placeholder when empty
  * @param props.icon - Optional leading icon
+ * @param props.trailingIcon - Optional trailing icon
  * @param props.loading - Busy state for the select row
  * @param props.onPress - Opens the picker
  * @returns Controlled select field with validation error
@@ -33,8 +37,10 @@ export function FormSelectField<T extends FieldValues>({
   control,
   name,
   label,
+  labelHint,
   placeholder,
   icon,
+  trailingIcon,
   loading,
   onPress,
 }: FormSelectFieldProps<T>) {
@@ -45,9 +51,11 @@ export function FormSelectField<T extends FieldValues>({
       render={({ field: { value }, fieldState }) => (
         <SelectField
           label={label}
+          labelHint={labelHint}
           value={typeof value === "string" ? value : ""}
           placeholder={placeholder}
           icon={icon}
+          trailingIcon={trailingIcon}
           loading={loading}
           error={fieldState.error?.message}
           onPress={onPress}

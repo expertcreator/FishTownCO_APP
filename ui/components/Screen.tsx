@@ -39,7 +39,6 @@ export function Screen({
           useSafeAreaWrapper={false}
           style={styles.flex}
           contentContainerStyle={[styles.content, contentStyle]}
-          keyboardDismissMode="on-drag"
         >
           {children}
         </KeyboardAwareContainer>

@@ -1,20 +1,23 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback } from "react";
-import {
-  ActivityIndicator,
-  Image,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Image, Pressable, StyleSheet, View } from "react-native";
+import { useCrewMembers } from "@/features/crew/hooks/useCrewMembers";
 import { useSafetyItems } from "@/features/safety/hooks/useSafetyItems";
 import { useVesselProfile } from "@/features/vessel/hooks/useVesselProfile";
 import { getVesselLengthLabel } from "@/features/vessel/types/vessel";
 import {
+  formatEngineHours,
+  formatNextServiceIn,
+  getVesselHeroSource,
+} from "@/features/vessel/utils/formatVesselDisplay";
+import {
   AppHeader,
   AppText,
+  CARD_RIPPLE,
   Card,
+  EmptyState,
+  getPressedItemStyle,
   PrimaryButton,
   Screen,
   VesselScreenSkeleton,
@@ -35,6 +38,7 @@ export default function VesselScreen() {
   const { t } = useTranslation();
   const toast = useToast();
   const { data: safetyItems = [] } = useSafetyItems();
+  const { data: crewMembers = [], refetch: refetchCrew } = useCrewMembers();
   const {
     data: vessel,
     isLoading,
@@ -43,14 +47,19 @@ export default function VesselScreen() {
     isError,
   } = useVesselProfile();
   const equipmentCount = safetyItems.length;
+  const crewCount = crewMembers.length;
+  const hasVessel = Boolean(vessel?.name);
+  /** `undefined` until first fetch settles — never flash EmptyState early. */
+  const isInitialLoad = vessel === undefined;
 
   useFocusEffect(
     useCallback(() => {
       void refetch();
-    }, [refetch])
+      void refetchCrew();
+    }, [refetch, refetchCrew])
   );
 
-  if (isLoading && !vessel) {
+  if (isInitialLoad && (isLoading || isFetching || !isError)) {
     return (
       <Screen edges={["top", "left", "right"]}>
         <AppHeader title={t("tabs.vessel")} />
@@ -59,7 +68,7 @@ export default function VesselScreen() {
     );
   }
 
-  if (isError) {
+  if (isInitialLoad && isError) {
     return (
       <Screen edges={["top", "left", "right"]}>
         <AppHeader title={t("tabs.vessel")} />
@@ -72,22 +81,18 @@ export default function VesselScreen() {
     );
   }
 
-  if (!vessel || !vessel.name) {
+  if (!hasVessel) {
     return (
       <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
         <AppHeader title={t("tabs.vessel")} />
-        <Card style={styles.emptyCard}>
-          <View style={styles.emptyIcon}>
-            <Ionicons name="boat-outline" size={32} color={colors.teal} />
-          </View>
-          <AppText style={styles.emptyTitle}>{t("vessel.empty-title")}</AppText>
-          <AppText style={styles.emptyBody}>{t("vessel.empty-body")}</AppText>
-          <PrimaryButton
-            label={t("vessel.edit-profile")}
-            icon="create-outline"
-            onPress={() => router.push("/vessel/edit")}
-          />
-        </Card>
+        <EmptyState
+          icon="boat-outline"
+          title={t("vessel.empty-title")}
+          body={t("vessel.empty-body")}
+          actionLabel={t("vessel.edit-profile")}
+          actionIcon="create-outline"
+          onActionPress={() => router.push("/vessel/edit")}
+        />
       </Screen>
     );
   }
@@ -97,8 +102,8 @@ export default function VesselScreen() {
   const maintenanceSub =
     vessel.engineHours || vessel.nextServiceIn
       ? t("vessel.maintenance-sub", {
-          hours: vessel.engineHours || "—",
-          next: vessel.nextServiceIn || "—",
+          hours: formatEngineHours(vessel.engineHours),
+          next: formatNextServiceIn(vessel.nextServiceIn),
         })
       : t("vessel.maintenance-sub-empty");
 
@@ -108,7 +113,7 @@ export default function VesselScreen() {
 
       <Card style={styles.heroCard}>
         <Image
-          source={require("@/assets/from-design/onboarding/01-central-log.jpg")}
+          source={getVesselHeroSource(vessel)}
           style={styles.heroImage}
           resizeMode="cover"
         />
@@ -142,14 +147,6 @@ export default function VesselScreen() {
         </View>
       </Card>
 
-      {isFetching ? (
-        <ActivityIndicator
-          color={colors.teal}
-          style={styles.refresh}
-          size="small"
-        />
-      ) : null}
-
       <View style={styles.menu}>
         <MenuRow
           icon="boat"
@@ -157,10 +154,10 @@ export default function VesselScreen() {
           iconColor={colors.navy}
           title={t("vessel.details")}
           subtitle={t("vessel.details-sub")}
-          onPress={() => router.push("/vessel/edit")}
+          onPress={() => toast.info(t("vessel.details-coming-soon"))}
         />
         <MenuRow
-          icon="compass"
+          icon="globe-outline"
           iconBg={colors.statusOkBg}
           iconColor={colors.teal}
           title={t("vessel.equipment")}
@@ -174,14 +171,19 @@ export default function VesselScreen() {
           iconColor={colors.orange}
           title={t("vessel.maintenance")}
           subtitle={maintenanceSub}
-          onPress={() => toast.info(t("common.coming-soon"))}
+          onPress={() => toast.info(t("vessel.maintenance-coming-soon"))}
         />
         <MenuRow
           icon="people"
           iconBg={colors.softTeal}
           iconColor={colors.navy}
           title={t("vessel.crew-title")}
-          subtitle={t("vessel.crew-sub")}
+          subtitle={
+            crewCount > 0
+              ? t("vessel.crew-sub-count", { count: crewCount })
+              : t("vessel.crew-sub")
+          }
+          showDot={crewCount > 0}
           onPress={() => router.push("/crew")}
         />
         <MenuRow
@@ -241,7 +243,10 @@ function MenuRow({
   return (
     <Pressable
       onPress={onPress}
-      style={({ pressed }) => [pressed && styles.pressed]}
+      android_ripple={CARD_RIPPLE}
+      style={({ pressed }) => [getPressedItemStyle(pressed)]}
+      accessibilityRole="button"
+      accessibilityLabel={title}
     >
       <Card style={styles.menuCard}>
         <View style={styles.menuLeft}>
@@ -278,32 +283,6 @@ function getStyles(colors: ThemeColors) {
       color: colors.muted,
       textAlign: "center",
       marginVertical: 24,
-    },
-    emptyCard: {
-      alignItems: "center",
-      gap: 12,
-      paddingVertical: 28,
-      marginTop: 12,
-    },
-    emptyIcon: {
-      width: 64,
-      height: 64,
-      borderRadius: 18,
-      backgroundColor: colors.softTeal,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    emptyTitle: {
-      color: colors.navy,
-      fontSize: 18,
-      fontWeight: "800",
-      textAlign: "center",
-    },
-    emptyBody: {
-      color: colors.muted,
-      fontSize: 14,
-      textAlign: "center",
-      marginBottom: 8,
     },
     heroCard: {
       padding: 0,
@@ -378,7 +357,6 @@ function getStyles(colors: ThemeColors) {
       fontSize: 14,
       fontWeight: "800",
     },
-    refresh: { marginBottom: 8 },
     menu: {
       gap: 10,
       marginBottom: 16,
@@ -440,6 +418,5 @@ function getStyles(colors: ThemeColors) {
       borderRadius: 16,
       minHeight: 56,
     },
-    pressed: { opacity: 0.94 },
   });
 }

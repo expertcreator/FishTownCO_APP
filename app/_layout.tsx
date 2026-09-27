@@ -2,7 +2,11 @@ import { BrandLogoWarmup } from "@/features/auth/components/BrandLogoWarmup/Bran
 import { configureGoogleSignIn } from "@/features/auth/utils/configureGoogleSignIn";
 import { queryClient } from "@/features/common/firebase";
 import { prefetchSafetyCategories } from "@/features/safety/services/prefetchSafetyCategories";
-import { SafeKeyboardProvider, ToastifyProvider } from "@/ui/components";
+import {
+  NetworkStatusProvider,
+  SafeKeyboardProvider,
+  ToastifyProvider,
+} from "@/ui/components";
 import { prefetchBrandLogos } from "@/features/auth/utils/prefetchBrandLogos";
 import { ThemeProvider, useColors, useTheme } from "@/ui/theme";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -85,9 +89,11 @@ function ThemedShell() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <BrandLogoWarmup />
-      <SafeKeyboardProvider>
-        <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
-      </SafeKeyboardProvider>
+      <NetworkStatusProvider>
+        <SafeKeyboardProvider>
+          <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
+        </SafeKeyboardProvider>
+      </NetworkStatusProvider>
       <ToastifyProvider />
     </View>
   );

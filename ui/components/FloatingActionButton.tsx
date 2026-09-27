@@ -1,31 +1,38 @@
-import { Ionicons } from "@expo/vector-icons";
+﻿import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import AppText from "./Text";
 
 type FloatingActionButtonProps = {
-  label: string;
+  /** Visible label. Omit or pass empty for an icon-only FAB. */
+  label?: string;
   onPress: () => void;
   icon?: keyof typeof Ionicons.glyphMap;
+  /** Accessibility label when visible text is hidden. */
+  accessibilityLabel?: string;
 };
 
 /**
  * Floating action button (FAB) pinned above the tab bar.
  * @param props - FAB props
- * @param props.label - Button label
+ * @param props.label - Optional visible label (hidden when empty)
  * @param props.onPress - Press handler
  * @param props.icon - Leading icon (defaults to add)
+ * @param props.accessibilityLabel - Screen-reader label when icon-only
  * @returns Floating action button element
  */
 export function FloatingActionButton({
   label,
   onPress,
   icon = "add",
+  accessibilityLabel,
 }: FloatingActionButtonProps) {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors);
+  const showLabel = Boolean(label?.trim());
+  const a11y = accessibilityLabel?.trim() || label?.trim() || "Add";
 
   return (
     <View
@@ -34,12 +41,16 @@ export function FloatingActionButton({
     >
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [styles.fab, pressed && styles.pressed]}
+        style={({ pressed }) => [
+          styles.fab,
+          !showLabel && styles.fabIconOnly,
+          pressed && styles.pressed,
+        ]}
         accessibilityRole="button"
-        accessibilityLabel={label}
+        accessibilityLabel={a11y}
       >
-        <Ionicons name={icon} size={20} color={colors.white} />
-        <AppText style={styles.label}>{label}</AppText>
+        <Ionicons name={icon} size={showLabel ? 20 : 28} color={colors.white} />
+        {showLabel ? <AppText style={styles.label}>{label}</AppText> : null}
       </Pressable>
     </View>
   );
@@ -56,7 +67,7 @@ function getStyles(colors: ThemeColors) {
       position: "absolute",
       left: 20,
       right: 20,
-      alignItems: "center",
+      alignItems: "flex-end",
       zIndex: 20,
     },
     fab: {
@@ -75,6 +86,11 @@ function getStyles(colors: ThemeColors) {
       elevation: 6,
       borderWidth: 1,
       borderColor: "rgba(255,255,255,0.2)",
+    },
+    fabIconOnly: {
+      width: 56,
+      paddingHorizontal: 0,
+      marginRight: 4,
     },
     label: {
       color: colors.white,

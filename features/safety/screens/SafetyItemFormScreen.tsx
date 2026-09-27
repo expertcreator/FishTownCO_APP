@@ -1,9 +1,9 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useForm } from "react-hook-form";
 import { useQuery } from "@tanstack/react-query";
-import { ActivityIndicator, StyleSheet, View } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
 import {
   isLocalMediaUri,
@@ -14,6 +14,7 @@ import { fetchSafetyItem } from "@/features/safety/services/fetchSafetyItem";
 import { getCurrentLocationLabel } from "@/features/safety/services/getCurrentLocationLabel";
 import { updateSafetyItem } from "@/features/safety/services/updateSafetyItem";
 import { uploadSafetyMediaInBackground } from "@/features/safety/services/uploadSafetyMediaInBackground";
+import { useLocationPickerStore } from "@/features/safety/store/locationPickerStore";
 import { useSafetyCategoriesStore } from "@/features/safety/store/safetyCategoriesStore";
 import {
   formatSafetyDueDate,
@@ -30,9 +31,9 @@ import {
   DatePickerModal,
   FormCard,
   FormField,
+  FormScreenSkeleton,
   FormSelectField,
   ImagePickerSheet,
-  InlineAction,
   KeyboardAwareContainer,
   OptionsPickerModal,
   PrimaryButton,
@@ -92,6 +93,7 @@ export default function SafetyItemFormScreen() {
   const {
     data: item,
     isLoading: isItemLoading,
+    isFetching: isItemFetching,
     isError: isItemError,
   } = useQuery({
     queryKey: ["safety", "item", itemId],
@@ -104,16 +106,17 @@ export default function SafetyItemFormScreen() {
   const [activeDateField, setActiveDateField] = useState<DateFieldKey | null>(
     null
   );
-  const [locationLoading, setLocationLoading] = useState(false);
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<MediaTarget | null>(null);
   const [certificateUri, setCertificateUri] = useState<string | null>(null);
   const [photoUri, setPhotoUri] = useState<string | null>(null);
+  const [locationLoading, setLocationLoading] = useState(false);
   const [coords, setCoords] = useState<{
     latitude: number;
     longitude: number;
   } | null>(null);
   const [hydrated, setHydrated] = useState(false);
+  const leftForMapRef = useRef(false);
 
   const { control, handleSubmit, setValue, watch, reset, formState } =
     useForm<AddSafetySchema>({
@@ -133,19 +136,43 @@ export default function SafetyItemFormScreen() {
       ? t("safety.form-error")
       : null;
 
+  useEffect(() => {
+    void loadCategories();
+  }, [loadCategories]);
+
   useFocusEffect(
     useCallback(() => {
+      const picked = useLocationPickerStore.getState().consumeResult();
+      if (picked) {
+        leftForMapRef.current = false;
+        setValue("locationAboard", picked.label, {
+          shouldValidate: true,
+          shouldDirty: true,
+        });
+        setCoords({
+          latitude: picked.latitude,
+          longitude: picked.longitude,
+        });
+        return;
+      }
+
+      // Returning from the map without confirming must keep the draft form.
+      if (leftForMapRef.current) {
+        leftForMapRef.current = false;
+        return;
+      }
+
       if (isEdit) return;
       reset(EMPTY_FORM);
-      setCoords(null);
       setIsSubmitting(false);
       setActiveDateField(null);
       setSubmitAttempted(false);
       setPickerTarget(null);
       setCertificateUri(null);
       setPhotoUri(null);
+      setCoords(null);
       setHydrated(false);
-    }, [isEdit, reset])
+    }, [isEdit, reset, setValue])
   );
 
   useEffect(() => {
@@ -160,6 +187,16 @@ export default function SafetyItemFormScreen() {
       nextDueDate: toFormDate(item.dueDateIso) || toFormDate(item.dueDate) || "",
       expiryDate: toFormDate(item.expiryDate),
     });
+    if (
+      typeof item.latitude === "number" &&
+      typeof item.longitude === "number" &&
+      Number.isFinite(item.latitude) &&
+      Number.isFinite(item.longitude)
+    ) {
+      setCoords({ latitude: item.latitude, longitude: item.longitude });
+    } else {
+      setCoords(null);
+    }
     setPhotoUri(
       pickDisplayMediaUri({
         thumbURL: item.photoThumbURL,
@@ -189,7 +226,7 @@ export default function SafetyItemFormScreen() {
   };
 
   /**
-   * Fills LOCATION ABOARD from device GPS.
+   * Fills LOCATION ABOARD from device GPS (Expo reverse geocode).
    * @returns Promise that resolves when location is applied or a toast is shown
    */
   const onUseCurrentLocation = async () => {
@@ -217,6 +254,23 @@ export default function SafetyItemFormScreen() {
     } finally {
       setLocationLoading(false);
     }
+  };
+
+  /**
+   * Opens the Google Map location picker with the current coords when available.
+   * @returns void
+   */
+  const onOpenMapPicker = () => {
+    leftForMapRef.current = true;
+    router.push({
+      pathname: "/safety/pick-location",
+      params: {
+        latitude:
+          coords?.latitude != null ? String(coords.latitude) : undefined,
+        longitude:
+          coords?.longitude != null ? String(coords.longitude) : undefined,
+      },
+    });
   };
 
   /**
@@ -251,8 +305,8 @@ export default function SafetyItemFormScreen() {
         nextDueDate: values.nextDueDate,
         nextDueDateIso: due.toISOString(),
         expiryDate: values.expiryDate,
-        latitude: coords?.latitude ?? null,
-        longitude: coords?.longitude ?? null,
+        latitude: coords?.latitude ?? item?.latitude ?? null,
+        longitude: coords?.longitude ?? item?.longitude ?? null,
         photoLocalUri: newPhoto,
         certLocalUri: newCert,
       };
@@ -300,7 +354,12 @@ export default function SafetyItemFormScreen() {
         ? expiryDate
         : nextDueDate;
 
-  if (isEdit && (isItemLoading || (!hydrated && !isItemError))) {
+  if (
+    (!isEdit && categoriesLoading && categories.length === 0) ||
+    (isEdit &&
+      (!item || !hydrated) &&
+      (isItemLoading || isItemFetching || !isItemError))
+  ) {
     return (
       <Screen
         scroll={false}
@@ -308,9 +367,11 @@ export default function SafetyItemFormScreen() {
         edges={["top", "left", "right"]}
       >
         <View style={styles.headerPad}>
-          <BackHeader title={t("safety.edit-title")} />
+          <BackHeader
+            title={isEdit ? t("safety.edit-title") : t("safety.add-title")}
+          />
         </View>
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
+        <FormScreenSkeleton />
       </Screen>
     );
   }
@@ -346,7 +407,6 @@ export default function SafetyItemFormScreen() {
         useSafeAreaWrapper={false}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
       >
         <FormCard>
           <FormSelectField
@@ -378,26 +438,33 @@ export default function SafetyItemFormScreen() {
             placeholder={t("safety.serial-placeholder")}
           />
 
-          <View>
-            <FormField
-              control={control}
-              name="locationAboard"
-              label={t("safety.location-aboard")}
-              placeholder={t("safety.location-aboard-placeholder")}
-            />
-            <InlineAction
-              label={t("safety.use-current-location")}
-              icon="locate-outline"
-              loading={locationLoading}
-              onPress={onUseCurrentLocation}
-            />
-          </View>
+          <FormField
+            control={control}
+            name="locationAboard"
+            label={t("safety.location-aboard")}
+            placeholder={t("safety.location-aboard-placeholder")}
+            trailingActions={[
+              {
+                icon: "locate-outline",
+                accessibilityLabel: t("safety.use-current-location"),
+                loading: locationLoading,
+                onPress: onUseCurrentLocation,
+              },
+              {
+                icon: "map-outline",
+                accessibilityLabel: t("safety.open-map"),
+                disabled: locationLoading,
+                onPress: onOpenMapPicker,
+              },
+            ]}
+          />
 
           <FormSelectField
             control={control}
             name="lastServiceDate"
             label={t("safety.last-service-date")}
             placeholder={t("safety.date-placeholder")}
+            trailingIcon="calendar-outline"
             onPress={() => setActiveDateField("lastServiceDate")}
           />
 
@@ -406,6 +473,7 @@ export default function SafetyItemFormScreen() {
             name="nextDueDate"
             label={t("safety.next-due-date")}
             placeholder={t("safety.date-placeholder")}
+            trailingIcon="calendar-outline"
             onPress={() => setActiveDateField("nextDueDate")}
           />
 
@@ -413,7 +481,9 @@ export default function SafetyItemFormScreen() {
             control={control}
             name="expiryDate"
             label={t("safety.expiry-date")}
+            labelHint={t("safety.expiry-date-hint")}
             placeholder={t("safety.date-placeholder")}
+            trailingIcon="calendar-outline"
             onPress={() => setActiveDateField("expiryDate")}
           />
         </FormCard>

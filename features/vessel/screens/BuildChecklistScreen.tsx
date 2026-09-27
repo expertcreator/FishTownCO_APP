@@ -9,7 +9,10 @@ import { saveVesselChecklist } from "@/features/vessel/services/saveVesselCheckl
 import {
   AppText,
   BackHeader,
+  CARD_RIPPLE,
   Card,
+  FormScreenSkeleton,
+  getPressedItemStyle,
   KeyboardAwareContainer,
   PrimaryButton,
   Screen,
@@ -30,7 +33,13 @@ export default function BuildChecklistScreen() {
   const styles = getStyles(colors);
   const { t } = useTranslation();
   const toast = useToast();
-  const { data: vessel } = useVesselProfile();
+  const {
+    data: vessel,
+    isLoading,
+    isFetching,
+    isError,
+    refetch,
+  } = useVesselProfile();
   const allIds = useMemo(
     () => BUILD_CHECKLIST_ITEMS.map((item) => item.id),
     []
@@ -40,10 +49,12 @@ export default function BuildChecklistScreen() {
   );
   const [hydrated, setHydrated] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  /** `undefined` until first fetch settles — avoid checklist flicker before hydrate. */
+  const isInitialLoad = vessel === undefined;
 
   useEffect(() => {
-    if (!vessel || hydrated) return;
-    if (vessel.checklistIds.length > 0) {
+    if (vessel === undefined || hydrated) return;
+    if (vessel && vessel.checklistIds.length > 0) {
       setChecked(
         Object.fromEntries(
           allIds.map((id) => [id, vessel.checklistIds.includes(id)])
@@ -92,6 +103,52 @@ export default function BuildChecklistScreen() {
     }
   };
 
+  if (isInitialLoad && (isLoading || isFetching || !isError)) {
+    return (
+      <Screen
+        scroll={false}
+        edges={["top", "left", "right"]}
+        contentStyle={styles.screen}
+      >
+        <BackHeader title={t("setup.checklist-title")} />
+        <FormScreenSkeleton />
+      </Screen>
+    );
+  }
+
+  if (isInitialLoad && isError) {
+    return (
+      <Screen
+        scroll={false}
+        edges={["top", "left", "right"]}
+        contentStyle={styles.screen}
+      >
+        <BackHeader title={t("setup.checklist-title")} />
+        <AppText style={styles.error}>{t("vessel.load-failed")}</AppText>
+        <PrimaryButton
+          label={t("common.try-again")}
+          onPress={() => {
+            setHydrated(false);
+            void refetch();
+          }}
+        />
+      </Screen>
+    );
+  }
+
+  if (!hydrated) {
+    return (
+      <Screen
+        scroll={false}
+        edges={["top", "left", "right"]}
+        contentStyle={styles.screen}
+      >
+        <BackHeader title={t("setup.checklist-title")} />
+        <FormScreenSkeleton />
+      </Screen>
+    );
+  }
+
   return (
     <Screen
       scroll={false}
@@ -104,7 +161,6 @@ export default function BuildChecklistScreen() {
         useSafeAreaWrapper={false}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
       >
         {BUILD_CHECKLIST_ITEMS.map((item) => {
           const on = Boolean(checked[item.id]);
@@ -114,7 +170,10 @@ export default function BuildChecklistScreen() {
               onPress={() =>
                 setChecked((prev) => ({ ...prev, [item.id]: !on }))
               }
-              style={({ pressed }) => [pressed && styles.pressed]}
+              android_ripple={CARD_RIPPLE}
+              style={({ pressed }) => [getPressedItemStyle(pressed)]}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: on }}
             >
               <Card style={styles.row}>
                 <Ionicons
@@ -180,6 +239,13 @@ function getStyles(colors: ThemeColors) {
       color: colors.muted,
       fontSize: 12,
     },
-    pressed: { opacity: 0.95 },
+    error: {
+      color: colors.muted,
+      fontSize: 14,
+      textAlign: "center",
+      paddingHorizontal: 20,
+      marginTop: 24,
+      marginBottom: 16,
+    },
   });
 }

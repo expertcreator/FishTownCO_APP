@@ -4,13 +4,13 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import {
-  ActivityIndicator,
-  Pressable,
-  StyleSheet,
-  View,
-} from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
+import {
+  ComplianceTimelineCard,
+  ItemHeroCard,
+  StatusToneBanner,
+} from "@/features/common/components";
 import type { StatusTone } from "@/features/common/data/demo";
 import { pickDisplayMediaUri } from "@/features/common/media/mediaStatus";
 import { fetchSafetyItem } from "@/features/safety/services/fetchSafetyItem";
@@ -29,6 +29,7 @@ import {
   AppText,
   BackHeader,
   Card,
+  ItemDetailSkeleton,
   PrimaryButton,
   Screen,
   useToast,
@@ -51,22 +52,22 @@ export default function SafetyItemDetailScreen() {
   const itemId = typeof id === "string" ? id : "";
   const [isServicing, setIsServicing] = useState(false);
 
-  const { data: item, isLoading, isError, refetch } = useQuery({
+  const { data: item, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["safety", "item", itemId],
     enabled: Boolean(itemId),
     queryFn: () => fetchSafetyItem(itemId),
   });
 
-  if (isLoading) {
+  if (!item && (isLoading || isFetching || !isError)) {
     return (
       <Screen>
         <BackHeader title={t("safety.detail-title")} />
-        <ActivityIndicator color={colors.teal} style={styles.loader} />
+        <ItemDetailSkeleton />
       </Screen>
     );
   }
 
-  if (isError || !item) {
+  if (!item) {
     return (
       <Screen>
         <BackHeader title={t("safety.detail-title")} />
@@ -155,135 +156,24 @@ export default function SafetyItemDetailScreen() {
         }
       />
 
-      <View
-        style={[
-          styles.banner,
-          {
-            backgroundColor: bannerColors.bg,
-            borderColor: bannerColors.border,
-          },
-        ]}
-      >
-        <Ionicons name={bannerColors.icon} size={18} color={bannerColors.text} />
-        <AppText style={[styles.bannerText, { color: bannerColors.text }]}>
-          {banner}
-        </AppText>
-      </View>
+      <StatusToneBanner tone={tone} text={banner} />
 
-      <Card style={styles.hero}>
-        <View style={styles.heroMedia}>
-          <Ionicons name={icon} size={56} color={colors.white} />
-          {item.category ? (
-            <View style={styles.heroChipTop}>
-              <Ionicons name="boat" size={14} color={colors.teal} />
-              <AppText style={styles.heroChipTopText} numberOfLines={1}>
-                {item.category}
-              </AppText>
-            </View>
-          ) : null}
-          {item.location ? (
-            <View style={styles.heroChipBottom}>
-              <Ionicons name="camera-outline" size={13} color={colors.white} />
-              <AppText style={styles.heroChipBottomText} numberOfLines={1}>
-                {item.location}
-              </AppText>
-            </View>
-          ) : null}
-        </View>
-      </Card>
+      <ItemHeroCard
+        imageUri={photoUri}
+        fallbackIcon={icon}
+        topBadge={item.category || undefined}
+        bottomBadge={item.location || undefined}
+      />
 
-      <Card style={styles.timelineCard}>
-        <View style={styles.timelineHeader}>
-          <AppText style={styles.sectionTitle}>
-            {t("safety.compliance-timeline")}
-          </AppText>
-          <View style={styles.timelineStatus}>
-            <Ionicons
-              name={tone === "ok" ? "checkmark-circle" : "alert-circle"}
-              size={16}
-              color={bannerColors.text}
-            />
-            <AppText style={[styles.timelineStatusText, { color: bannerColors.text }]}>
-              {timelineLabel}
-            </AppText>
-          </View>
-        </View>
-
-        <View style={styles.barWrap}>
-          {tone === "overdue" ? (
-            <View style={styles.nowBadge}>
-              <AppText style={styles.nowBadgeText}>{t("safety.now")}</AppText>
-              <View style={styles.nowStem} />
-            </View>
-          ) : null}
-          <View style={styles.barTrack}>
-            <View
-              style={[
-                styles.barFill,
-                {
-                  width: `${Math.round(progress * 100)}%`,
-                  backgroundColor:
-                    tone === "overdue" ? colors.teal : colors.teal,
-                },
-              ]}
-            />
-            {tone === "overdue" ? (
-              <View style={styles.barDanger} />
-            ) : null}
-          </View>
-        </View>
-
-        <View style={styles.markers}>
-          {(
-            [
-              { key: "90", label: "90D", active: days <= 90, color: colors.teal, large: false },
-              { key: "60", label: "60D", active: days <= 60, color: colors.teal, large: false },
-              { key: "30", label: "30D", active: days <= 30, color: colors.teal, large: false },
-              {
-                key: "7",
-                label: "7D",
-                active: days <= 7,
-                color: colors.orange,
-                large: false,
-              },
-              {
-                key: "overdue",
-                label: t("safety.status-overdue").toUpperCase(),
-                active: days < 0,
-                color: colors.statusOverdueText,
-                large: true,
-              },
-            ] as const
-          ).map((marker) => (
-            <View key={marker.key} style={styles.marker}>
-              <View
-                style={[
-                  marker.large ? styles.markerDotLarge : styles.markerDot,
-                  {
-                    backgroundColor: marker.active
-                      ? marker.color
-                      : colors.border,
-                  },
-                ]}
-              >
-                {marker.large && marker.active ? (
-                  <View style={styles.markerInner} />
-                ) : null}
-              </View>
-              <AppText
-                style={[
-                  styles.markerLabel,
-                  {
-                    color: marker.active ? marker.color : colors.muted,
-                  },
-                ]}
-              >
-                {marker.label}
-              </AppText>
-            </View>
-          ))}
-        </View>
-      </Card>
+      <ComplianceTimelineCard
+        title={t("safety.compliance-timeline")}
+        label={timelineLabel}
+        tone={tone}
+        daysUntil={days}
+        progress={progress}
+        nowLabel={t("safety.now")}
+        overdueLabel={t("safety.status-overdue").toUpperCase()}
+      />
 
       <Card style={styles.specs}>
         <SpecRow
@@ -578,10 +468,16 @@ function getStyles(colors: ThemeColors) {
       borderRadius: 16,
     },
     heroMedia: {
-      height: 180,
+      height: 208,
       backgroundColor: colors.navy,
       alignItems: "center",
       justifyContent: "center",
+      overflow: "hidden",
+    },
+    heroImage: {
+      ...StyleSheet.absoluteFill,
+      width: "100%",
+      height: "100%",
     },
     heroChipTop: {
       position: "absolute",

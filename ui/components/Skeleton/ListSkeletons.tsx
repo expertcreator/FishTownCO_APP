@@ -130,42 +130,64 @@ export function SafetyListSkeleton() {
 }
 
 /**
- * My Vessel tab skeleton.
+ * My Vessel tab skeleton matching the hero card + menu rows layout.
  * @returns Vessel loading UI
  */
 export function VesselScreenSkeleton() {
   const colors = useColors();
   return (
     <SkeletonScreen>
-      <TitleBlockSkeleton />
-      <View style={[styles.vesselHero, { backgroundColor: colors.card, borderColor: colors.border }]}>
-        <SkeletonCircle size={48} />
-        <SkeletonSpacer height={12} />
-        <SkeletonRect width="60%" height={20} borderRadius={6} />
-        <SkeletonSpacer height={8} />
-        <SkeletonRect width="40%" height={14} borderRadius={6} />
-        <SkeletonSpacer height={16} />
-        <View style={styles.metaGrid}>
-          {ROW_KEYS.slice(0, 6).map((key) => (
-            <View key={key} style={styles.metaCell}>
-              <SkeletonRect width="70%" height={10} borderRadius={4} />
-              <SkeletonSpacer height={6} />
-              <SkeletonRect width="90%" height={14} borderRadius={6} />
-            </View>
-          ))}
+      <View
+        style={[
+          styles.vesselHeroCard,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <SkeletonRect width="100%" height={200} borderRadius={0} />
+        <View style={styles.vesselHeroBody}>
+          <View style={styles.vesselNameRow}>
+            <SkeletonRect width="70%" height={28} borderRadius={8} />
+            <SkeletonCircle size={24} />
+          </View>
+          <SkeletonSpacer height={12} />
+          <View style={styles.chips}>
+            <SkeletonRect width={140} height={28} borderRadius={999} />
+            <SkeletonRect width={160} height={28} borderRadius={999} />
+          </View>
+          <SkeletonSpacer height={12} />
+          <View
+            style={[
+              styles.vesselLengthRow,
+              { backgroundColor: colors.cardSoft, borderColor: colors.border },
+            ]}
+          >
+            <SkeletonRect width="35%" height={12} borderRadius={4} />
+            <SkeletonRect width="30%" height={14} borderRadius={6} />
+          </View>
         </View>
       </View>
-      <SkeletonSpacer height={12} />
-      {ROW_KEYS.slice(0, 3).map((key) => (
+      <SkeletonSpacer height={14} />
+      {ROW_KEYS.slice(0, 5).map((key) => (
         <View key={key}>
-          <View style={[styles.actionRow, { backgroundColor: colors.card, borderColor: colors.border }]}>
-            <SkeletonCircle size={28} />
-            <SkeletonSpacer width={10} />
-            <SkeletonRect width="55%" height={14} borderRadius={6} />
+          <View
+            style={[
+              styles.vesselMenuRow,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <SkeletonRect width={48} height={48} borderRadius={12} />
+            <View style={styles.vesselMenuText}>
+              <SkeletonRect width="55%" height={14} borderRadius={6} />
+              <SkeletonSpacer height={8} />
+              <SkeletonRect width="80%" height={12} borderRadius={6} />
+            </View>
+            <SkeletonRect width={22} height={22} borderRadius={6} />
           </View>
           <SkeletonSpacer height={10} />
         </View>
       ))}
+      <SkeletonSpacer height={6} />
+      <SkeletonRect width="100%" height={56} borderRadius={16} />
     </SkeletonScreen>
   );
 }
@@ -178,6 +200,12 @@ export function WalletListSkeleton() {
   return (
     <SkeletonScreen>
       <TitleBlockSkeleton />
+      <View style={styles.chips}>
+        {CHIP_KEYS.map((key) => (
+          <SkeletonRect key={key} width={78} height={32} borderRadius={999} />
+        ))}
+      </View>
+      <SkeletonSpacer height={10} />
       {ROW_KEYS.map((key) => (
         <View key={key}>
           <ListRowSkeleton />
@@ -189,17 +217,45 @@ export function WalletListSkeleton() {
 }
 
 /**
- * Crew list skeleton.
+ * Crew list skeleton matching prototype cards (avatar, status, medical row).
  * @returns Crew loading UI
  */
 export function CrewListSkeleton() {
+  const colors = useColors();
   return (
     <SkeletonScreen>
-      <TitleBlockSkeleton />
+      <SkeletonRect width="40%" height={14} borderRadius={6} />
+      <SkeletonSpacer height={16} />
       {ROW_KEYS.map((key) => (
         <View key={key}>
-          <ListRowSkeleton />
-          <SkeletonSpacer height={10} />
+          <View
+            style={[
+              styles.crewCard,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <View style={styles.crewTopRow}>
+              <SkeletonRect width={48} height={48} borderRadius={12} />
+              <View style={styles.crewBody}>
+                <SkeletonRect width="55%" height={16} borderRadius={6} />
+                <SkeletonSpacer height={8} />
+                <SkeletonRect width="70%" height={12} borderRadius={6} />
+              </View>
+              <SkeletonRect width={72} height={26} borderRadius={999} />
+            </View>
+            <SkeletonSpacer height={12} />
+            <View
+              style={[
+                styles.crewMedical,
+                { backgroundColor: colors.cardSoft },
+              ]}
+            >
+              <SkeletonRect width={18} height={18} borderRadius={4} />
+              <SkeletonSpacer width={10} />
+              <SkeletonRect width="65%" height={13} borderRadius={6} />
+            </View>
+          </View>
+          <SkeletonSpacer height={12} />
         </View>
       ))}
     </SkeletonScreen>
@@ -207,16 +263,60 @@ export function CrewListSkeleton() {
 }
 
 /**
- * Billing history list skeleton.
+ * Billing history list skeleton (filter card + payment rows).
  * @returns Billing loading UI
  */
 export function BillingListSkeleton() {
+  const colors = useColors();
   return (
     <SkeletonScreen>
-      <TitleBlockSkeleton />
-      {ROW_KEYS.map((key) => (
+      <View
+        style={[
+          styles.billingFilterCard,
+          { backgroundColor: colors.card, borderColor: colors.border },
+        ]}
+      >
+        <SkeletonRect width="40%" height={12} borderRadius={4} />
+        <SkeletonSpacer height={12} />
+        <View style={styles.chips}>
+          {CHIP_KEYS.slice(0, 3).map((key) => (
+            <SkeletonRect key={key} width={96} height={32} borderRadius={999} />
+          ))}
+        </View>
+        <SkeletonSpacer height={14} />
+        <View style={styles.billingDateRow}>
+          <View style={styles.billingDateField}>
+            <SkeletonRect width="40%" height={11} borderRadius={4} />
+            <SkeletonSpacer height={8} />
+            <SkeletonRect width="100%" height={48} borderRadius={12} />
+          </View>
+          <View style={styles.billingDateField}>
+            <SkeletonRect width="30%" height={11} borderRadius={4} />
+            <SkeletonSpacer height={8} />
+            <SkeletonRect width="100%" height={48} borderRadius={12} />
+          </View>
+        </View>
+      </View>
+      <SkeletonSpacer height={8} />
+      <SkeletonRect width="55%" height={13} borderRadius={6} />
+      <SkeletonSpacer height={14} />
+      {ROW_KEYS.slice(0, 5).map((key) => (
         <View key={key}>
-          <ListRowSkeleton />
+          <View
+            style={[
+              styles.billingRow,
+              { backgroundColor: colors.card, borderColor: colors.border },
+            ]}
+          >
+            <View style={styles.billingRowLeft}>
+              <SkeletonRect width="40%" height={18} borderRadius={6} />
+              <SkeletonSpacer height={8} />
+              <SkeletonRect width="55%" height={12} borderRadius={4} />
+              <SkeletonSpacer height={6} />
+              <SkeletonRect width="65%" height={11} borderRadius={4} />
+            </View>
+            <SkeletonRect width={48} height={14} borderRadius={6} />
+          </View>
           <SkeletonSpacer height={10} />
         </View>
       ))}
@@ -273,6 +373,60 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 16,
   },
+  vesselHeroCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    overflow: "hidden",
+  },
+  vesselHeroBody: {
+    padding: 16,
+  },
+  vesselNameRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 8,
+  },
+  vesselLengthRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    borderRadius: 12,
+    borderWidth: 1,
+    paddingHorizontal: 14,
+    paddingVertical: 12,
+  },
+  vesselMenuRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 14,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+  },
+  vesselMenuText: {
+    flex: 1,
+  },
+  crewCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 14,
+  },
+  crewTopRow: {
+    flexDirection: "row",
+    alignItems: "flex-start",
+    gap: 12,
+  },
+  crewBody: {
+    flex: 1,
+  },
+  crewMedical: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 12,
+    paddingHorizontal: 12,
+    paddingVertical: 12,
+  },
   metaGrid: {
     flexDirection: "row",
     flexWrap: "wrap",
@@ -287,5 +441,32 @@ const styles = StyleSheet.create({
     borderRadius: 14,
     borderWidth: 1,
     padding: 14,
+  },
+  billingFilterCard: {
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+    marginBottom: 8,
+  },
+  billingDateRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  billingDateField: {
+    flex: 1,
+    minWidth: 0,
+  },
+  billingRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    gap: 12,
+    borderRadius: 16,
+    borderWidth: 1,
+    padding: 16,
+  },
+  billingRowLeft: {
+    flex: 1,
+    minWidth: 0,
   },
 });

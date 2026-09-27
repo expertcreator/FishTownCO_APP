@@ -1,22 +1,31 @@
 import type { ReactNode } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
-import { useColors, type ThemeColors } from "@/ui/theme";
+import { logout } from "@/features/auth/services/logout";
+import { useColors, useTheme, type ThemeColors } from "@/ui/theme";
+import { useTranslation } from "@/ui/translations";
+import { getPressedItemStyle } from "./pressableStyles";
 import AppText from "./Text";
+import { useToast } from "./Toast";
 
 type AppHeaderProps = {
   title: string;
+  /** Replaces the default theme + logout actions when provided. */
   right?: ReactNode;
+  /** When true (default), shows theme toggle and logout on the right. Ignored if `right` is set. */
+  showActions?: boolean;
   onLogoPress?: () => void;
   showBorder?: boolean;
 };
 
 /**
- * Branded top header used on main tabs (Home / Safety / Vessel).
- * Logo on the left, centered title, optional right action.
+ * Branded top header used on main tabs (Home / Safety / Vessel / Wallet).
+ * Logo on the left, centered title, theme toggle + logout on the right by default.
  * @param props - Header props
  * @param props.title - Centered screen title
- * @param props.right - Optional right-side action (e.g. logout)
+ * @param props.right - Optional custom right-side content (replaces default actions)
+ * @param props.showActions - Whether to show theme + logout (default true)
  * @param props.onLogoPress - Logo press handler (defaults to Home tab)
  * @param props.showBorder - Whether to show the bottom border
  * @returns App header element
@@ -24,6 +33,7 @@ type AppHeaderProps = {
 export function AppHeader({
   title,
   right,
+  showActions = true,
   onLogoPress,
   showBorder = true,
 }: AppHeaderProps) {
@@ -50,8 +60,72 @@ export function AppHeader({
           {title}
         </AppText>
 
-        <View style={[styles.side, styles.right]}>{right ?? null}</View>
+        <View style={[styles.side, styles.right]}>
+          {right ?? (showActions ? <AppHeaderActions /> : null)}
+        </View>
       </View>
+    </View>
+  );
+}
+
+/**
+ * Theme toggle and logout icons shown on bottom-navigation tab headers.
+ * @returns Header action buttons
+ */
+function AppHeaderActions() {
+  const colors = useColors();
+  const { isDark, toggleTheme } = useTheme();
+  const { t } = useTranslation();
+  const toast = useToast();
+  const styles = getStyles(colors);
+
+  /**
+   * Signs out of Firebase Auth and returns to the login screen.
+   * @returns Promise that resolves when navigation starts or a toast is shown
+   */
+  const onLogout = async () => {
+    try {
+      await logout();
+      toast.success(t("auth.log-out-success"));
+      router.replace("/(auth)/login");
+    } catch (error) {
+      console.error("[AppHeader] logout failed", error);
+      toast.error(t("auth.log-out-failed"));
+    }
+  };
+
+  return (
+    <View style={styles.actions}>
+      <Pressable
+        onPress={toggleTheme}
+        hitSlop={10}
+        style={({ pressed }) => [
+          styles.actionButton,
+          getPressedItemStyle(pressed),
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={
+          isDark ? t("app.theme-light") : t("app.theme-dark")
+        }
+      >
+        <Ionicons
+          name={isDark ? "sunny-outline" : "moon-outline"}
+          size={22}
+          color={colors.navy}
+        />
+      </Pressable>
+      <Pressable
+        onPress={onLogout}
+        hitSlop={10}
+        style={({ pressed }) => [
+          styles.actionButton,
+          getPressedItemStyle(pressed),
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={t("auth.log-out")}
+      >
+        <Ionicons name="log-out-outline" size={22} color={colors.navy} />
+      </Pressable>
     </View>
   );
 }
@@ -87,6 +161,17 @@ function getStyles(colors: ThemeColors) {
     },
     right: {
       alignItems: "flex-end",
+    },
+    actions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+    },
+    actionButton: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
     },
     logo: {
       width: 88,

@@ -14,7 +14,9 @@ import AppText from "./Text";
 type PrimaryButtonProps = {
   label: string;
   onPress?: () => void;
-  icon?: keyof typeof Ionicons.glyphMap;
+  icon?: keyof typeof Ionicons.glyphMap | null;
+  /** When `leading`, icon renders before the label (create-account anchor). */
+  iconPosition?: "leading" | "trailing";
   style?: StyleProp<ViewStyle>;
   disabled?: boolean;
   loading?: boolean;
@@ -25,7 +27,8 @@ type PrimaryButtonProps = {
  * @param props - Button props
  * @param props.label - Button label
  * @param props.onPress - Press handler
- * @param props.icon - Optional trailing icon
+ * @param props.icon - Optional icon (`null` hides it)
+ * @param props.iconPosition - Icon before or after the label
  * @param props.style - Optional style
  * @param props.disabled - Disabled state
  * @param props.loading - Shows a spinner and disables the button
@@ -35,6 +38,7 @@ export function PrimaryButton({
   label,
   onPress,
   icon = "arrow-forward",
+  iconPosition = "trailing",
   style,
   disabled,
   loading = false,
@@ -42,6 +46,10 @@ export function PrimaryButton({
   const colors = useColors();
   const styles = getStyles(colors);
   const isDisabled = disabled || loading;
+  const iconEl =
+    icon != null ? (
+      <Ionicons name={icon} size={18} color={colors.white} />
+    ) : null;
 
   return (
     <Pressable
@@ -60,11 +68,15 @@ export function PrimaryButton({
       ]}
     >
       {loading ? (
-        <ActivityIndicator color={colors.white} />
+        <>
+          <ActivityIndicator color={colors.white} />
+          <AppText style={styles.primaryText}>{label}</AppText>
+        </>
       ) : (
         <>
+          {iconPosition === "leading" ? iconEl : null}
           <AppText style={styles.primaryText}>{label}</AppText>
-          {icon ? <Ionicons name={icon} size={18} color={colors.white} /> : null}
+          {iconPosition === "trailing" ? iconEl : null}
         </>
       )}
     </Pressable>
@@ -126,7 +138,11 @@ export function TextLink({ children, onPress, align = "left" }: TextLinkProps) {
   const styles = getStyles(colors);
 
   return (
-    <Pressable onPress={onPress}>
+    <Pressable
+      onPress={onPress}
+      style={({ pressed }) => [pressed && styles.linkPressed]}
+      accessibilityRole="link"
+    >
       <AppText style={[styles.link, { textAlign: align }]}>{children}</AppText>
     </Pressable>
   );
@@ -200,7 +216,9 @@ function getStyles(colors: ThemeColors) {
     color: colors.teal,
     fontSize: 14,
     fontWeight: "700",
-    textDecorationLine: "underline",
+  },
+  linkPressed: {
+    opacity: 0.7,
   },
   card: {
     backgroundColor: colors.card,

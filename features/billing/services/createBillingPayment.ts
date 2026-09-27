@@ -24,9 +24,10 @@ export type CreateBillingPaymentInput = {
   paidAt?: Date;
 };
 
+/** Prototype Skipper Plan is £10/month; annual is ten months up front. */
 const PLAN_AMOUNTS: Record<BillingPlanId, number> = {
-  monthly: 14.99,
-  annual: 149,
+  monthly: 10,
+  annual: 100,
 };
 
 /**

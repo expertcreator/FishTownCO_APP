@@ -6,42 +6,95 @@ import type { StatusTone } from "@/features/common/data/demo";
 import { pickDisplayMediaUri } from "@/features/common/media/mediaStatus";
 import { getSafetyCategoryIcon } from "@/features/safety/services/mapSafetyItemDoc";
 import type { SafetyItem } from "@/features/safety/types/safetyItem";
+import {
+  AppText,
+  CARD_RIPPLE,
+  Card,
+  getPressedActionStyle,
+  getPressedItemStyle,
+  ORANGE_RIPPLE,
+  useToast,
+} from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
-import { AppText, Card, useToast } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+
+/** When to show the replacement CTA (matches prototype SafetyItemCard). */
+export type SafetyReplacementMode = "none" | "overdue" | "action";
 
 type SafetyItemCardProps = {
   item: SafetyItem;
+  /**
+   * `action` = overdue or due soon (Safety tab).
+   * `overdue` = overdue only (Home tab).
+   * `none` = never.
+   */
+  showReplacement?: SafetyReplacementMode;
+  dateLabelKey?: string;
 };
 
 /**
- * Safety inventory row matching prototype screen 12 cards.
- * Prefers photo thumb, else tone-colored category icon; shows next-due,
- * status pill, and replacement CTA for overdue / due-soon items.
+ * Safety inventory card matching https://fishtownco.itoasis.co/ (screens 11–12).
+ * Uses live Firestore item fields for name, due date, tone, and photo.
+ * Replacement CTA is a sibling pressable (not nested) so it receives taps.
  * @param props - Card props
  * @param props.item - Safety item from Firestore
+ * @param props.showReplacement - When to show the replacement CTA
+ * @param props.dateLabelKey - Optional i18n key for the due-date prefix
  * @returns Safety item card element
  */
-export function SafetyItemCard({ item }: SafetyItemCardProps) {
+export function SafetyItemCard({
+  item,
+  showReplacement = "action",
+  dateLabelKey = "safety.next-due",
+}: SafetyItemCardProps) {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
   const toast = useToast();
   const toneStyle = getToneStyle(colors, item.tone);
   const icon = getSafetyCategoryIcon(item.category || item.name);
-  const showReplacement = item.tone === "overdue" || item.tone === "due";
   const photoUri = pickDisplayMediaUri({
     thumbURL: item.photoThumbURL,
     downloadURL: item.photoDownloadURL,
     localUri: item.photoLocalUri,
   });
 
+  const showButton =
+    showReplacement === "action"
+      ? item.tone === "overdue" || item.tone === "due"
+      : showReplacement === "overdue"
+        ? item.tone === "overdue"
+        : false;
+
+  /**
+   * Opens the live item detail screen.
+   * @returns void
+   */
+  const onOpenDetail = () => {
+    router.push(`/safety/${item.id}`);
+  };
+
+  /**
+   * Matches prototype: shows a coming-soon toast for replacement options.
+   * @returns void
+   */
+  const onReplace = () => {
+    toast.info(t("safety.replacement-coming-soon"));
+  };
+
   return (
-    <Pressable
-      onPress={() => router.push(`/safety/${item.id}`)}
-      style={({ pressed }) => [pressed && styles.pressed]}
-    >
-      <Card style={styles.card}>
+    <Card style={styles.card}>
+      <Pressable
+        onPress={onOpenDetail}
+        android_ripple={CARD_RIPPLE}
+        style={({ pressed }) => [
+          styles.mainPressable,
+          !showButton && styles.mainPressableSolo,
+          getPressedItemStyle(pressed),
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={item.name}
+      >
         <View style={styles.topRow}>
           <View style={styles.left}>
             <View style={[styles.iconWrap, { backgroundColor: toneStyle.iconBg }]}>
@@ -54,7 +107,7 @@ export function SafetyItemCard({ item }: SafetyItemCardProps) {
                   transition={150}
                 />
               ) : (
-                <Ionicons name={icon} size={24} color={toneStyle.icon} />
+                <Ionicons name={icon} size={26} color={toneStyle.icon} />
               )}
             </View>
             <View style={styles.body}>
@@ -68,7 +121,7 @@ export function SafetyItemCard({ item }: SafetyItemCardProps) {
                   color={toneStyle.due}
                 />
                 <AppText style={[styles.due, { color: toneStyle.due }]}>
-                  {t("safety.next-due", { date: item.dueDate })}
+                  {t(dateLabelKey, { date: item.dueDate })}
                 </AppText>
               </View>
             </View>
@@ -82,28 +135,31 @@ export function SafetyItemCard({ item }: SafetyItemCardProps) {
               },
             ]}
           >
-            <Ionicons name={toneStyle.pillIcon} size={14} color={toneStyle.pillText} />
+            <Ionicons name={toneStyle.pillIcon} size={15} color={toneStyle.pillText} />
             <AppText style={[styles.pillText, { color: toneStyle.pillText }]}>
               {item.status}
             </AppText>
           </View>
         </View>
+      </Pressable>
 
-        {showReplacement ? (
-          <Pressable
-            onPress={() => toast.info(t("common.coming-soon"))}
-            style={({ pressed }) => [
-              styles.replacement,
-              pressed && styles.replacementPressed,
-            ]}
-          >
-            <AppText style={styles.replacementText}>
-              {t("safety.view-replacement")}
-            </AppText>
-          </Pressable>
-        ) : null}
-      </Card>
-    </Pressable>
+      {showButton ? (
+        <Pressable
+          onPress={onReplace}
+          android_ripple={ORANGE_RIPPLE}
+          style={({ pressed }) => [
+            styles.replacement,
+            getPressedActionStyle(pressed),
+          ]}
+          accessibilityRole="button"
+          accessibilityLabel={t("safety.view-replacement")}
+        >
+          <AppText style={styles.replacementText}>
+            {t("safety.view-replacement")}
+          </AppText>
+        </Pressable>
+      ) : null}
+    </Card>
   );
 }
 
@@ -167,8 +223,18 @@ function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     card: {
       gap: 12,
-      marginBottom: 12,
+      marginBottom: 0,
       borderRadius: 16,
+      overflow: "hidden",
+      padding: 0,
+    },
+    mainPressable: {
+      paddingTop: 16,
+      paddingHorizontal: 16,
+      paddingBottom: 4,
+    },
+    mainPressableSolo: {
+      paddingBottom: 16,
     },
     topRow: {
       flexDirection: "row",
@@ -224,19 +290,20 @@ function getStyles(colors: ThemeColors) {
       fontWeight: "700",
     },
     replacement: {
+      marginHorizontal: 16,
+      marginBottom: 16,
       backgroundColor: colors.orange,
       borderRadius: 12,
       minHeight: 40,
       alignItems: "center",
       justifyContent: "center",
       paddingHorizontal: 12,
+      overflow: "hidden",
     },
-    replacementPressed: { opacity: 0.9 },
     replacementText: {
       color: colors.white,
       fontSize: 12,
       fontWeight: "700",
     },
-    pressed: { opacity: 0.96 },
   });
 }

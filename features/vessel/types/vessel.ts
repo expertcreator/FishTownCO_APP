@@ -16,6 +16,10 @@ export type VesselProfile = {
   skipper: string;
   engineHours: string;
   nextServiceIn: string;
+  /** Firebase Storage download URL for the vessel hero photo. */
+  photoUrl: string;
+  /** Optional compressed thumb URL for lists. */
+  photoThumbUrl: string;
   /** Selected build-checklist item ids from prototype screen 9. */
   checklistIds: string[];
 };
@@ -38,6 +42,8 @@ export type VesselProfileInput = {
   skipper?: string;
   engineHours?: string;
   nextServiceIn?: string;
+  photoUrl?: string;
+  photoThumbUrl?: string;
 };
 
 /**

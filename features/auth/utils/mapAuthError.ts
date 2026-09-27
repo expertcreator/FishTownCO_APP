@@ -47,10 +47,25 @@ export function getAuthErrorMessage(error: unknown): string {
  */
 export function mapAuthError(error: unknown, t: Translate): string {
   const code = getAuthErrorCode(error);
+  const message = getAuthErrorMessage(error);
   console.log("[mapAuthError]", {
     code,
-    message: getAuthErrorMessage(error),
+    message,
   });
+
+  if (
+    message === "GOOGLE_SIGNIN_CANCELLED" ||
+    message === "APPLE_SIGNIN_CANCELLED"
+  ) {
+    return t("auth.social-signin-cancelled");
+  }
+  if (
+    message === "APPLE_SIGNIN_UNSUPPORTED" ||
+    message === "GOOGLE_SIGNIN_NO_TOKEN" ||
+    message === "APPLE_SIGNIN_NO_TOKEN"
+  ) {
+    return t("auth.social-signin-error");
+  }
 
   switch (code) {
     case "auth/email-already-in-use":

@@ -1,4 +1,6 @@
+import type { CountryCode } from "libphonenumber-js";
 import { z } from "zod";
+import { isValidNationalPhone } from "@/ui/utils/phone";
 
 type Translate = (
   key: string,
@@ -11,15 +13,20 @@ const required = (t: Translate) =>
 /**
  * Add-crew person-fields schema matching prototype screen 20.
  * Certificates are validated separately as a multi-entry list.
+ * Phone is the national number; country is validated via `countryCode`.
  * @param t - Translation function
+ * @param countryCode - Selected ISO country for phone validation
  * @returns Zod crew member schema
  */
-export const createAddCrewSchema = (t: Translate) =>
+export const createAddCrewSchema = (
+  t: Translate,
+  countryCode: CountryCode
+) =>
   z.object({
     name: z.string().trim().min(1, t("validation.name-required")),
     role: required(t),
     phone: required(t).refine(
-      (value) => value.replace(/\D/g, "").length >= 7,
+      (value) => isValidNationalPhone(value, countryCode),
       { message: t("validation.phone-invalid") }
     ),
     email: z

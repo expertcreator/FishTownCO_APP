@@ -1,13 +1,15 @@
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { useInitialSkeleton } from "@/features/common/hooks/useInitialSkeleton";
 import { WalletDocCard } from "@/features/wallet/components/WalletDocCard";
 import { useWalletDocs } from "@/features/wallet/hooks/useWalletDocs";
 import {
   AppHeader,
   AppText,
+  CARD_RIPPLE,
+  EmptyState,
   FloatingActionButton,
+  getPressedItemStyle,
   KeyboardAwareContainer,
   PrimaryButton,
   Screen,
@@ -28,14 +30,11 @@ export default function WalletScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
-  const skeletonPending = useInitialSkeleton();
   const [filter, setFilter] = useState<WalletFilterKey>("all");
-  const {
-    data: docs = [],
-    isLoading,
-    refetch,
-    isError,
-  } = useWalletDocs();
+  const { data, isLoading, isFetching, refetch, isError } = useWalletDocs();
+  const docs = data ?? [];
+  /** `undefined` until first fetch settles — never treat that as an empty list. */
+  const isInitialLoad = data === undefined;
 
   useFocusEffect(
     useCallback(() => {
@@ -73,7 +72,7 @@ export default function WalletScreen() {
     }
   }, [docs, filter]);
 
-  if ((isLoading || skeletonPending) && docs.length === 0 && !isError) {
+  if (isInitialLoad && (isLoading || isFetching || !isError)) {
     return (
       <Screen scroll={false} edges={["top", "left", "right"]}>
         <AppHeader title={t("tabs.wallet")} />
@@ -82,7 +81,7 @@ export default function WalletScreen() {
     );
   }
 
-  if (isError) {
+  if (isInitialLoad && isError) {
     return (
       <Screen edges={["top", "left", "right"]}>
         <AppHeader title={t("tabs.wallet")} />
@@ -107,7 +106,6 @@ export default function WalletScreen() {
         useSafeAreaWrapper={false}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
       >
         <AppText style={styles.title}>
           {t("wallet.title").toUpperCase()}
@@ -128,7 +126,12 @@ export default function WalletScreen() {
               <Pressable
                 key={key}
                 onPress={() => setFilter(key)}
-                style={[styles.chip, on && styles.chipOn]}
+                android_ripple={CARD_RIPPLE}
+                style={({ pressed }) => [
+                  styles.chip,
+                  on && styles.chipOn,
+                  getPressedItemStyle(pressed),
+                ]}
               >
                 <AppText style={[styles.chipText, on && styles.chipTextOn]}>
                   {label} ({count})
@@ -138,10 +141,29 @@ export default function WalletScreen() {
           })}
         </View>
 
-        {items.length === 0 ? (
-          <AppText style={styles.empty}>
-            {filter === "all" ? t("wallet.empty") : t("wallet.empty-filter")}
-          </AppText>
+        {!isInitialLoad && items.length === 0 ? (
+          <EmptyState
+            icon="folder-open-outline"
+            title={
+              filter === "all"
+                ? t("wallet.empty-title")
+                : t("wallet.empty-filter-title")
+            }
+            body={
+              filter === "all"
+                ? t("wallet.empty-body")
+                : t("wallet.empty-filter-body")
+            }
+            actionLabel={
+              filter === "all" ? t("wallet.add-document") : undefined
+            }
+            actionIcon="add"
+            onActionPress={
+              filter === "all"
+                ? () => router.push("/wallet/add")
+                : undefined
+            }
+          />
         ) : (
           items.map((doc) => <WalletDocCard key={doc.id} doc={doc} />)
         )}

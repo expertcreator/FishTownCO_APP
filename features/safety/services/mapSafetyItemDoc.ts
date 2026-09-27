@@ -77,6 +77,14 @@ export function mapSafetyItemDoc(
       ? String(data.lastServiceDate)
       : undefined,
     expiryDate: data.expiryDate ? String(data.expiryDate) : undefined,
+    latitude:
+      typeof data.latitude === "number" && Number.isFinite(data.latitude)
+        ? data.latitude
+        : null,
+    longitude:
+      typeof data.longitude === "number" && Number.isFinite(data.longitude)
+        ? data.longitude
+        : null,
     photoLocalUri: data.photoLocalUri ? String(data.photoLocalUri) : null,
     photoDownloadURL: data.photoDownloadURL
       ? String(data.photoDownloadURL)

@@ -10,7 +10,12 @@ import {
   getCrewStatusIcon,
   getCrewStatusLabel,
 } from "@/features/crew/utils/crewStatus";
-import { AppText, Card } from "@/ui/components";
+import {
+  AppText,
+  CARD_RIPPLE,
+  Card,
+  getPressedItemStyle,
+} from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
 
 type CrewMemberCardProps = {
@@ -39,7 +44,10 @@ export function CrewMemberCard({ member }: CrewMemberCardProps) {
   return (
     <Pressable
       onPress={() => router.push(`/crew/${member.id}`)}
-      style={({ pressed }) => [pressed && styles.pressed]}
+      android_ripple={CARD_RIPPLE}
+      style={({ pressed }) => [getPressedItemStyle(pressed)]}
+      accessibilityRole="button"
+      accessibilityLabel={member.name}
     >
       <Card style={styles.card}>
         <View style={styles.topRow}>
@@ -225,6 +233,5 @@ function getStyles(colors: ThemeColors) {
     medicalExpired: {
       color: colors.statusOverdueText,
     },
-    pressed: { opacity: 0.96 },
   });
 }

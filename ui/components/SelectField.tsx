@@ -5,9 +5,13 @@ import AppText from "./Text";
 
 type SelectFieldProps = {
   label: string;
+  /** Optional muted suffix next to the label (e.g. "(if applicable)"). */
+  labelHint?: string;
   value: string;
   placeholder: string;
   icon?: keyof typeof Ionicons.glyphMap;
+  /** Trailing icon; defaults to chevron-down. */
+  trailingIcon?: keyof typeof Ionicons.glyphMap;
   error?: string;
   loading?: boolean;
   onPress: () => void;
@@ -18,9 +22,11 @@ type SelectFieldProps = {
  * Matches Foori-style tappable inputs with press feedback.
  * @param props - Select field props
  * @param props.label - Uppercase field label
+ * @param props.labelHint - Optional muted label suffix
  * @param props.value - Selected value shown in the row
  * @param props.placeholder - Placeholder when empty
  * @param props.icon - Optional leading icon
+ * @param props.trailingIcon - Optional trailing icon (default chevron-down)
  * @param props.error - Validation message
  * @param props.loading - Shows a busy state on the trailing icon
  * @param props.onPress - Opens the picker
@@ -28,9 +34,11 @@ type SelectFieldProps = {
  */
 export function SelectField({
   label,
+  labelHint,
   value,
   placeholder,
   icon,
+  trailingIcon = "chevron-down",
   error,
   loading = false,
   onPress,
@@ -41,7 +49,12 @@ export function SelectField({
 
   return (
     <View style={styles.wrap}>
-      <AppText style={styles.label}>{label}</AppText>
+      <View style={styles.labelRow}>
+        <AppText style={styles.label}>{label}</AppText>
+        {labelHint ? (
+          <AppText style={styles.labelHint}>{labelHint}</AppText>
+        ) : null}
+      </View>
       <Pressable
         onPress={onPress}
         disabled={loading}
@@ -65,7 +78,7 @@ export function SelectField({
           {hasValue ? value : placeholder}
         </AppText>
         <Ionicons
-          name={loading ? "hourglass-outline" : "chevron-down"}
+          name={loading ? "hourglass-outline" : trailingIcon}
           size={18}
           color={colors.muted}
         />
@@ -83,11 +96,22 @@ export function SelectField({
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     wrap: { gap: 8 },
+    labelRow: {
+      flexDirection: "row",
+      alignItems: "baseline",
+      gap: 6,
+      flexWrap: "wrap",
+    },
     label: {
       color: colors.navy,
       fontSize: 12,
       fontWeight: "800",
       letterSpacing: 0.8,
+    },
+    labelHint: {
+      color: colors.muted,
+      fontSize: 11,
+      fontWeight: "500",
     },
     inputRow: {
       minHeight: 52,

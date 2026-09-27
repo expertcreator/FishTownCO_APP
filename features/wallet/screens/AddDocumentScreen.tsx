@@ -20,6 +20,7 @@ import {
   DatePickerModal,
   FormCard,
   FormField,
+  FormScreenSkeleton,
   FormSelectField,
   ImagePickerSheet,
   KeyboardAwareContainer,
@@ -53,6 +54,7 @@ export default function AddDocumentScreen() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [typeOpen, setTypeOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [hydrated, setHydrated] = useState(false);
   const [activeDateField, setActiveDateField] = useState<DateField | null>(
     null
   );
@@ -97,6 +99,7 @@ export default function AddDocumentScreen() {
       setFileUri(null);
       setActiveDateField(null);
       setIsSubmitting(false);
+      setHydrated(true);
     }, [reset])
   );
 
@@ -137,6 +140,19 @@ export default function AddDocumentScreen() {
     }
   };
 
+  if (!hydrated) {
+    return (
+      <Screen
+        scroll={false}
+        edges={["top", "left", "right"]}
+        contentStyle={styles.screen}
+      >
+        <BackHeader title={t("wallet.add-doc-title")} />
+        <FormScreenSkeleton />
+      </Screen>
+    );
+  }
+
   return (
     <Screen
       scroll={false}
@@ -149,7 +165,6 @@ export default function AddDocumentScreen() {
         useSafeAreaWrapper={false}
         style={styles.scroll}
         contentContainerStyle={styles.scrollContent}
-        keyboardDismissMode="on-drag"
       >
         <FormCard style={styles.card}>
           <FormSelectField

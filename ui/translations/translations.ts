@@ -48,12 +48,15 @@ export const translate = (
     (langTranslations?.[key] as string);
   let result = translatedValue ?? defaultValue ?? key;
 
-  // Handle interpolation - replace {{param}} with actual values
-  // Using split/join for literal string replacement (avoids regex metacharacter issues)
+  // Handle interpolation - replace {{param}} (preferred) then {param}.
+  // Using split/join for literal string replacement (avoids regex metacharacter issues).
   if (params && typeof result === "string") {
     for (const [paramKey, paramValue] of Object.entries(params)) {
-      const token = `{${paramKey}}`;
-      result = result.split(token).join(String(paramValue));
+      const value = String(paramValue);
+      const doubleToken = `{{${paramKey}}}`;
+      const singleToken = `{${paramKey}}`;
+      result = result.split(doubleToken).join(value);
+      result = result.split(singleToken).join(value);
     }
   }
 
