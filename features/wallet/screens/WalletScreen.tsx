@@ -170,7 +170,8 @@ export default function WalletScreen() {
       </KeyboardAwareContainer>
 
       <FloatingActionButton
-        label={t("wallet.add-document")}
+        accessibilityLabel={t("wallet.add-document")}
+        icon="add"
         onPress={() => router.push("/wallet/add")}
       />
     </Screen>

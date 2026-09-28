@@ -1,6 +1,6 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useForm, type Resolver } from "react-hook-form";
 import { Pressable, StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
@@ -157,29 +157,33 @@ export default function AddCrewMemberScreen() {
     [t, countryCode]
   );
 
-  const { control, handleSubmit, reset, formState, trigger } =
+  const { control, handleSubmit, reset, trigger, getFieldState, clearErrors } =
     useForm<AddCrewSchema>({
       resolver,
       defaultValues: EMPTY_FORM,
       mode: "onChange",
       reValidateMode: "onChange",
     });
+  const resetRef = useRef(reset);
+  resetRef.current = reset;
 
   useEffect(() => {
+    const phoneState = getFieldState("phone");
+    if (!phoneState.isDirty && !phoneState.isTouched) return;
     void trigger("phone");
-  }, [countryCode, trigger]);
+  }, [countryCode, getFieldState, trigger]);
 
   useFocusEffect(
     useCallback(() => {
       if (isEdit) return;
-      reset(EMPTY_FORM);
+      resetRef.current(EMPTY_FORM);
       setPhotoUri(null);
       setCertificates([createEmptyCertDraft()]);
       setSubmitAttempted(false);
       setCountryCode(DEFAULT_PHONE_COUNTRY);
       setSelectedCountry(null);
       setHydrated(true);
-    }, [isEdit, reset])
+    }, [isEdit])
   );
 
   useEffect(() => {
@@ -229,10 +233,7 @@ export default function AddCrewMemberScreen() {
   const certsValid = certificates.every(
     (cert) => cert.type.trim() && cert.issueDate.trim() && cert.expiryDate.trim()
   );
-  const footerError =
-    submitAttempted && (!formState.isValid || !certsValid)
-      ? t("validation.required")
-      : null;
+  const footerError = submitAttempted ? t("validation.required") : null;
 
   const activeCertType =
     certificates.find((cert) => cert.key === certTypeKey)?.type ?? "";
@@ -262,8 +263,12 @@ export default function AddCrewMemberScreen() {
    */
   const onSubmit = async (values: AddCrewSchema) => {
     if (isSubmitting) return;
-    setSubmitAttempted(true);
-    if (!certsValid) return;
+    if (!certsValid) {
+      setSubmitAttempted(true);
+      return;
+    }
+    setSubmitAttempted(false);
+    clearErrors();
     setIsSubmitting(true);
     try {
       const certPayload = certificates.map((cert, index) => {
@@ -550,7 +555,12 @@ export default function AddCrewMemberScreen() {
           label={isEdit ? t("crew.update-member") : t("crew.save-member")}
           icon="save-outline"
           loading={isSubmitting}
-          onPress={handleSubmit(onSubmit, () => setSubmitAttempted(true))}
+          onPress={handleSubmit(
+            (values) => {
+              void onSubmit(values);
+            },
+            () => setSubmitAttempted(true)
+          )}
         />
       </StickyFormFooter>
 

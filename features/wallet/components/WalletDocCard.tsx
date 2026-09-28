@@ -1,6 +1,5 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
-import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { StatusTone } from "@/features/common/data/demo";
 import { getCrewStatusIcon } from "@/features/crew/utils/crewStatus";
@@ -13,12 +12,15 @@ import {
   CARD_RIPPLE,
   Card,
   getPressedItemStyle,
+  useToast,
 } from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 
 type WalletDocCardProps = {
   doc: WalletDoc;
+  /** Overrides the default document-viewer coming-soon toast. */
+  onPress?: () => void;
 };
 
 /**
@@ -26,12 +28,14 @@ type WalletDocCardProps = {
  * Prefers thumbURL, then downloadURL, then localUri for the leading image.
  * @param props - Card props
  * @param props.doc - Wallet document to display
+ * @param props.onPress - Optional press handler
  * @returns Wallet document card element
  */
-export function WalletDocCard({ doc }: WalletDocCardProps) {
+export function WalletDocCard({ doc, onPress }: WalletDocCardProps) {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
+  const toast = useToast();
   const toneStyle = getToneStyle(colors, doc.tone);
   const statusIcon = getCrewStatusIcon(doc.tone);
   const categoryIcon = getWalletCategoryIcon(doc.category);
@@ -46,7 +50,11 @@ export function WalletDocCard({ doc }: WalletDocCardProps) {
 
   return (
     <Pressable
-      onPress={() => router.push(`/wallet/${doc.id}`)}
+      onPress={
+        onPress ??
+        (() =>
+          toast.info(t("wallet.viewer-coming-soon", { title: doc.title })))
+      }
       android_ripple={CARD_RIPPLE}
       style={({ pressed }) => [getPressedItemStyle(pressed)]}
       accessibilityRole="button"

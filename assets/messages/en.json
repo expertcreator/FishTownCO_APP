@@ -378,6 +378,7 @@
     "sign-in-required": "Please log in to save documents.",
     "load-failed": "Could not load wallet documents. Try again.",
     "empty": "No documents yet. Tap Add Document to start.",
+    "viewer-coming-soon": "{{title}} (Document Viewer) — Coming soon in next update",
     "detail-title": "Document detail",
     "item-missing": "This document could not be found.",
     "details-section": "Document details",

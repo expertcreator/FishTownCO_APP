@@ -277,7 +277,11 @@ export default function HomeScreen() {
           record.kind === "safety" ? (
             <SafetyItemCard key={record.id} item={record.item} showReplacement="overdue" />
           ) : (
-            <WalletDocCard key={record.id} doc={record.doc} />
+            <WalletDocCard
+              key={record.id}
+              doc={record.doc}
+              onPress={() => router.push("/(tabs)/wallet")}
+            />
           )
         )}
       </View>
