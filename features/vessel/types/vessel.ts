@@ -20,6 +20,12 @@ export type VesselProfile = {
   photoUrl: string;
   /** Optional compressed thumb URL for lists. */
   photoThumbUrl: string;
+  /** Uploaded vessel document download URL. */
+  documentUrl: string;
+  /** Original file name for the vessel document. */
+  documentName: string;
+  /** Storage path for the vessel document. */
+  documentStoragePath: string;
   /** Selected build-checklist item ids from prototype screen 9. */
   checklistIds: string[];
 };
@@ -44,6 +50,9 @@ export type VesselProfileInput = {
   nextServiceIn?: string;
   photoUrl?: string;
   photoThumbUrl?: string;
+  documentUrl?: string | null;
+  documentName?: string | null;
+  documentStoragePath?: string | null;
 };
 
 /**

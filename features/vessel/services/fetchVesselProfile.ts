@@ -43,6 +43,9 @@ export function mapVesselProfile(
     nextServiceIn: String(data.nextServiceIn ?? "").trim(),
     photoUrl: String(data.photoUrl ?? "").trim(),
     photoThumbUrl: String(data.photoThumbUrl ?? "").trim(),
+    documentUrl: String(data.documentUrl ?? "").trim(),
+    documentName: String(data.documentName ?? "").trim(),
+    documentStoragePath: String(data.documentStoragePath ?? "").trim(),
     checklistIds: Array.isArray(data.checklistIds)
       ? data.checklistIds.map((id) => String(id)).filter(Boolean)
       : [],

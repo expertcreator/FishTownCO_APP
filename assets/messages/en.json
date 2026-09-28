@@ -307,7 +307,6 @@
     "load-failed": "Could not load vessel profile. Try again.",
     "empty-title": "No vessel profile yet",
     "empty-body": "Add your vessel details to keep everything in one place.",
-    "create-hint": "Saving will create your vessel profile in Firestore.",
     "usage-fallback": "Commercial vessel",
     "maintenance-sub-empty": "Track engine hours and service intervals",
     "tonnage": "TONNAGE",
@@ -326,13 +325,18 @@
     "vessel-use": "VESSEL USE",
     "save-profile": "Save Vessel Profile",
     "name-placeholder": "e.g. Northern Star",
-    "type-placeholder": "e.g. Fishing Vessel",
+    "type-placeholder": "Select vessel type",
+    "select-type": "Select vessel type",
     "length-placeholder": "e.g. 42 ft / 12.8 m",
     "home-port-placeholder": "e.g. Newlyn, Cornwall",
     "mmsi-placeholder": "e.g. 235091240",
     "registration-placeholder": "e.g. SSR 772091",
     "engine-hours-placeholder": "e.g. 1420",
-    "usage-placeholder": "e.g. Commercial Fishing & Day Charters"
+    "usage-placeholder": "Select vessel use",
+    "select-use": "Select vessel use",
+    "upload-document": "Upload document (PDF or photo)",
+    "document-added": "Document added",
+    "remove-document": "Remove document"
   },
   "wallet": {
     "title": "Wallet",
@@ -483,7 +487,9 @@
     "gallery-error": "Failed to select image from gallery. Please try again.",
     "camera-error": "Failed to take photo. Please check camera permissions.",
     "choose-from-library": "Choose from library",
-    "take-photo": "Take a photo"
+    "take-photo": "Take a photo",
+    "choose-document": "Choose document",
+    "document-error": "Could not open that document. Please try again."
   },
   "network-welcome-back": "Welcome back",
   "network-no-connection": "No Internet Connection",

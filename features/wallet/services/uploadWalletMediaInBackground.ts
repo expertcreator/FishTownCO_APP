@@ -1,22 +1,26 @@
+import { uploadUserFile } from "@/features/common/media/uploadUserFile";
 import { patchWalletDocMedia } from "@/features/wallet/services/patchWalletDocMedia";
-import { uploadUserMedia } from "@/features/common/media/uploadUserMedia";
 
 /**
  * Uploads wallet media in the background and patches Firestore URLs.
  * Never throws to the caller. Failures are marked on the document.
  * @param docId - Wallet Firestore document id
- * @param localUri - Local image URI selected on the form
+ * @param localUri - Local image or PDF URI selected on the form
+ * @param file - Optional original name and MIME type
  * @returns Promise that resolves when upload attempt finishes
  */
 export async function uploadWalletMediaInBackground(
   docId: string,
-  localUri: string
+  localUri: string,
+  file?: { fileName?: string; mimeType?: string }
 ): Promise<void> {
 
   try {
-    const result = await uploadUserMedia({
+    const result = await uploadUserFile({
       localUri,
       folder: `wallet/${docId}`,
+      fileName: file?.fileName,
+      mimeType: file?.mimeType,
     });
 
     await patchWalletDocMedia({

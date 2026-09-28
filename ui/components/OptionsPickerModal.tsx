@@ -14,6 +14,8 @@ import AppText from "./Text";
 export type PickerOption = {
   id: string;
   label: string;
+  /** Ionicons glyph name. Shown beside the label when it is a real icon. */
+  icon?: string;
 };
 
 type OptionsPickerModalProps = {
@@ -85,6 +87,7 @@ export function OptionsPickerModal({
               contentContainerStyle={styles.list}
               renderItem={({ item }) => {
                 const selected = item.id === selectedId;
+                const iconName = toPickerIcon(item.icon);
                 return (
                   <Pressable
                     onPress={() => {
@@ -98,11 +101,22 @@ export function OptionsPickerModal({
                       getPressedItemStyle(pressed),
                     ]}
                   >
-                    <AppText
-                      style={[styles.rowText, selected && styles.rowTextSelected]}
-                    >
-                      {item.label}
-                    </AppText>
+                    <View style={styles.rowMain}>
+                      {iconName ? (
+                        <View style={styles.iconWrap}>
+                          <Ionicons
+                            name={iconName}
+                            size={20}
+                            color={selected ? colors.teal : colors.navy}
+                          />
+                        </View>
+                      ) : null}
+                      <AppText
+                        style={[styles.rowText, selected && styles.rowTextSelected]}
+                      >
+                        {item.label}
+                      </AppText>
+                    </View>
                     {selected ? (
                       <Ionicons name="checkmark" size={20} color={colors.teal} />
                     ) : null}
@@ -118,6 +132,21 @@ export function OptionsPickerModal({
       </View>
     </Modal>
   );
+}
+
+/**
+ * Returns a saved picker icon when it is a real Ionicons name.
+ * @param icon - Optional glyph name on the option
+ * @returns Glyph name, or null when the option has no icon
+ */
+function toPickerIcon(
+  icon: string | undefined
+): keyof typeof Ionicons.glyphMap | null {
+  const name = icon?.trim() ?? "";
+  if (name && name in Ionicons.glyphMap) {
+    return name as keyof typeof Ionicons.glyphMap;
+  }
+  return null;
 }
 
 /**
@@ -183,6 +212,20 @@ function getStyles(colors: ThemeColors) {
       borderWidth: 1,
       borderColor: colors.teal,
       backgroundColor: colors.softTeal,
+    },
+    rowMain: {
+      flex: 1,
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+    },
+    iconWrap: {
+      width: 36,
+      height: 36,
+      borderRadius: 10,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.card,
     },
     rowText: {
       flex: 1,

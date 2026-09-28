@@ -33,8 +33,10 @@ export default function SafetyScreen() {
   const [filter, setFilter] = useState<SafetyFilterKey>("all");
   const { data, isLoading, isFetching, refetch, isError } = useSafetyItems();
   const itemsData = data ?? [];
-  /** `undefined` until first fetch settles � never treat that as an empty list. */
+  /** `undefined` until first fetch settles — never treat that as an empty list. */
   const isInitialLoad = data === undefined;
+  /** Skeleton only before the first result. A later refresh keeps the list on screen. */
+  const showSkeleton = isInitialLoad && (isLoading || isFetching || !isError);
   const { data: vessel } = useVesselProfile();
   const vesselName = vessel?.name?.trim() || t("app.name");
 
@@ -61,7 +63,7 @@ export default function SafetyScreen() {
       ? t("safety.tracked-on-one", { count: counts.all, vessel: vesselName })
       : t("safety.tracked-on", { count: counts.all, vessel: vesselName });
 
-  if (isInitialLoad && (isLoading || isFetching || !isError)) {
+  if (showSkeleton) {
     return (
       <Screen
         scroll={false}
@@ -141,9 +143,6 @@ export default function SafetyScreen() {
           ))}
         </View>
 
-        {isFetching && itemsData.length > 0 ? (
-          <AppText style={styles.refreshing}>{t("common.loading")}</AppText>
-        ) : null}
       </KeyboardAwareContainer>
 
       <AddSafetyFab />
@@ -195,12 +194,6 @@ function getStyles(colors: ThemeColors) {
       textAlign: "center",
       marginVertical: 24,
       fontSize: 14,
-    },
-    refreshing: {
-      color: colors.muted,
-      textAlign: "center",
-      fontSize: 12,
-      marginBottom: 8,
     },
   });
 }

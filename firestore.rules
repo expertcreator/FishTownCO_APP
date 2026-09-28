@@ -16,5 +16,15 @@ service cloud.firestore {
       allow read, create, update: if request.auth != null;
       allow delete: if false;
     }
+
+    match /vesselTypes/{id} {
+      allow read, create, update: if request.auth != null;
+      allow delete: if false;
+    }
+
+    match /vesselUses/{id} {
+      allow read, create, update: if request.auth != null;
+      allow delete: if false;
+    }
   }
 }

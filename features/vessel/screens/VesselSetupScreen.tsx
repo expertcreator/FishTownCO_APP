@@ -1,10 +1,11 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { router } from "expo-router";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
 import { saveVesselProfile } from "@/features/vessel/services/saveVesselProfile";
+import { useVesselTypesStore } from "@/features/vessel/store/vesselTypesStore";
 import {
   createVesselSetupSchema,
   type VesselSetupSchema,
@@ -14,6 +15,8 @@ import {
   BackHeader,
   Card,
   FormField,
+  FormSelectField,
+  OptionsPickerModal,
   PrimaryButton,
   Screen,
   useToast,
@@ -33,8 +36,12 @@ export default function VesselSetupScreen() {
   const toast = useToast();
   const schema = useMemo(() => createVesselSetupSchema(t), [t]);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [typeOpen, setTypeOpen] = useState(false);
+  const vesselTypes = useVesselTypesStore((state) => state.types);
+  const typesLoading = useVesselTypesStore((state) => state.isLoading);
+  const loadTypes = useVesselTypesStore((state) => state.loadTypes);
 
-  const { control, handleSubmit } = useForm<VesselSetupSchema>({
+  const { control, handleSubmit, setValue, watch } = useForm<VesselSetupSchema>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
@@ -46,6 +53,12 @@ export default function VesselSetupScreen() {
     mode: "onChange",
     reValidateMode: "onChange",
   });
+
+  const vesselType = watch("type");
+
+  useEffect(() => {
+    void loadTypes();
+  }, [loadTypes]);
 
   /**
    * Saves vessel basics to Firestore and opens the build checklist.
@@ -94,11 +107,17 @@ export default function VesselSetupScreen() {
           label={t("setup.vessel-name")}
           icon="boat-outline"
         />
-        <FormField
+        <FormSelectField
           control={control}
           name="type"
           label={t("setup.vessel-type")}
+          placeholder={t("vessel.type-placeholder")}
           icon="compass-outline"
+          loading={typesLoading && vesselTypes.length === 0}
+          onPress={() => {
+            setTypeOpen(true);
+            if (vesselTypes.length === 0) void loadTypes();
+          }}
         />
         <FormField
           control={control}
@@ -125,6 +144,21 @@ export default function VesselSetupScreen() {
           onPress={handleSubmit(onSubmit)}
         />
       </Card>
+
+      <OptionsPickerModal
+        visible={typeOpen}
+        title={t("vessel.select-type")}
+        options={vesselTypes}
+        selectedId={vesselTypes.find((option) => option.label === vesselType)?.id}
+        loading={typesLoading && vesselTypes.length === 0}
+        onClose={() => setTypeOpen(false)}
+        onSelect={(option) => {
+          setValue("type", option.label, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        }}
+      />
     </Screen>
   );
 }

@@ -31,7 +31,8 @@ type WalletDocCardProps = {
 export function WalletDocCard({ doc }: WalletDocCardProps) {
   const colors = useColors();
   const styles = getStyles(colors);
-  const { t } = useTranslation();  const toneStyle = getToneStyle(colors, doc.tone);
+  const { t } = useTranslation();
+  const toneStyle = getToneStyle(colors, doc.tone);
   const statusIcon = getCrewStatusIcon(doc.tone);
   const categoryIcon = getWalletCategoryIcon(doc.category);
   const imageUri = doc.thumbURL || doc.downloadURL || doc.localUri || null;

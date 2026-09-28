@@ -1,6 +1,6 @@
 import { Ionicons } from "@expo/vector-icons";
 import { LinearGradient } from "expo-linear-gradient";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import {
   Alert,
   Modal,
@@ -11,6 +11,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { pickImage } from "@/features/common/utils/imagePicker";
+import { pickDocument } from "@/features/common/utils/pickDocument";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 import { OutlineButton, TextLink } from "./Buttons";
@@ -19,10 +20,15 @@ import AppText from "./Text";
 export type ImagePickerSheetProps = {
   visible: boolean;
   onClose: () => void;
-  onImageSelected: (imageUri: string) => void;
+  onImageSelected: (
+    imageUri: string,
+    file?: { name?: string; mimeType?: string }
+  ) => void;
   enableCropping?: boolean;
   width?: number;
   height?: number;
+  /** Adds a PDF / file choice beside the photo options. */
+  allowDocuments?: boolean;
 };
 
 /**
@@ -43,23 +49,47 @@ export function ImagePickerSheet({
   enableCropping = false,
   width = 400,
   height = 400,
+  allowDocuments = false,
 }: ImagePickerSheetProps) {
   const { t } = useTranslation();
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const styles = getStyles(colors);
   const isProcessingRef = useRef(false);
+  const [pickerBusy, setPickerBusy] = useState(false);
 
   /**
-   * Opens the gallery picker after closing the sheet.
+   * Hides this sheet, then opens a system picker.
+   * The parent selection target stays set until the picker returns.
+   * @param pick - System picker
+   * @param errorMessage - Alert body when the picker fails
    * @returns Promise that resolves when selection finishes
    */
-  const handleGallerySelection = async () => {
+  const runPicker = async (
+    pick: () => Promise<void>,
+    errorMessage: string
+  ) => {
     if (isProcessingRef.current) return;
     isProcessingRef.current = true;
+    setPickerBusy(true);
     try {
+      await new Promise((resolve) => setTimeout(resolve, 450));
+      await pick();
+    } catch {
+      Alert.alert(t("imagePicker.error-title"), errorMessage);
+    } finally {
+      isProcessingRef.current = false;
+      setPickerBusy(false);
       onClose();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+    }
+  };
+
+  /**
+   * Opens the gallery picker after hiding the sheet.
+   * @returns Promise that resolves when selection finishes
+   */
+  const handleGallerySelection = () =>
+    runPicker(async () => {
       const results = await pickImage({
         from: "gallery",
         cropping: enableCropping,
@@ -68,25 +98,16 @@ export function ImagePickerSheet({
       });
       const imageUri = results[0];
       if (typeof imageUri === "string" && imageUri.trim().length > 0) {
-        onImageSelected(imageUri);
+        onImageSelected(imageUri, { mimeType: "image/jpeg" });
       }
-    } catch {
-      Alert.alert(t("imagePicker.error-title"), t("imagePicker.gallery-error"));
-    } finally {
-      isProcessingRef.current = false;
-    }
-  };
+    }, t("imagePicker.gallery-error"));
 
   /**
-   * Opens the camera after closing the sheet.
+   * Opens the camera after hiding the sheet.
    * @returns Promise that resolves when capture finishes
    */
-  const handleCameraSelection = async () => {
-    if (isProcessingRef.current) return;
-    isProcessingRef.current = true;
-    try {
-      onClose();
-      await new Promise((resolve) => setTimeout(resolve, 100));
+  const handleCameraSelection = () =>
+    runPicker(async () => {
       const results = await pickImage({
         from: "camera",
         cropping: enableCropping,
@@ -95,18 +116,28 @@ export function ImagePickerSheet({
       });
       const imageUri = results[0];
       if (typeof imageUri === "string" && imageUri.trim().length > 0) {
-        onImageSelected(imageUri);
+        onImageSelected(imageUri, { mimeType: "image/jpeg" });
       }
-    } catch {
-      Alert.alert(t("imagePicker.error-title"), t("imagePicker.camera-error"));
-    } finally {
-      isProcessingRef.current = false;
-    }
-  };
+    }, t("imagePicker.camera-error"));
+
+  /**
+   * Opens the system document picker for a PDF or image.
+   * @returns Promise that resolves when selection finishes
+   */
+  const handleDocumentSelection = () =>
+    runPicker(async () => {
+      const file = await pickDocument();
+      if (file) {
+        onImageSelected(file.uri, {
+          name: file.name,
+          mimeType: file.mimeType,
+        });
+      }
+    }, t("imagePicker.document-error"));
 
   return (
     <Modal
-      visible={visible}
+      visible={visible && !pickerBusy}
       transparent
       animationType="slide"
       onRequestClose={onClose}
@@ -150,6 +181,14 @@ export function ImagePickerSheet({
             onPress={handleCameraSelection}
             style={styles.cameraButton}
           />
+
+          {allowDocuments ? (
+            <OutlineButton
+              label={t("imagePicker.choose-document")}
+              icon="document-text-outline"
+              onPress={handleDocumentSelection}
+            />
+          ) : null}
 
           <TextLink onPress={onClose} align="center">
             {t("common.cancel")}

@@ -31,6 +31,8 @@ export { FormCard } from "./FormCard";
 export { SectionHeader } from "./SectionHeader";
 export { InlineAction } from "./InlineAction";
 export { UploadDropzone } from "./UploadDropzone";
+export { DocumentUploadField } from "./DocumentUploadField";
+export type { DocumentUploadValue } from "./DocumentUploadField";
 export { CertificatePhotoUpload } from "./CertificatePhotoUpload";
 export { StickyFormFooter } from "./StickyFormFooter";
 export { ImagePickerSheet } from "./ImagePickerSheet";

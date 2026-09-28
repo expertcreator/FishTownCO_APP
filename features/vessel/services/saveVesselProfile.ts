@@ -52,6 +52,11 @@ export async function saveVesselProfile(
       photoThumbUrl: input.photoThumbUrl?.trim() || null,
       updatedAt: serverTimestamp(),
     };
+    if (input.documentUrl !== undefined) {
+      payload.documentUrl = input.documentUrl?.trim() || null;
+      payload.documentName = input.documentName?.trim() || null;
+      payload.documentStoragePath = input.documentStoragePath?.trim() || null;
+    }
     if (!existing.exists()) {
       payload.createdAt = serverTimestamp();
     }

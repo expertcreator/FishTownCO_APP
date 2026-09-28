@@ -21,15 +21,14 @@ import {
   FormCard,
   FormField,
   FormScreenSkeleton,
+  DocumentUploadField,
   FormSelectField,
-  ImagePickerSheet,
   KeyboardAwareContainer,
   OptionsPickerModal,
   PrimaryButton,
   Screen,
   SectionHeader,
   StickyFormFooter,
-  UploadDropzone,
   useToast,
   type PickerOption,
 } from "@/ui/components";
@@ -51,7 +50,8 @@ export default function AddDocumentScreen() {
   const toast = useToast();
   const schema = useMemo(() => createAddDocumentSchema(t), [t]);
   const [fileUri, setFileUri] = useState<string | null>(null);
-  const [pickerOpen, setPickerOpen] = useState(false);
+  const [fileName, setFileName] = useState("");
+  const [fileMime, setFileMime] = useState("");
   const [typeOpen, setTypeOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -97,6 +97,8 @@ export default function AddDocumentScreen() {
         expiryDate: "",
       });
       setFileUri(null);
+      setFileName("");
+      setFileMime("");
       setActiveDateField(null);
       setIsSubmitting(false);
       setHydrated(true);
@@ -124,7 +126,10 @@ export default function AddDocumentScreen() {
       });
 
       if (fileUri) {
-        void uploadWalletMediaInBackground(id, fileUri);
+        void uploadWalletMediaInBackground(id, fileUri, {
+          fileName,
+          mimeType: fileMime,
+        });
       }
 
       toast.success(t("wallet.save-success"));
@@ -204,13 +209,18 @@ export default function AddDocumentScreen() {
 
         <FormCard style={styles.card}>
           <SectionHeader title={t("wallet.upload-file")} />
-          <UploadDropzone
-            title={
-              fileUri ? t("wallet.file-added") : t("wallet.upload-file-title")
-            }
-            hint={t("wallet.upload-file-hint")}
-            icon="cloud-upload-outline"
-            onPress={() => setPickerOpen(true)}
+          <DocumentUploadField
+            uri={fileUri}
+            fileName={fileName}
+            mimeType={fileMime}
+            emptyLabel={t("wallet.upload-file-title")}
+            filledLabel={t("wallet.file-added")}
+            removeAccessibilityLabel={t("crew.remove-cert-file")}
+            onChange={(file) => {
+              setFileUri(file?.uri ?? null);
+              setFileName(file?.name ?? "");
+              setFileMime(file?.mimeType ?? "");
+            }}
           />
         </FormCard>
       </KeyboardAwareContainer>
@@ -223,15 +233,6 @@ export default function AddDocumentScreen() {
           onPress={handleSubmit(onSubmit)}
         />
       </StickyFormFooter>
-
-      <ImagePickerSheet
-        visible={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        onImageSelected={(uri) => {
-          setFileUri(uri);
-          setPickerOpen(false);
-        }}
-      />
 
       <OptionsPickerModal
         visible={typeOpen}

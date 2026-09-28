@@ -62,6 +62,32 @@ function createAppMMKV(): MMKV {
 
 export const mmkv = createAppMMKV();
 
+type PersistHydration = {
+  hasHydrated: () => boolean;
+  onFinishHydration: (fn: () => void) => () => void;
+};
+
+/**
+ * Resolves once a persisted Zustand store has read its saved state.
+ * @param persistApi - The store's `persist` helper
+ * @returns Promise that resolves when hydration has finished
+ */
+export function waitForPersistHydration(
+  persistApi: PersistHydration
+): Promise<void> {
+  if (persistApi.hasHydrated()) return Promise.resolve();
+  return new Promise((resolve) => {
+    const unsubscribe = persistApi.onFinishHydration(() => {
+      unsubscribe();
+      resolve();
+    });
+    if (persistApi.hasHydrated()) {
+      unsubscribe();
+      resolve();
+    }
+  });
+}
+
 export const createZustandMMKVStorage = <S>(): PersistStorage<S> =>
   createJSONStorage<S>(() => ({
     getItem: (name: string) => mmkv.getString(name) ?? null,

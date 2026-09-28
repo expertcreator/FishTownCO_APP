@@ -4,8 +4,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
+import { isLocalMediaUri } from "@/features/common/media/mediaStatus";
 import { useVesselProfile } from "@/features/vessel/hooks/useVesselProfile";
 import { saveVesselProfile } from "@/features/vessel/services/saveVesselProfile";
+import { uploadVesselDocument } from "@/features/vessel/services/uploadVesselDocument";
+import { useVesselTypesStore } from "@/features/vessel/store/vesselTypesStore";
+import { useVesselUsesStore } from "@/features/vessel/store/vesselUsesStore";
 import {
   createEditVesselSchema,
   type EditVesselSchema,
@@ -16,7 +20,10 @@ import {
   FormCard,
   FormField,
   FormScreenSkeleton,
+  DocumentUploadField,
+  FormSelectField,
   KeyboardAwareContainer,
+  OptionsPickerModal,
   PrimaryButton,
   Screen,
   StickyFormFooter,
@@ -46,10 +53,21 @@ export default function EditVesselScreen() {
   } = useVesselProfile();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [typeOpen, setTypeOpen] = useState(false);
+  const [useOpen, setUseOpen] = useState(false);
+  const [documentUri, setDocumentUri] = useState<string | null>(null);
+  const [documentName, setDocumentName] = useState("");
+  const [documentMime, setDocumentMime] = useState("");
+  const vesselTypes = useVesselTypesStore((state) => state.types);
+  const typesLoading = useVesselTypesStore((state) => state.isLoading);
+  const loadTypes = useVesselTypesStore((state) => state.loadTypes);
+  const vesselUses = useVesselUsesStore((state) => state.uses);
+  const usesLoading = useVesselUsesStore((state) => state.isLoading);
+  const loadUses = useVesselUsesStore((state) => state.loadUses);
   /** `undefined` until first fetch settles — never paint an empty form early. */
   const isInitialLoad = vessel === undefined;
 
-  const { control, handleSubmit, reset } = useForm<EditVesselSchema>({
+  const { control, handleSubmit, reset, setValue, watch } = useForm<EditVesselSchema>({
     resolver: zodResolver(schema),
     defaultValues: {
       name: "",
@@ -64,6 +82,14 @@ export default function EditVesselScreen() {
     mode: "onChange",
     reValidateMode: "onChange",
   });
+
+  const vesselType = watch("type");
+  const vesselUse = watch("usage");
+
+  useEffect(() => {
+    void loadTypes();
+    void loadUses();
+  }, [loadTypes, loadUses]);
 
   useFocusEffect(
     useCallback(() => {
@@ -85,6 +111,9 @@ export default function EditVesselScreen() {
         engineHours: vessel.engineHours,
         usage: vessel.usage,
       });
+      setDocumentUri(vessel.documentUrl || null);
+      setDocumentName(vessel.documentName || "");
+      setDocumentMime("");
     }
     setHydrated(true);
   }, [vessel, hydrated, reset]);
@@ -99,6 +128,20 @@ export default function EditVesselScreen() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     try {
+      let nextDocumentUrl = documentUri;
+      let nextDocumentName = documentName;
+      let nextDocumentPath = vessel?.documentStoragePath ?? "";
+      if (documentUri && isLocalMediaUri(documentUri)) {
+        const uploaded = await uploadVesselDocument(
+          documentUri,
+          documentName,
+          documentMime
+        );
+        nextDocumentUrl = uploaded.downloadURL;
+        nextDocumentName = uploaded.fileName;
+        nextDocumentPath = uploaded.storagePath;
+      }
+
       await saveVesselProfile({
         name: values.name,
         type: values.type,
@@ -108,6 +151,9 @@ export default function EditVesselScreen() {
         registrationNo: values.registrationNo,
         engineHours: values.engineHours,
         usage: values.usage,
+        documentUrl: nextDocumentUrl,
+        documentName: nextDocumentName,
+        documentStoragePath: nextDocumentPath,
         tonnage: vessel?.tonnage,
         flag: vessel?.flag,
         callSign: vessel?.callSign,
@@ -195,11 +241,16 @@ export default function EditVesselScreen() {
             label={t("setup.vessel-name")}
             placeholder={t("vessel.name-placeholder")}
           />
-          <FormField
+          <FormSelectField
             control={control}
             name="type"
             label={t("setup.vessel-type")}
             placeholder={t("vessel.type-placeholder")}
+            loading={typesLoading && vesselTypes.length === 0}
+            onPress={() => {
+              setTypeOpen(true);
+              if (vesselTypes.length === 0) void loadTypes();
+            }}
           />
           <FormField
             control={control}
@@ -233,17 +284,31 @@ export default function EditVesselScreen() {
             keyboardType="number-pad"
             placeholder={t("vessel.engine-hours-placeholder")}
           />
-          <FormField
+          <FormSelectField
             control={control}
             name="usage"
             label={t("vessel.vessel-use")}
             placeholder={t("vessel.usage-placeholder")}
+            loading={usesLoading && vesselUses.length === 0}
+            onPress={() => {
+              setUseOpen(true);
+              if (vesselUses.length === 0) void loadUses();
+            }}
+          />
+          <DocumentUploadField
+            uri={documentUri}
+            fileName={documentName}
+            mimeType={documentMime}
+            emptyLabel={t("vessel.upload-document")}
+            filledLabel={t("vessel.document-added")}
+            removeAccessibilityLabel={t("vessel.remove-document")}
+            onChange={(file) => {
+              setDocumentUri(file?.uri ?? null);
+              setDocumentName(file?.name ?? "");
+              setDocumentMime(file?.mimeType ?? "");
+            }}
           />
         </FormCard>
-
-        {!vessel ? (
-          <AppText style={styles.hint}>{t("vessel.create-hint")}</AppText>
-        ) : null}
       </KeyboardAwareContainer>
 
       <StickyFormFooter>
@@ -255,6 +320,36 @@ export default function EditVesselScreen() {
           onPress={handleSubmit(onSubmit)}
         />
       </StickyFormFooter>
+
+      <OptionsPickerModal
+        visible={typeOpen}
+        title={t("vessel.select-type")}
+        options={vesselTypes}
+        selectedId={vesselTypes.find((option) => option.label === vesselType)?.id}
+        loading={typesLoading && vesselTypes.length === 0}
+        onClose={() => setTypeOpen(false)}
+        onSelect={(option) => {
+          setValue("type", option.label, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        }}
+      />
+
+      <OptionsPickerModal
+        visible={useOpen}
+        title={t("vessel.select-use")}
+        options={vesselUses}
+        selectedId={vesselUses.find((option) => option.label === vesselUse)?.id}
+        loading={usesLoading && vesselUses.length === 0}
+        onClose={() => setUseOpen(false)}
+        onSelect={(option) => {
+          setValue("usage", option.label, {
+            shouldValidate: true,
+            shouldDirty: true,
+          });
+        }}
+      />
     </Screen>
   );
 }

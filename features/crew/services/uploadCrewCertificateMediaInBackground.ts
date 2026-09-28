@@ -1,4 +1,4 @@
-import { uploadUserMedia } from "@/features/common/media/uploadUserMedia";
+import { uploadUserFile } from "@/features/common/media/uploadUserFile";
 import { patchCrewCertificateMedia } from "@/features/crew/services/patchCrewCertificateMedia";
 
 /**
@@ -6,19 +6,23 @@ import { patchCrewCertificateMedia } from "@/features/crew/services/patchCrewCer
  * Never throws to the caller. Failures are marked on the certificate.
  * @param memberId - Crew Firestore document id
  * @param certificateId - Certificate id within the member doc
- * @param localUri - Local image URI selected on the form
+ * @param localUri - Local image or PDF URI selected on the form
+ * @param file - Optional original name and MIME type
  * @returns Promise that resolves when the upload attempt finishes
  */
 export async function uploadCrewCertificateMediaInBackground(
   memberId: string,
   certificateId: string,
-  localUri: string
+  localUri: string,
+  file?: { fileName?: string; mimeType?: string }
 ): Promise<void> {
 
   try {
-    const result = await uploadUserMedia({
+    const result = await uploadUserFile({
       localUri,
       folder: `crew/${memberId}/certificates/${certificateId}`,
+      fileName: file?.fileName,
+      mimeType: file?.mimeType,
     });
 
     await patchCrewCertificateMedia({

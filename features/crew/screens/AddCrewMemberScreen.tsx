@@ -28,6 +28,7 @@ import {
   BackHeader,
   CountryPickerSheet,
   DatePickerModal,
+  DocumentUploadField,
   Field,
   FormCard,
   FormField,
@@ -59,6 +60,8 @@ type CertDraft = {
   issueDate: string;
   expiryDate: string;
   localUri?: string | null;
+  fileName?: string;
+  mimeType?: string;
   downloadURL?: string | null;
   thumbURL?: string | null;
   storagePath?: string | null;
@@ -290,6 +293,8 @@ export default function AddCrewMemberScreen() {
           expiryDateIso: expiry.toISOString(),
           hasAttachment: Boolean(newLocal || cert.downloadURL),
           localUri: newLocal,
+          fileName: cert.fileName,
+          mimeType: cert.mimeType,
           ...keepRemote,
         };
       });
@@ -327,7 +332,8 @@ export default function AddCrewMemberScreen() {
           void uploadCrewCertificateMediaInBackground(
             savedId,
             cert.id,
-            cert.localUri
+            cert.localUri,
+            { fileName: cert.fileName, mimeType: cert.mimeType }
           );
         }
       }
@@ -494,29 +500,33 @@ export default function AddCrewMemberScreen() {
                     setDateTarget({ certKey: cert.key, field: "expiryDate" })
                   }
                 />
-                <UploadDropzone
-                  variant="document"
-                  title={
-                    certUri ? t("crew.cert-file-added") : t("crew.upload-cert")
-                  }
-                  icon="document-text-outline"
-                  imageUri={certUri}
-                  onPress={() =>
-                    setMediaTarget({ kind: "certificate", certKey: cert.key })
-                  }
-                  onRemove={
-                    certUri
-                      ? () =>
-                          patchCert(cert.key, {
-                            localUri: null,
-                            downloadURL: null,
-                            thumbURL: null,
-                            storagePath: null,
-                            mediaStatus: "none",
-                          })
-                      : undefined
-                  }
+                <DocumentUploadField
+                  uri={certUri}
+                  fileName={cert.fileName}
+                  mimeType={cert.mimeType}
+                  emptyLabel={t("crew.upload-cert")}
+                  filledLabel={t("crew.cert-file-added")}
                   removeAccessibilityLabel={t("crew.remove-cert-file")}
+                  onChange={(file) => {
+                    if (!file) {
+                      patchCert(cert.key, {
+                        localUri: null,
+                        fileName: "",
+                        mimeType: "",
+                        downloadURL: null,
+                        thumbURL: null,
+                        storagePath: null,
+                        mediaStatus: "none",
+                      });
+                      return;
+                    }
+                    patchCert(cert.key, {
+                      localUri: file.uri,
+                      fileName: file.name,
+                      mimeType: file.mimeType,
+                      mediaStatus: "pending",
+                    });
+                  }}
                 />
               </View>
             );
@@ -545,17 +555,10 @@ export default function AddCrewMemberScreen() {
       </StickyFormFooter>
 
       <ImagePickerSheet
-        visible={mediaTarget !== null}
+        visible={mediaTarget?.kind === "photo"}
         onClose={() => setMediaTarget(null)}
         onImageSelected={(uri) => {
-          if (mediaTarget?.kind === "photo") {
-            setPhotoUri(uri);
-          } else if (mediaTarget?.kind === "certificate") {
-            patchCert(mediaTarget.certKey, {
-              localUri: uri,
-              mediaStatus: "pending",
-            });
-          }
+          setPhotoUri(uri);
           setMediaTarget(null);
         }}
       />

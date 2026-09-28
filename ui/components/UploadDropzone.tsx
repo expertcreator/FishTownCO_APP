@@ -59,48 +59,69 @@ export function UploadDropzone({
         : "cloud-upload-outline");
 
   if (variant === "document") {
-    return (
-      <View style={styles.documentWrap}>
-        <Pressable
-          onPress={onPress}
-          android_ripple={{ color: "rgba(31,138,138,0.12)" }}
-          style={({ pressed }) => [
-            styles.documentBtn,
-            pressed && styles.pressed,
-          ]}
-          accessibilityRole="button"
-          accessibilityLabel={title}
-        >
-          {imageUri ? (
-            <Image
-              source={{ uri: imageUri }}
-              style={styles.documentThumb}
-              resizeMode="cover"
-            />
-          ) : (
-            <Ionicons name={resolvedIcon} size={18} color={colors.teal} />
-          )}
-          <AppText style={styles.documentTitle} numberOfLines={1}>
-            {title}
-          </AppText>
-        </Pressable>
-        {imageUri && onRemove ? (
+    if (onRemove && imageUri) {
+      return (
+        <View style={styles.documentSelected}>
+          <Image
+            source={{ uri: imageUri }}
+            style={styles.documentPreview}
+            resizeMode="cover"
+          />
           <Pressable
             onPress={onRemove}
             hitSlop={8}
             style={({ pressed }) => [
-              styles.documentRemove,
+              styles.documentImageClose,
               pressed && styles.pressed,
             ]}
             accessibilityRole="button"
             accessibilityLabel={removeAccessibilityLabel}
           >
-            <AppText style={styles.documentRemoveText}>
-              {removeAccessibilityLabel}
-            </AppText>
+            <Ionicons name="close" size={16} color={colors.white} />
           </Pressable>
-        ) : null}
-      </View>
+        </View>
+      );
+    }
+
+    if (onRemove) {
+      return (
+        <View style={styles.documentMeta}>
+          <Ionicons name="document-text" size={22} color={colors.teal} />
+          <AppText style={styles.documentTitle} numberOfLines={1}>
+            {title}
+          </AppText>
+          <Pressable
+            onPress={onRemove}
+            hitSlop={8}
+            style={({ pressed }) => [
+              styles.documentClose,
+              pressed && styles.pressed,
+            ]}
+            accessibilityRole="button"
+            accessibilityLabel={removeAccessibilityLabel}
+          >
+            <Ionicons name="close" size={16} color={colors.navy} />
+          </Pressable>
+        </View>
+      );
+    }
+
+    return (
+      <Pressable
+        onPress={onPress}
+        android_ripple={{ color: "rgba(31,138,138,0.12)" }}
+        style={({ pressed }) => [
+          styles.documentBtn,
+          pressed && styles.pressed,
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={title}
+      >
+        <Ionicons name={resolvedIcon} size={18} color={colors.teal} />
+        <AppText style={styles.documentTitle} numberOfLines={1}>
+          {title}
+        </AppText>
+      </Pressable>
     );
   }
 
@@ -244,8 +265,47 @@ function getStyles(colors: ThemeColors) {
       fontWeight: "600",
       textAlign: "center",
     },
-    documentWrap: {
+    documentSelected: {
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      backgroundColor: colors.card,
+      overflow: "hidden",
+    },
+    documentPreview: {
+      width: "100%",
+      height: 160,
+      backgroundColor: colors.cardSoft,
+    },
+    documentImageClose: {
+      position: "absolute",
+      top: 8,
+      right: 8,
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.navy,
+    },
+    documentMeta: {
+      flexDirection: "row",
+      alignItems: "center",
       gap: 8,
+      paddingHorizontal: 12,
+      paddingVertical: 10,
+      borderWidth: 1,
+      borderColor: colors.border,
+      borderRadius: 12,
+      backgroundColor: colors.card,
+    },
+    documentClose: {
+      width: 28,
+      height: 28,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.cardSoft,
     },
     documentBtn: {
       minHeight: 45,
@@ -261,23 +321,10 @@ function getStyles(colors: ThemeColors) {
       gap: 8,
       overflow: "hidden",
     },
-    documentThumb: {
-      width: 22,
-      height: 22,
-      borderRadius: 4,
-    },
     documentTitle: {
-      flexShrink: 1,
+      flex: 1,
       color: colors.navy,
-      fontSize: 12,
-      fontWeight: "700",
-    },
-    documentRemove: {
-      alignSelf: "flex-start",
-    },
-    documentRemoveText: {
-      color: colors.statusOverdueText,
-      fontSize: 12,
+      fontSize: 13,
       fontWeight: "700",
     },
     pressed: { opacity: 0.88 },

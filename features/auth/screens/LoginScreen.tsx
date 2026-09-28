@@ -15,6 +15,7 @@ import {
   type LoginSchema,
 } from "@/features/auth/validation/authSchema";
 import { useSafetyCategoriesStore } from "@/features/safety/store/safetyCategoriesStore";
+import { prefetchVesselCatalogs } from "@/features/vessel/services/prefetchVesselCatalogs";
 import {
   AppText,
   Card,
@@ -73,6 +74,7 @@ export default function LoginScreen() {
         password: values.password,
       });
       await useSafetyCategoriesStore.getState().loadCategories();
+      await prefetchVesselCatalogs();
       toast.success(t("auth.log-in-success"));
       router.replace("/(tabs)/home");
     } catch (error) {
@@ -87,6 +89,7 @@ export default function LoginScreen() {
    */
   const afterAuthSuccess = async () => {
     await useSafetyCategoriesStore.getState().loadCategories();
+    await prefetchVesselCatalogs();
     toast.success(t("auth.log-in-success"));
     router.replace("/(tabs)/home");
   };
@@ -230,7 +233,7 @@ export default function LoginScreen() {
           accessibilityRole="button"
           accessibilityLabel={t("auth.create-account-link")}
         >
-          <Ionicons name="open-outline" size={14} color={colors.teal} />
+          <Ionicons name="open-outline" size={16} color={colors.teal} />
         </Pressable>
       </View>
     </Screen>
@@ -373,7 +376,7 @@ function getStyles(colors: ThemeColors) {
     link: {
       color: colors.teal,
       fontWeight: "800",
-      fontSize: 12,
+      fontSize: 16,
     },
   });
 }

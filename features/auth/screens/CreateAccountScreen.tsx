@@ -14,6 +14,7 @@ import {
   type CreateAccountSchema,
 } from "@/features/auth/validation/authSchema";
 import { useSafetyCategoriesStore } from "@/features/safety/store/safetyCategoriesStore";
+import { prefetchVesselCatalogs } from "@/features/vessel/services/prefetchVesselCatalogs";
 import {
   AppText,
   Card,
@@ -107,6 +108,7 @@ export default function CreateAccountScreen() {
    */
   const afterSocialAuthSuccess = async () => {
     await useSafetyCategoriesStore.getState().loadCategories();
+    await prefetchVesselCatalogs();
     toast.success(t("auth.log-in-success"));
     router.replace("/(tabs)/home");
   };

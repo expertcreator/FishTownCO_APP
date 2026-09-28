@@ -2,6 +2,7 @@ import { BrandLogoWarmup } from "@/features/auth/components/BrandLogoWarmup/Bran
 import { configureGoogleSignIn } from "@/features/auth/utils/configureGoogleSignIn";
 import { queryClient } from "@/features/common/firebase";
 import { prefetchSafetyCategories } from "@/features/safety/services/prefetchSafetyCategories";
+import { prefetchVesselCatalogs } from "@/features/vessel/services/prefetchVesselCatalogs";
 import {
   NetworkStatusProvider,
   SafeKeyboardProvider,
@@ -28,7 +29,8 @@ const SPLASH_MAX_MS = 8000;
 
 /**
  * Root layout for Fishtownco.
- * Prefetches brand logos and Firestore safety categories while the native splash is up.
+ * Prefetches brand logos and Firestore catalogs while the native splash is up.
+ * Those catalog reads do not hold the splash. Saved lists stay available if a read fails.
  * The entry route hides that splash once Welcome, Login, or Home is ready.
  * @returns Root navigation tree
  */
@@ -45,6 +47,10 @@ export default function RootLayout() {
       ]),
       Promise.race([
         prefetchSafetyCategories(),
+        new Promise<void>((resolve) => setTimeout(resolve, 4000)),
+      ]),
+      Promise.race([
+        prefetchVesselCatalogs(),
         new Promise<void>((resolve) => setTimeout(resolve, 4000)),
       ]),
     ]).catch(() => undefined);

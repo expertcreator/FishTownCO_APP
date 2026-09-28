@@ -27,8 +27,8 @@ import {
 import {
   AppText,
   BackHeader,
-  CertificatePhotoUpload,
   DatePickerModal,
+  DocumentUploadField,
   FormCard,
   FormField,
   FormScreenSkeleton,
@@ -40,6 +40,7 @@ import {
   Screen,
   SectionHeader,
   StickyFormFooter,
+  UploadDropzone,
   useToast,
 } from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
@@ -109,6 +110,8 @@ export default function SafetyItemFormScreen() {
   const [submitAttempted, setSubmitAttempted] = useState(false);
   const [pickerTarget, setPickerTarget] = useState<MediaTarget | null>(null);
   const [certificateUri, setCertificateUri] = useState<string | null>(null);
+  const [certificateName, setCertificateName] = useState("");
+  const [certificateMime, setCertificateMime] = useState("");
   const [photoUri, setPhotoUri] = useState<string | null>(null);
   const [locationLoading, setLocationLoading] = useState(false);
   const [coords, setCoords] = useState<{
@@ -169,6 +172,8 @@ export default function SafetyItemFormScreen() {
       setSubmitAttempted(false);
       setPickerTarget(null);
       setCertificateUri(null);
+      setCertificateName("");
+      setCertificateMime("");
       setPhotoUri(null);
       setCoords(null);
       setHydrated(false);
@@ -211,6 +216,8 @@ export default function SafetyItemFormScreen() {
         localUri: item.certLocalUri,
       })
     );
+    setCertificateName("");
+    setCertificateMime(item.certThumbURL ? "image/jpeg" : "");
     setHydrated(true);
   }, [isEdit, item, hydrated, reset]);
 
@@ -322,7 +329,10 @@ export default function SafetyItemFormScreen() {
           void uploadSafetyMediaInBackground(itemId, "photo", newPhoto);
         }
         if (newCert) {
-          void uploadSafetyMediaInBackground(itemId, "certificate", newCert);
+          void uploadSafetyMediaInBackground(itemId, "certificate", newCert, {
+            fileName: certificateName,
+            mimeType: certificateMime,
+          });
         }
         toast.success(t("safety.update-success"));
       } else {
@@ -331,7 +341,10 @@ export default function SafetyItemFormScreen() {
           void uploadSafetyMediaInBackground(id, "photo", newPhoto);
         }
         if (newCert) {
-          void uploadSafetyMediaInBackground(id, "certificate", newCert);
+          void uploadSafetyMediaInBackground(id, "certificate", newCert, {
+            fileName: certificateName,
+            mimeType: certificateMime,
+          });
         }
         toast.success(t("safety.add-success"));
       }
@@ -490,17 +503,28 @@ export default function SafetyItemFormScreen() {
 
         <FormCard>
           <SectionHeader title={t("safety.certificates-photos")} />
-          <CertificatePhotoUpload
-            certificateTitle={t("safety.add-certificate")}
-            certificateHint={t("safety.add-certificate-hint")}
-            photoTitle={t("safety.add-photo")}
-            photoHint={t("safety.add-photo-hint")}
-            certificateUri={certificateUri}
-            photoUri={photoUri}
-            onAddCertificate={() => setPickerTarget("certificate")}
-            onAddPhoto={() => setPickerTarget("photo")}
-            onRemoveCertificate={() => setCertificateUri(null)}
-            onRemovePhoto={() => setPhotoUri(null)}
+          <DocumentUploadField
+            uri={certificateUri}
+            fileName={certificateName}
+            mimeType={certificateMime}
+            emptyLabel={t("crew.upload-cert")}
+            filledLabel={t("safety.file-on-file")}
+            removeAccessibilityLabel={t("crew.remove-cert-file")}
+            onChange={(file) => {
+              setCertificateUri(file?.uri ?? null);
+              setCertificateName(file?.name ?? "");
+              setCertificateMime(file?.mimeType ?? "");
+            }}
+          />
+          <UploadDropzone
+            variant="photo"
+            title={t("safety.add-photo")}
+            hint={t("safety.add-photo-hint")}
+            icon="camera-outline"
+            imageUri={photoUri}
+            onPress={() => setPickerTarget("photo")}
+            onRemove={photoUri ? () => setPhotoUri(null) : undefined}
+            removeAccessibilityLabel={t("crew.remove-photo")}
           />
         </FormCard>
       </KeyboardAwareContainer>
@@ -515,14 +539,10 @@ export default function SafetyItemFormScreen() {
       </StickyFormFooter>
 
       <ImagePickerSheet
-        visible={pickerTarget !== null}
+        visible={pickerTarget === "photo"}
         onClose={() => setPickerTarget(null)}
         onImageSelected={(uri) => {
-          if (pickerTarget === "certificate") {
-            setCertificateUri(uri);
-          } else if (pickerTarget === "photo") {
-            setPhotoUri(uri);
-          }
+          setPhotoUri(uri);
           setPickerTarget(null);
         }}
       />
@@ -532,7 +552,7 @@ export default function SafetyItemFormScreen() {
         title={t("safety.select-category")}
         options={categories}
         selectedId={categories.find((c) => c.label === itemType)?.id}
-        loading={categoriesLoading}
+        loading={categoriesLoading && categories.length === 0}
         onClose={() => setCategoryOpen(false)}
         onSelect={(option) => {
           setValue("itemType", option.label, {
