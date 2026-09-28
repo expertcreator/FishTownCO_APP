@@ -34,7 +34,7 @@ export const createAddCrewSchema = (
       .trim()
       .min(1, t("validation.email-required"))
       .email(t("validation.email-invalid")),
-  });
+});
 
 export type AddCrewSchema = z.infer<ReturnType<typeof createAddCrewSchema>>;
 

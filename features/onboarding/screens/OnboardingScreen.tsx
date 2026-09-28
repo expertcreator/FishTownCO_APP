@@ -227,5 +227,5 @@ function getStyles(colors: ThemeColors) {
     fontSize: 17,
     fontWeight: "700",
   },
-});
+  });
 }

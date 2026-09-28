@@ -1,4 +1,3 @@
-import type { Ionicons } from "@expo/vector-icons";
 import type { QueryDocumentSnapshot } from "@react-native-firebase/firestore";
 import type { SafetyItem } from "@/features/safety/types/safetyItem";
 import {
@@ -9,30 +8,6 @@ import {
   getSafetyStatusLabel,
   getSafetyTone,
 } from "@/features/safety/utils/safetyStatus";
-
-type IoniconName = keyof typeof Ionicons.glyphMap;
-
-/**
- * Picks a list icon for a safety category / item type.
- * @param category - Item type or category label
- * @returns Ionicons glyph name
- */
-export function getSafetyCategoryIcon(category: string): IoniconName {
-  const value = category.toLowerCase();
-  if (value.includes("fire")) return "flame-outline";
-  if (value.includes("life") || value.includes("raft") || value.includes("jacket"))
-    return "help-buoy-outline";
-  if (value.includes("nav") || value.includes("radio") || value.includes("telecom"))
-    return "radio-outline";
-  if (value.includes("medical") || value.includes("first")) return "medkit-outline";
-  if (value.includes("pyro") || value.includes("distress") || value.includes("flare"))
-    return "flash-outline";
-  if (value.includes("hull") || value.includes("machinery")) return "construct-outline";
-  if (value.includes("mooring") || value.includes("anchor") || value.includes("tackle"))
-    return "boat-outline";
-  if (value.includes("cert")) return "document-text-outline";
-  return "shield-checkmark-outline";
-}
 
 /**
  * Maps a Firestore safety document into the Safety list model.

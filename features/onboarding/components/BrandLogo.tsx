@@ -62,5 +62,5 @@ function getStyles(colors: ThemeColors) {
   wordmarkAccent: {
     color: colors.orange,
   },
-});
+  });
 }

@@ -18,11 +18,10 @@ const COLLECTION = "crewCertificateTypes";
 export async function upsertCrewCertificateTypeSeed(): Promise<number> {
   const user = getCurrentUser();
   if (!user?.uid) {
-    console.log("[upsertCrewCertificateTypeSeed] skipped — not signed in");
+    
     return 0;
   }
 
-  console.log("[upsertCrewCertificateTypeSeed] start");
   await Promise.all(
     CREW_CERTIFICATE_TYPE_SEED.map((item) =>
       setDoc(
@@ -36,9 +35,7 @@ export async function upsertCrewCertificateTypeSeed(): Promise<number> {
       )
     )
   );
-  console.log("[upsertCrewCertificateTypeSeed] done", {
-    count: CREW_CERTIFICATE_TYPE_SEED.length,
-  });
+  
   return CREW_CERTIFICATE_TYPE_SEED.length;
 }
 
@@ -48,7 +45,7 @@ export async function upsertCrewCertificateTypeSeed(): Promise<number> {
  * @throws {Error} When Firestore read fails
  */
 export async function fetchCrewCertificateTypes(): Promise<PickerOption[]> {
-  console.log("[fetchCrewCertificateTypes] start");
+  
   const snapshot = await getDocs(collection(firebaseFirestore, COLLECTION));
 
   const options = snapshot.docs
@@ -68,8 +65,5 @@ export async function fetchCrewCertificateTypes(): Promise<PickerOption[]> {
     .sort((a, b) => a.order - b.order)
     .map(({ id, label }) => ({ id, label }));
 
-  console.log("[fetchCrewCertificateTypes] success", {
-    count: options.length,
-  });
   return options;
 }

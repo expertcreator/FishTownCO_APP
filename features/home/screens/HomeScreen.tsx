@@ -165,7 +165,6 @@ export default function HomeScreen() {
         </View>
       </Pressable>
 
-
       <Pressable
         onPress={() => setFilter("overdue")}
         accessibilityRole="button"

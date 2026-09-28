@@ -23,8 +23,6 @@ export async function loginWithApple(): Promise<SocialLoginResult> {
     throw new Error("APPLE_SIGNIN_UNSUPPORTED");
   }
 
-  console.log("[loginWithApple] start");
-
   try {
     const appleAuthRequestResponse = await appleAuth.performRequest({
       requestedOperation: appleAuth.Operation.LOGIN,
@@ -50,17 +48,12 @@ export async function loginWithApple(): Promise<SocialLoginResult> {
     if (displayName && !result.user.displayName) {
       try {
         await updateProfile(result.user, { displayName });
-      } catch (profileError) {
-        console.warn("[loginWithApple] updateProfile failed", profileError);
+      } catch {
+
       }
     }
 
     await ensureUserProfile();
-
-    console.log("[loginWithApple] success", {
-      uid: result.user.uid,
-      email: result.user.email,
-    });
 
     return {
       uid: result.user.uid,
@@ -75,7 +68,7 @@ export async function loginWithApple(): Promise<SocialLoginResult> {
     ) {
       throw new Error("APPLE_SIGNIN_CANCELLED");
     }
-    console.error("[loginWithApple] failed", error);
+
     throw error;
   }
 }

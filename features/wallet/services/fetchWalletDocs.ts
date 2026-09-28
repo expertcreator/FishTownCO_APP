@@ -23,8 +23,6 @@ export async function fetchWalletDocs(): Promise<WalletDoc[]> {
     throw new Error("NOT_SIGNED_IN");
   }
 
-  console.log("[fetchWalletDocs] start", { uid: user.uid });
-
   try {
     const walletQuery = query(
       collection(firebaseFirestore, "users", user.uid, "wallet"),
@@ -32,10 +30,10 @@ export async function fetchWalletDocs(): Promise<WalletDoc[]> {
     );
     const snapshot = await getDocs(walletQuery);
     const docs = snapshot.docs.map(mapWalletDoc);
-    console.log("[fetchWalletDocs] success", { count: docs.length });
+
     return docs;
-  } catch (error) {
-    console.warn("[fetchWalletDocs] orderBy failed, falling back", error);
+  } catch {
+
     const snapshot = await getDocs(
       collection(firebaseFirestore, "users", user.uid, "wallet")
     );
@@ -50,7 +48,7 @@ export async function fetchWalletDocs(): Promise<WalletDoc[]> {
           : Number.POSITIVE_INFINITY;
         return aTime - bTime;
       });
-    console.log("[fetchWalletDocs] fallback success", { count: docs.length });
+
     return docs;
   }
 }

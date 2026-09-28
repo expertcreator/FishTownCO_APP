@@ -58,5 +58,5 @@ function getStyles(colors: ThemeColors) {
     paddingBottom: 28,
     paddingTop: 8,
   },
-});
+  });
 }

@@ -69,14 +69,14 @@ export default function ResetPasswordScreen() {
     if (isSubmitting) return;
     setIsSubmitting(true);
     const email = values.email.trim();
-    console.log("[ResetPasswordScreen] submit", { email });
+
     try {
       await resetPassword({ email });
       toast.success(t("auth.reset-email-sent-toast"));
       setSentEmail(email);
       setSent(true);
     } catch (error) {
-      console.error("[ResetPasswordScreen] submit failed", error);
+
       toast.error(mapAuthError(error, t));
     } finally {
       setIsSubmitting(false);

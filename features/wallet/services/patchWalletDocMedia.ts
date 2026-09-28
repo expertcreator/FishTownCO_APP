@@ -33,10 +33,6 @@ export async function patchWalletDocMedia(
   }
 
   const path = `users/${user.uid}/wallet/${input.id}`;
-  console.log("[patchWalletDocMedia] start", {
-    path,
-    mediaStatus: input.mediaStatus,
-  });
 
   try {
     await updateDoc(
@@ -50,16 +46,10 @@ export async function patchWalletDocMedia(
       }
     );
 
-    console.log("[patchWalletDocMedia] success", { path });
     await queryClient.invalidateQueries({ queryKey: WALLET_DOCS_QUERY_KEY });
     return { path };
   } catch (error) {
-    console.error("[patchWalletDocMedia] failed", {
-      path,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

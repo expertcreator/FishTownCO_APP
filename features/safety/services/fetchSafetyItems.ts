@@ -22,8 +22,6 @@ export async function fetchSafetyItems(): Promise<SafetyItem[]> {
     throw new Error("NOT_SIGNED_IN");
   }
 
-  console.log("[fetchSafetyItems] start", { uid: user.uid });
-
   const safetyQuery = query(
     collection(firebaseFirestore, "users", user.uid, "safety"),
     orderBy("dueDateIso", "asc")
@@ -32,11 +30,11 @@ export async function fetchSafetyItems(): Promise<SafetyItem[]> {
   try {
     const snapshot = await getDocs(safetyQuery);
     const items = snapshot.docs.map(mapSafetyItemDoc);
-    console.log("[fetchSafetyItems] success", { count: items.length });
+    
     return items;
-  } catch (error) {
+  } catch {
     // Fallback when dueDateIso index / field is missing on older docs
-    console.warn("[fetchSafetyItems] orderBy failed, falling back", error);
+    
     const snapshot = await getDocs(
       collection(firebaseFirestore, "users", user.uid, "safety")
     );
@@ -47,7 +45,7 @@ export async function fetchSafetyItems(): Promise<SafetyItem[]> {
         const bTime = b.dueDateIso ? Date.parse(b.dueDateIso) : Number.POSITIVE_INFINITY;
         return aTime - bTime;
       });
-    console.log("[fetchSafetyItems] fallback success", { count: items.length });
+    
     return items;
   }
 }

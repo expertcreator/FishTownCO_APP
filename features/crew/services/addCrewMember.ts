@@ -91,12 +91,6 @@ export async function addCrewMember(
       .filter(Boolean)
       .sort()[0] ?? null;
 
-  console.log("[addCrewMember] start", {
-    consolePath,
-    name: input.name,
-    certCount: certificates.length,
-  });
-
   const hasLocal = Boolean(input.localUri?.trim());
 
   try {
@@ -117,17 +111,12 @@ export async function addCrewMember(
     });
 
     const fullPath = `${consolePath}/${ref.id}`;
-    console.log("[addCrewMember] success", { id: ref.id, fullPath });
+
     await queryClient.invalidateQueries({ queryKey: CREW_MEMBERS_QUERY_KEY });
 
     return { id: ref.id, path: fullPath };
   } catch (error) {
-    console.error("[addCrewMember] failed", {
-      consolePath,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

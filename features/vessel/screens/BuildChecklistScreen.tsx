@@ -93,7 +93,7 @@ export default function BuildChecklistScreen() {
       toast.success(t("setup.checklist-saved"));
       router.push("/subscription");
     } catch (error) {
-      console.error("[BuildChecklistScreen] save failed", error);
+
       if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
         toast.error(t("vessel.sign-in-required"));
       } else {

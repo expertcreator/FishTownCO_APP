@@ -1,3 +1,4 @@
+import type { Ionicons } from "@expo/vector-icons";
 import type { StatusTone } from "@/features/common/data/demo";
 
 /** Wallet document category used for filters and card labels. */
@@ -51,6 +52,30 @@ export function mapDocTypeToCategory(docType: string): WalletCategory {
   if (value.includes("certificate") || value.includes("safety") || value.includes("manual"))
     return "safety";
   return "other";
+}
+
+/**
+ * Picks the list icon for a wallet category.
+ * @param category - Wallet category key
+ * @returns Ionicons glyph name
+ */
+export function getWalletCategoryIcon(
+  category: WalletCategory
+): keyof typeof Ionicons.glyphMap {
+  switch (category) {
+    case "insurance":
+      return "shield";
+    case "registry":
+      return "ribbon-outline";
+    case "compliance":
+      return "checkmark-done-outline";
+    case "telecom":
+      return "cellular-outline";
+    case "safety":
+      return "alert-circle-outline";
+    default:
+      return "document-text-outline";
+  }
 }
 
 /**

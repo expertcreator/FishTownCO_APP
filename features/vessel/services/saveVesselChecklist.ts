@@ -29,11 +29,6 @@ export async function saveVesselChecklist(
   const path = `users/${user.uid}/vessel/${VESSEL_DOC_ID}`;
   const uniqueIds = [...new Set(checklistIds.map((id) => id.trim()).filter(Boolean))];
 
-  console.log("[saveVesselChecklist] start", {
-    path,
-    count: uniqueIds.length,
-  });
-
   try {
     await setDoc(
       doc(firebaseFirestore, "users", user.uid, "vessel", VESSEL_DOC_ID),
@@ -44,16 +39,10 @@ export async function saveVesselChecklist(
       { merge: true }
     );
 
-    console.log("[saveVesselChecklist] success", { path, count: uniqueIds.length });
     await queryClient.invalidateQueries({ queryKey: VESSEL_QUERY_KEY });
     return { path };
   } catch (error) {
-    console.error("[saveVesselChecklist] failed", {
-      path,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

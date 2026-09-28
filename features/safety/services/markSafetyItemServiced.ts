@@ -71,12 +71,6 @@ export async function markSafetyItemServiced(
   );
   const path = `users/${user.uid}/safety/${itemId}`;
 
-  console.log("[markSafetyItemServiced] start", {
-    path,
-    intervalDays,
-    nextDue: nextDue.toISOString(),
-  });
-
   try {
     await updateDoc(
       doc(firebaseFirestore, "users", user.uid, "safety", itemId),
@@ -89,7 +83,6 @@ export async function markSafetyItemServiced(
       }
     );
 
-    console.log("[markSafetyItemServiced] success", { path });
     await queryClient.invalidateQueries({ queryKey: SAFETY_ITEMS_QUERY_KEY });
     await queryClient.invalidateQueries({
       queryKey: ["safety", "item", itemId],
@@ -97,12 +90,7 @@ export async function markSafetyItemServiced(
 
     return { nextDueDateIso: nextDue.toISOString(), path };
   } catch (error) {
-    console.error("[markSafetyItemServiced] failed", {
-      path,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

@@ -3,7 +3,7 @@ import { patchCrewCertificateMedia } from "@/features/crew/services/patchCrewCer
 
 /**
  * Uploads a crew certificate image in the background and patches Firestore.
- * Never throws to the caller — failures are logged and marked on the cert.
+ * Never throws to the caller. Failures are marked on the certificate.
  * @param memberId - Crew Firestore document id
  * @param certificateId - Certificate id within the member doc
  * @param localUri - Local image URI selected on the form
@@ -14,10 +14,6 @@ export async function uploadCrewCertificateMediaInBackground(
   certificateId: string,
   localUri: string
 ): Promise<void> {
-  console.log("[uploadCrewCertificateMediaInBackground] start", {
-    memberId,
-    certificateId,
-  });
 
   try {
     const result = await uploadUserMedia({
@@ -34,16 +30,8 @@ export async function uploadCrewCertificateMediaInBackground(
       mediaStatus: "ready",
     });
 
-    console.log("[uploadCrewCertificateMediaInBackground] ready", {
-      memberId,
-      certificateId,
-    });
-  } catch (error) {
-    console.error("[uploadCrewCertificateMediaInBackground] failed", {
-      memberId,
-      certificateId,
-      error,
-    });
+  } catch {
+
     try {
       await patchCrewCertificateMedia({
         memberId,
@@ -53,11 +41,8 @@ export async function uploadCrewCertificateMediaInBackground(
         storagePath: "",
         mediaStatus: "failed",
       });
-    } catch (patchError) {
-      console.error(
-        "[uploadCrewCertificateMediaInBackground] patch failed",
-        patchError
-      );
+    } catch {
+
     }
   }
 }

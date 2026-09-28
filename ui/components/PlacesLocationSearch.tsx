@@ -98,8 +98,8 @@ export function PlacesLocationSearch({
           if (requestId === requestIdRef.current) {
             setResults(predictions);
           }
-        } catch (error) {
-          console.error("[PlacesLocationSearch] autocomplete failed", error);
+        } catch {
+
           if (requestId === requestIdRef.current) {
             setResults([]);
           }

@@ -30,11 +30,6 @@ export async function saveVesselProfile(
 
   const path = `users/${user.uid}/vessel/${VESSEL_DOC_ID}`;
   const ref = doc(firebaseFirestore, "users", user.uid, "vessel", VESSEL_DOC_ID);
-  console.log("[saveVesselProfile] start", {
-    path,
-    name: input.name,
-    type: input.type,
-  });
 
   try {
     const existing = await getDoc(ref);
@@ -63,16 +58,10 @@ export async function saveVesselProfile(
 
     await setDoc(ref, payload, { merge: true });
 
-    console.log("[saveVesselProfile] success", { path });
     await queryClient.invalidateQueries({ queryKey: VESSEL_QUERY_KEY });
     return { path };
   } catch (error) {
-    console.error("[saveVesselProfile] failed", {
-      path,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

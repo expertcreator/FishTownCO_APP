@@ -36,7 +36,6 @@ export async function ensureUserProfile(): Promise<{ path: string }> {
     (email.includes("@") ? email.split("@")[0] : "") ||
     "Skipper";
 
-  console.log("[ensureUserProfile] creating", { path, name, email });
   await setDoc(ref, {
     name,
     email: email || null,

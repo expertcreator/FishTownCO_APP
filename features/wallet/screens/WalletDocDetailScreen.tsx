@@ -8,7 +8,7 @@ import {
   StatusToneBanner,
   getBannerColors,
 } from "@/features/common/components";
-import { getSafetyCategoryIcon } from "@/features/safety/services/mapSafetyItemDoc";
+import { getWalletCategoryIcon } from "@/features/wallet/types/wallet";
 import {
   daysUntilDue,
   getComplianceProgress,
@@ -68,7 +68,7 @@ export default function WalletDocDetailScreen() {
   const tone = doc.tone;
   const bannerColors = getBannerColors(colors, tone);
   const imageUri = doc.thumbURL || doc.downloadURL || doc.localUri || null;
-  const icon = getSafetyCategoryIcon(doc.categoryLabel || doc.title);
+  const icon = getWalletCategoryIcon(doc.category);
 
   const banner =
     tone === "overdue"

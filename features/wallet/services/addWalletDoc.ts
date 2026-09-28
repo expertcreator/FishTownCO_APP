@@ -53,12 +53,6 @@ export async function addWalletDoc(
   const consolePath = `users/${user.uid}/wallet`;
   const hasLocal = Boolean(input.localUri?.trim());
 
-  console.log("[addWalletDoc] start", {
-    consolePath,
-    title: input.title,
-    docType: input.docType,
-  });
-
   try {
     const ref = await addDoc(walletCollection, {
       docType: input.docType.trim(),
@@ -79,17 +73,12 @@ export async function addWalletDoc(
     });
 
     const fullPath = `${consolePath}/${ref.id}`;
-    console.log("[addWalletDoc] success", { id: ref.id, fullPath });
+
     await queryClient.invalidateQueries({ queryKey: WALLET_DOCS_QUERY_KEY });
 
     return { id: ref.id, path: fullPath };
   } catch (error) {
-    console.error("[addWalletDoc] failed", {
-      consolePath,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

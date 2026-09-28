@@ -48,10 +48,6 @@ export function getAuthErrorMessage(error: unknown): string {
 export function mapAuthError(error: unknown, t: Translate): string {
   const code = getAuthErrorCode(error);
   const message = getAuthErrorMessage(error);
-  console.log("[mapAuthError]", {
-    code,
-    message,
-  });
 
   if (
     message === "GOOGLE_SIGNIN_CANCELLED" ||

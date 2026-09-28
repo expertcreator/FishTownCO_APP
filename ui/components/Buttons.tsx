@@ -228,5 +228,5 @@ function getStyles(colors: ThemeColors) {
     borderColor: colors.border,
   },
   disabled: { opacity: 0.5 },
-});
+  });
 }

@@ -23,8 +23,6 @@ export async function fetchBillingPayments(): Promise<BillingRow[]> {
     throw new Error("NOT_SIGNED_IN");
   }
 
-  console.log("[fetchBillingPayments] start", { uid: user.uid });
-
   try {
     const billingQuery = query(
       collection(firebaseFirestore, "users", user.uid, "billing"),
@@ -32,19 +30,17 @@ export async function fetchBillingPayments(): Promise<BillingRow[]> {
     );
     const snapshot = await getDocs(billingQuery);
     const rows = snapshot.docs.map(mapBillingDoc);
-    console.log("[fetchBillingPayments] success", { count: rows.length });
+
     return rows;
-  } catch (error) {
-    console.warn("[fetchBillingPayments] orderBy failed, falling back", error);
+  } catch {
+
     const snapshot = await getDocs(
       collection(firebaseFirestore, "users", user.uid, "billing")
     );
     const rows = snapshot.docs
       .map(mapBillingDoc)
       .sort((a, b) => Date.parse(b.dateIso) - Date.parse(a.dateIso));
-    console.log("[fetchBillingPayments] fallback success", {
-      count: rows.length,
-    });
+
     return rows;
   }
 }

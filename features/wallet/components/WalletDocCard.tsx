@@ -4,7 +4,10 @@ import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { StatusTone } from "@/features/common/data/demo";
 import { getCrewStatusIcon } from "@/features/crew/utils/crewStatus";
-import type { WalletDoc } from "@/features/wallet/types/wallet";
+import {
+  getWalletCategoryIcon,
+  type WalletDoc,
+} from "@/features/wallet/types/wallet";
 import {
   AppText,
   CARD_RIPPLE,
@@ -30,7 +33,7 @@ export function WalletDocCard({ doc }: WalletDocCardProps) {
   const styles = getStyles(colors);
   const { t } = useTranslation();  const toneStyle = getToneStyle(colors, doc.tone);
   const statusIcon = getCrewStatusIcon(doc.tone);
-  const categoryIcon = getCategoryIcon(doc.category);
+  const categoryIcon = getWalletCategoryIcon(doc.category);
   const imageUri = doc.thumbURL || doc.downloadURL || doc.localUri || null;
 
   const expiresLine = doc.expiresMeta
@@ -157,30 +160,6 @@ function getToneStyle(colors: ThemeColors, tone: StatusTone): ToneStyle {
         pillText: colors.teal,
         pillBorder: colors.teal,
       };
-  }
-}
-
-/**
- * Picks a category icon for a wallet document.
- * @param category - Wallet category key
- * @returns Ionicons glyph name
- */
-function getCategoryIcon(
-  category: WalletDoc["category"]
-): keyof typeof Ionicons.glyphMap {
-  switch (category) {
-    case "insurance":
-      return "shield";
-    case "registry":
-      return "ribbon-outline";
-    case "compliance":
-      return "checkmark-done-outline";
-    case "telecom":
-      return "cellular-outline";
-    case "safety":
-      return "alert-circle-outline";
-    default:
-      return "document-text-outline";
   }
 }
 

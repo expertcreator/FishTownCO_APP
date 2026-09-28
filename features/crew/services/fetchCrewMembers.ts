@@ -23,8 +23,6 @@ export async function fetchCrewMembers(): Promise<CrewMember[]> {
     throw new Error("NOT_SIGNED_IN");
   }
 
-  console.log("[fetchCrewMembers] start", { uid: user.uid });
-
   try {
     const crewQuery = query(
       collection(firebaseFirestore, "users", user.uid, "crew"),
@@ -32,10 +30,10 @@ export async function fetchCrewMembers(): Promise<CrewMember[]> {
     );
     const snapshot = await getDocs(crewQuery);
     const members = snapshot.docs.map(mapCrewMemberDoc);
-    console.log("[fetchCrewMembers] success", { count: members.length });
+    
     return members;
-  } catch (error) {
-    console.warn("[fetchCrewMembers] orderBy failed, falling back", error);
+  } catch {
+    
     const snapshot = await getDocs(
       collection(firebaseFirestore, "users", user.uid, "crew")
     );
@@ -50,9 +48,7 @@ export async function fetchCrewMembers(): Promise<CrewMember[]> {
           : Number.POSITIVE_INFINITY;
         return aTime - bTime;
       });
-    console.log("[fetchCrewMembers] fallback success", {
-      count: members.length,
-    });
+    
     return members;
   }
 }

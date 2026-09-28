@@ -62,11 +62,6 @@ export async function patchSafetyItemMedia(
 
   const path = `users/${user.uid}/safety/${input.id}`;
   const fields = mediaFields(input.kind);
-  console.log("[patchSafetyItemMedia] start", {
-    path,
-    kind: input.kind,
-    mediaStatus: input.mediaStatus,
-  });
 
   try {
     await updateDoc(
@@ -80,20 +75,13 @@ export async function patchSafetyItemMedia(
       }
     );
 
-    console.log("[patchSafetyItemMedia] success", { path, kind: input.kind });
     await queryClient.invalidateQueries({ queryKey: SAFETY_ITEMS_QUERY_KEY });
     await queryClient.invalidateQueries({
       queryKey: ["safety", "item", input.id],
     });
     return { path };
   } catch (error) {
-    console.error("[patchSafetyItemMedia] failed", {
-      path,
-      kind: input.kind,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

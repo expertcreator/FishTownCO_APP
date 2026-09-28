@@ -35,10 +35,6 @@ export async function updateCrewMember(
   }
 
   const path = `users/${user.uid}/crew/${input.id}`;
-  console.log("[updateCrewMember] start", {
-    path,
-    name: input.name,
-  });
 
   const certificates = input.certificates.map((cert, index) => {
     const hasLocal = Boolean(cert.localUri?.trim());
@@ -95,7 +91,6 @@ export async function updateCrewMember(
       updatedAt: serverTimestamp(),
     });
 
-    console.log("[updateCrewMember] success", { path });
     await queryClient.invalidateQueries({ queryKey: CREW_MEMBERS_QUERY_KEY });
     await queryClient.invalidateQueries({
       queryKey: ["crew", "member", input.id],
@@ -103,12 +98,7 @@ export async function updateCrewMember(
 
     return { id: input.id, path };
   } catch (error) {
-    console.error("[updateCrewMember] failed", {
-      path,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

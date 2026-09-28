@@ -23,6 +23,6 @@ export const createAddSafetySchema = (t: Translate) =>
     lastServiceDate: z.string().trim().optional(),
     nextDueDate: required(t),
     expiryDate: z.string().trim().optional(),
-  });
+});
 
 export type AddSafetySchema = z.infer<ReturnType<typeof createAddSafetySchema>>;

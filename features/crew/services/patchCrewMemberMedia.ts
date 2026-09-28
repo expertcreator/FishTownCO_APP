@@ -34,10 +34,6 @@ export async function patchCrewMemberMedia(
   }
 
   const path = `users/${user.uid}/crew/${input.id}`;
-  console.log("[patchCrewMemberMedia] start", {
-    path,
-    mediaStatus: input.mediaStatus,
-  });
 
   try {
     await updateDoc(
@@ -51,19 +47,13 @@ export async function patchCrewMemberMedia(
       }
     );
 
-    console.log("[patchCrewMemberMedia] success", { path });
     await queryClient.invalidateQueries({ queryKey: CREW_MEMBERS_QUERY_KEY });
     await queryClient.invalidateQueries({
       queryKey: ["crew", "member", input.id],
     });
     return { path };
   } catch (error) {
-    console.error("[patchCrewMemberMedia] failed", {
-      path,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

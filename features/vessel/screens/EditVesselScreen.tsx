@@ -120,7 +120,7 @@ export default function EditVesselScreen() {
       toast.success(t("vessel.save-success"));
       router.back();
     } catch (error) {
-      console.error("[EditVesselScreen] save failed", error);
+
       if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
         toast.error(t("vessel.sign-in-required"));
       } else {

@@ -60,17 +60,16 @@ export async function fetchVesselProfile(): Promise<VesselProfile | null> {
     throw new Error("NOT_SIGNED_IN");
   }
 
-  console.log("[fetchVesselProfile] start", { uid: user.uid });
   const snap = await getDoc(
     doc(firebaseFirestore, "users", user.uid, "vessel", VESSEL_DOC_ID)
   );
 
   if (!snap.exists()) {
-    console.log("[fetchVesselProfile] missing");
+
     return null;
   }
 
   const profile = mapVesselProfile(snap.data() as Record<string, unknown>);
-  console.log("[fetchVesselProfile] success", { name: profile.name });
+
   return profile;
 }

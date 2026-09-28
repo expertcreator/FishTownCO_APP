@@ -20,12 +20,16 @@ import { View } from "react-native";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
-/** Minimum time the native splash stays visible before `hideAsync` (Foori: 1000ms). */
-const SPLASH_HIDE_DELAY_MS = 1000;
+/**
+ * Safety cap so the native splash cannot stick if the entry route never
+ * resolves. The entry screen hides it as soon as Welcome, Login, or Home is ready.
+ */
+const SPLASH_MAX_MS = 8000;
 
 /**
- * Root layout for Fishtownco — native splash hide matches Foori pattern.
- * Prefetches brand logos and Firestore safety categories while splash is up.
+ * Root layout for Fishtownco.
+ * Prefetches brand logos and Firestore safety categories while the native splash is up.
+ * The entry route hides that splash once Welcome, Login, or Home is ready.
  * @returns Root navigation tree
  */
 export default function RootLayout() {
@@ -34,33 +38,23 @@ export default function RootLayout() {
   }, []);
 
   useLayoutEffect(() => {
-    let cancelled = false;
+    Promise.all([
+      Promise.race([
+        prefetchBrandLogos(),
+        new Promise<void>((resolve) => setTimeout(resolve, 2500)),
+      ]),
+      Promise.race([
+        prefetchSafetyCategories(),
+        new Promise<void>((resolve) => setTimeout(resolve, 4000)),
+      ]),
+    ]).catch(() => undefined);
 
-    (async () => {
-      await Promise.all([
-        Promise.race([
-          prefetchBrandLogos(),
-          new Promise<void>((resolve) => setTimeout(resolve, 2500)),
-        ]),
-        Promise.race([
-          prefetchSafetyCategories(),
-          new Promise<void>((resolve) => setTimeout(resolve, 4000)),
-        ]),
-      ]);
-      await new Promise<void>((resolve) =>
-        setTimeout(resolve, SPLASH_HIDE_DELAY_MS)
-      );
-      if (!cancelled) {
-        SplashScreen.hideAsync().catch(() => undefined);
-      }
-    })().catch(() => {
-      if (!cancelled) {
-        SplashScreen.hideAsync().catch(() => undefined);
-      }
-    });
+    const splashCap = setTimeout(() => {
+      SplashScreen.hideAsync().catch(() => undefined);
+    }, SPLASH_MAX_MS);
 
     return () => {
-      cancelled = true;
+      clearTimeout(splashCap);
     };
   }, []);
 
@@ -91,10 +85,22 @@ function ThemedShell() {
       <BrandLogoWarmup />
       <NetworkStatusProvider>
         <SafeKeyboardProvider>
-          <Stack screenOptions={{ headerShown: false, animation: "fade" }} />
+          <Stack screenOptions={{ headerShown: false, animation: "fade" }}>
+            <Stack.Screen name="index" options={{ animation: "none" }} />
+          </Stack>
         </SafeKeyboardProvider>
       </NetworkStatusProvider>
-      <ToastifyProvider />
+      <ToastifyProvider
+        config={{
+          theme: {
+            backgroundColor: colors.card,
+            textColor: colors.navy,
+            textSecondaryColor: colors.muted,
+            borderColor: colors.border,
+            shadowColor: isDark ? "#000000" : colors.navy,
+          },
+        }}
+      />
     </View>
   );
 }

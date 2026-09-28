@@ -23,7 +23,7 @@ export const createVesselSetupSchema = (t: Translate) =>
     length: required(t),
     homePort: required(t),
     mmsi: mmsi(t),
-  });
+});
 
 export type VesselSetupSchema = z.infer<
   ReturnType<typeof createVesselSetupSchema>
@@ -44,7 +44,7 @@ export const createEditVesselSchema = (t: Translate) =>
     registrationNo: z.string().trim(),
     engineHours: z.string().trim(),
     usage: z.string().trim(),
-  });
+});
 
 export type EditVesselSchema = z.infer<
   ReturnType<typeof createEditVesselSchema>

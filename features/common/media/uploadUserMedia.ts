@@ -56,11 +56,6 @@ export async function uploadUserMedia(
   const originalPath = `${basePath}/original.jpg`;
   const thumbPath = `${basePath}/thumb.jpg`;
 
-  console.log("[uploadUserMedia] start", {
-    basePath,
-    localUri: input.localUri,
-  });
-
   try {
     const fullUri = await compressImage(input.localUri, {
       maxEdge: input.maxEdge ?? 1280,
@@ -81,11 +76,6 @@ export async function uploadUserMedia(
     const downloadURL = await getDownloadURL(originalRef);
     const thumbURL = await getDownloadURL(thumbRef);
 
-    console.log("[uploadUserMedia] success", {
-      originalPath,
-      thumbPath,
-    });
-
     return {
       downloadURL,
       thumbURL,
@@ -93,12 +83,7 @@ export async function uploadUserMedia(
       thumbPath,
     };
   } catch (error) {
-    console.error("[uploadUserMedia] failed", {
-      basePath,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

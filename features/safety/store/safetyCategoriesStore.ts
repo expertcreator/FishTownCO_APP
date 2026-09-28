@@ -1,12 +1,12 @@
 import { create } from "zustand";
-import type { PickerOption } from "@/ui/components/OptionsPickerModal";
 import {
   fetchSafetyCategories,
   upsertSafetyCategorySeed,
+  type SafetyCategory,
 } from "@/features/safety/services/safetyCategories";
 
 type SafetyCategoriesState = {
-  categories: PickerOption[];
+  categories: SafetyCategory[];
   isLoading: boolean;
   isLoaded: boolean;
   error: string | null;
@@ -33,11 +33,8 @@ export const useSafetyCategoriesStore = create<SafetyCategoriesState>(
       try {
         try {
           await upsertSafetyCategorySeed();
-        } catch (seedError) {
-          console.warn(
-            "[safetyCategoriesStore] seed failed (check Firestore write rules)",
-            seedError
-          );
+        } catch {
+          
         }
 
         const categories = await fetchSafetyCategories();
@@ -51,7 +48,7 @@ export const useSafetyCategoriesStore = create<SafetyCategoriesState>(
               : null,
         });
       } catch (error) {
-        console.error("[safetyCategoriesStore] load failed", error);
+        
         set({
           categories: [],
           isLoaded: true,
@@ -63,5 +60,5 @@ export const useSafetyCategoriesStore = create<SafetyCategoriesState>(
         });
       }
     },
-  })
+})
 );

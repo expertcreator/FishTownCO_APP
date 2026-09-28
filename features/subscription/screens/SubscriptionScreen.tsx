@@ -23,13 +23,13 @@ const PLANS = [
     titleKey: "subscription.annual-title",
     priceKey: "subscription.annual-price",
     noteKey: "subscription.annual-note",
-  },
+},
   {
     id: "monthly" as const,
     titleKey: "subscription.monthly-title",
     priceKey: "subscription.monthly-price",
     noteKey: "subscription.monthly-note",
-  },
+},
 ] as const;
 
 /**
@@ -58,7 +58,7 @@ export default function SubscriptionScreen() {
       toast.success(t("subscription.start-success"));
       router.replace("/(tabs)/home");
     } catch (error) {
-      console.error("[SubscriptionScreen] start failed", error);
+
       if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
         toast.error(t("subscription.sign-in-required"));
       } else {

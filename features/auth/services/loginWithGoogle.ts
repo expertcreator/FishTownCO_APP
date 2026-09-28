@@ -23,7 +23,6 @@ export type SocialLoginResult = {
  */
 export async function loginWithGoogle(): Promise<SocialLoginResult> {
   configureGoogleSignIn();
-  console.log("[loginWithGoogle] start", { platform: Platform.OS });
 
   try {
     if (Platform.OS === "android") {
@@ -55,11 +54,6 @@ export async function loginWithGoogle(): Promise<SocialLoginResult> {
     const result = await signInWithCredential(firebaseAuth, credential);
     await ensureUserProfile();
 
-    console.log("[loginWithGoogle] success", {
-      uid: result.user.uid,
-      email: result.user.email,
-    });
-
     return {
       uid: result.user.uid,
       email: result.user.email,
@@ -73,7 +67,7 @@ export async function loginWithGoogle(): Promise<SocialLoginResult> {
     ) {
       throw new Error("GOOGLE_SIGNIN_CANCELLED");
     }
-    console.error("[loginWithGoogle] failed", error);
+
     throw error;
   }
 }

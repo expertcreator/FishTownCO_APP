@@ -38,8 +38,6 @@ export async function compressImage(
   const maxEdge = options.maxEdge ?? 1280;
   const quality = options.quality ?? 0.7;
 
-  console.log("[compressImage] start", { uri, maxEdge, quality });
-
   let actions: ImageManipulator.Action[] = [];
   try {
     const { width, height } = await getImageSize(uri);
@@ -60,10 +58,5 @@ export async function compressImage(
     format: ImageManipulator.SaveFormat.JPEG,
   });
 
-  console.log("[compressImage] success", {
-    uri: result.uri,
-    width: result.width,
-    height: result.height,
-  });
   return result.uri;
 }

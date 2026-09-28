@@ -14,10 +14,8 @@ export type DeviceLocationResult = {
  * @throws {Error} When permission is denied or location cannot be read
  */
 export async function getCurrentLocationLabel(): Promise<DeviceLocationResult> {
-  console.log("[getCurrentLocationLabel] start");
 
   const permission = await Location.requestForegroundPermissionsAsync();
-  console.log("[getCurrentLocationLabel] permission", permission.status);
 
   if (permission.status !== Location.PermissionStatus.GRANTED) {
     throw new Error("LOCATION_PERMISSION_DENIED");
@@ -27,9 +25,8 @@ export async function getCurrentLocationLabel(): Promise<DeviceLocationResult> {
     accuracy: Location.Accuracy.Balanced,
   });
   const { latitude, longitude } = position.coords;
-  console.log("[getCurrentLocationLabel] coords", { latitude, longitude });
 
   const label = await reverseGeocodeLabel(latitude, longitude);
-  console.log("[getCurrentLocationLabel] success", { label });
+
   return { label, latitude, longitude };
 }

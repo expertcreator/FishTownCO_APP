@@ -71,4 +71,4 @@ export const createZustandMMKVStorage = <S>(): PersistStorage<S> =>
     removeItem: (name: string) => {
       mmkv.delete(name);
     },
-  })) as PersistStorage<S>;
+})) as PersistStorage<S>;

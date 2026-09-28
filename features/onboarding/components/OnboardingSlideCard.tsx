@@ -126,5 +126,5 @@ function getStyles(colors: ThemeColors) {
     fontSize: 15,
     lineHeight: 22,
   },
-});
+  });
 }

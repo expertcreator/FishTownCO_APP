@@ -3,7 +3,7 @@ import { patchCrewMemberMedia } from "@/features/crew/services/patchCrewMemberMe
 
 /**
  * Uploads a crew member photo in the background and patches Firestore URLs.
- * Never throws to the caller — failures are logged and marked on the doc.
+ * Never throws to the caller. Failures are marked on the document.
  * @param memberId - Crew Firestore document id
  * @param localUri - Local image URI selected on the form
  * @returns Promise that resolves when the upload attempt finishes
@@ -12,7 +12,6 @@ export async function uploadCrewMediaInBackground(
   memberId: string,
   localUri: string
 ): Promise<void> {
-  console.log("[uploadCrewMediaInBackground] start", { memberId });
 
   try {
     const result = await uploadUserMedia({
@@ -28,12 +27,8 @@ export async function uploadCrewMediaInBackground(
       mediaStatus: "ready",
     });
 
-    console.log("[uploadCrewMediaInBackground] ready", { memberId });
-  } catch (error) {
-    console.error("[uploadCrewMediaInBackground] failed", {
-      memberId,
-      error,
-    });
+  } catch {
+
     try {
       await patchCrewMemberMedia({
         id: memberId,
@@ -42,8 +37,8 @@ export async function uploadCrewMediaInBackground(
         storagePath: "",
         mediaStatus: "failed",
       });
-    } catch (patchError) {
-      console.error("[uploadCrewMediaInBackground] patch failed", patchError);
+    } catch {
+
     }
   }
 }

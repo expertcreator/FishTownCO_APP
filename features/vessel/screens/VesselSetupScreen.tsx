@@ -66,7 +66,7 @@ export default function VesselSetupScreen() {
       toast.success(t("vessel.save-success"));
       router.push("/vessel/build-checklist");
     } catch (error) {
-      console.error("[VesselSetupScreen] save failed", error);
+
       if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
         toast.error(t("vessel.sign-in-required"));
       } else {

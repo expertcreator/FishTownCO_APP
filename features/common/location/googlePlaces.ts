@@ -58,16 +58,12 @@ export async function fetchPlaceAutocomplete(
     params.set("radius", String(bias.radiusMeters ?? 50_000));
   }
 
-  console.log("[fetchPlaceAutocomplete] start", { queryLen: query.length });
   const response = await fetch(
     `https://maps.googleapis.com/maps/api/place/autocomplete/json?${params.toString()}`
   );
   const data = (await response.json()) as AutocompleteResponse;
   if (data.status !== "OK" && data.status !== "ZERO_RESULTS") {
-    console.warn("[fetchPlaceAutocomplete] non-ok", {
-      status: data.status,
-      error: data.error_message,
-    });
+
     return [];
   }
 
@@ -95,17 +91,13 @@ export async function fetchPlaceDetails(
     key: apiKey,
   });
 
-  console.log("[fetchPlaceDetails] start", { placeId });
   try {
     const response = await fetch(
       `https://maps.googleapis.com/maps/api/place/details/json?${params.toString()}`
     );
     const data = (await response.json()) as PlaceDetailsResponse;
     if (data.status !== "OK" || !data.result) {
-      console.warn("[fetchPlaceDetails] non-ok", {
-        status: data.status,
-        error: data.error_message,
-      });
+
       return {
         description: fallbackDescription,
         formattedAddress: fallbackDescription,
@@ -127,8 +119,8 @@ export async function fetchPlaceDetails(
       latitude: typeof lat === "number" ? lat : null,
       longitude: typeof lng === "number" ? lng : null,
     };
-  } catch (error) {
-    console.error("[fetchPlaceDetails] failed", error);
+  } catch {
+
     return {
       description: fallbackDescription,
       formattedAddress: fallbackDescription,

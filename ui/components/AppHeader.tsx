@@ -1,10 +1,11 @@
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { logout } from "@/features/auth/services/logout";
 import { useColors, useTheme, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
+import { LogoutModal } from "./LogoutModal";
 import { getPressedItemStyle } from "./pressableStyles";
 import AppText from "./Text";
 import { useToast } from "./Toast";
@@ -78,19 +79,26 @@ function AppHeaderActions() {
   const { t } = useTranslation();
   const toast = useToast();
   const styles = getStyles(colors);
+  const [logoutOpen, setLogoutOpen] = useState(false);
+  const [loggingOut, setLoggingOut] = useState(false);
 
   /**
    * Signs out of Firebase Auth and returns to the login screen.
    * @returns Promise that resolves when navigation starts or a toast is shown
    */
-  const onLogout = async () => {
+  const onConfirmLogout = async () => {
+    if (loggingOut) return;
+    setLoggingOut(true);
     try {
       await logout();
+      setLogoutOpen(false);
       toast.success(t("auth.log-out-success"));
       router.replace("/(auth)/login");
-    } catch (error) {
-      console.error("[AppHeader] logout failed", error);
+    } catch {
+      setLogoutOpen(false);
       toast.error(t("auth.log-out-failed"));
+    } finally {
+      setLoggingOut(false);
     }
   };
 
@@ -115,7 +123,7 @@ function AppHeaderActions() {
         />
       </Pressable>
       <Pressable
-        onPress={onLogout}
+        onPress={() => setLogoutOpen(true)}
         hitSlop={10}
         style={({ pressed }) => [
           styles.actionButton,
@@ -126,6 +134,14 @@ function AppHeaderActions() {
       >
         <Ionicons name="log-out-outline" size={22} color={colors.navy} />
       </Pressable>
+      <LogoutModal
+        visible={logoutOpen}
+        loading={loggingOut}
+        onClose={() => setLogoutOpen(false)}
+        onConfirm={() => {
+          void onConfirmLogout();
+        }}
+      />
     </View>
   );
 }

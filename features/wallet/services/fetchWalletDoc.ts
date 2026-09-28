@@ -26,7 +26,6 @@ export async function fetchWalletDoc(id: string): Promise<WalletDoc> {
     throw new Error("MISSING_ID");
   }
 
-  console.log("[fetchWalletDoc] start", { id: trimmed });
   const ref = doc(firebaseFirestore, "users", user.uid, "wallet", trimmed);
   const snap = await getDoc(ref);
   if (!snap.exists()) {
@@ -34,6 +33,6 @@ export async function fetchWalletDoc(id: string): Promise<WalletDoc> {
   }
 
   const mapped = mapWalletDoc(snap as unknown as QueryDocumentSnapshot);
-  console.log("[fetchWalletDoc] success", { id: mapped.id });
+
   return mapped;
 }

@@ -33,7 +33,7 @@ export default function SafetyScreen() {
   const [filter, setFilter] = useState<SafetyFilterKey>("all");
   const { data, isLoading, isFetching, refetch, isError } = useSafetyItems();
   const itemsData = data ?? [];
-  /** `undefined` until first fetch settles — never treat that as an empty list. */
+  /** `undefined` until first fetch settles ï¿½ never treat that as an empty list. */
   const isInitialLoad = data === undefined;
   const { data: vessel } = useVesselProfile();
   const vesselName = vessel?.name?.trim() || t("app.name");

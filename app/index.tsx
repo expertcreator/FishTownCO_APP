@@ -1,31 +1,36 @@
 import { resolveAppLaunchRoute } from "@/features/auth/utils/resolveAppLaunchRoute";
 import { firebaseAuth } from "@/features/common/firebase";
 import { useOnboardingStore } from "@/features/onboarding/store/onboardingStore";
-import { AppBootSkeleton } from "@/ui/components";
-import { useColors, type ThemeColors } from "@/ui/theme";
 import { onAuthStateChanged } from "@react-native-firebase/auth";
 import { Redirect, type Href } from "expo-router";
+import * as SplashScreen from "expo-splash-screen";
 import { useEffect, useState } from "react";
-import { View } from "react-native";
+
+/** Keeps the native splash up long enough that it does not flash. */
+const MIN_SPLASH_MS = 1000;
 
 /**
- * App entry after native splash.
- * Waits for onboarding hydration and Firebase Auth restore, then routes to
- * Welcome, Login, or Home so a restart keeps an existing session.
- * @returns Redirect or boot skeleton
+ * App entry under the native splash.
+ * Waits for onboarding hydration and Firebase Auth, then opens Welcome, Login,
+ * or Home. The splash stays up until that screen is ready, so the boot
+ * skeleton never appears in front of the bottom tabs.
+ * @returns Redirect once the launch route is known
  */
 export default function Index() {
-  const colors = useColors();
-  const styles = getStyles(colors);
-
   const hasCompletedOnboarding = useOnboardingStore(
     (s) => s.hasCompletedOnboarding
   );
   const [onboardingHydrated, setOnboardingHydrated] = useState(() =>
     useOnboardingStore.persist.hasHydrated()
   );
+  const [minSplashElapsed, setMinSplashElapsed] = useState(false);
   const [isReady, setIsReady] = useState(false);
   const [redirectTo, setRedirectTo] = useState<Href | null>(null);
+
+  useEffect(() => {
+    const timer = setTimeout(() => setMinSplashElapsed(true), MIN_SPLASH_MS);
+    return () => clearTimeout(timer);
+  }, []);
 
   useEffect(() => {
     if (onboardingHydrated) return;
@@ -58,27 +63,16 @@ export default function Index() {
     };
   }, [hasCompletedOnboarding, onboardingHydrated]);
 
-  if (!(isReady && redirectTo)) {
-    return (
-      <View style={styles.boot}>
-        <AppBootSkeleton />
-      </View>
-    );
+  const launchHref = isReady ? redirectTo : null;
+
+  useEffect(() => {
+    if (!launchHref || !minSplashElapsed) return;
+    SplashScreen.hideAsync().catch(() => undefined);
+  }, [launchHref, minSplashElapsed]);
+
+  if (!launchHref || !minSplashElapsed) {
+    return null;
   }
 
-  return <Redirect href={redirectTo} />;
-}
-
-/**
- * Builds boot-loader styles for the active palette.
- * @param colors - Active theme colors
- * @returns Style object
- */
-function getStyles(colors: ThemeColors) {
-  return {
-    boot: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-  };
+  return <Redirect href={launchHref} />;
 }

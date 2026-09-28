@@ -63,9 +63,7 @@ export default function LocationMapPickerScreen() {
   useEffect(() => {
     if (isMapTilesLoaded || !ready) return;
     const timer = setTimeout(() => {
-      console.warn(
-        "[LocationMapPickerScreen] map load fallback — enabling map controls"
-      );
+
       setIsMapTilesLoaded(true);
     }, MAP_LOAD_FALLBACK_MS);
     return () => clearTimeout(timer);
@@ -85,8 +83,8 @@ export default function LocationMapPickerScreen() {
       if (seq === geocodeSeq.current) {
         setLabel(next);
       }
-    } catch (error) {
-      console.error("[LocationMapPickerScreen] reverse geocode failed", error);
+    } catch {
+
       if (seq === geocodeSeq.current) {
         setLabel(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
       }
@@ -137,8 +135,8 @@ export default function LocationMapPickerScreen() {
           }
           return;
         }
-      } catch (error) {
-        console.warn("[LocationMapPickerScreen] GPS bootstrap failed", error);
+      } catch {
+
       }
 
       const fallback: Region = {
@@ -183,8 +181,8 @@ export default function LocationMapPickerScreen() {
       setRegion(next);
       mapRef.current?.animateToRegion(next, 350);
       void geocodeCenter(next.latitude, next.longitude);
-    } catch (error) {
-      console.error("[LocationMapPickerScreen] locate failed", error);
+    } catch {
+
     } finally {
       setLocating(false);
     }
@@ -231,7 +229,7 @@ export default function LocationMapPickerScreen() {
           loadingBackgroundColor={colors.cardSoft}
           onMapLoaded={markMapTilesLoaded}
           onMapReady={() => {
-            console.log("[LocationMapPickerScreen] onMapReady");
+
             markMapTilesLoaded();
           }}
           onRegionChangeComplete={(next) => {

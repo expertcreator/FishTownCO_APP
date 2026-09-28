@@ -22,7 +22,7 @@ export const ONBOARDING_SLIDES: OnboardingSlideData[] = [
     badgeKey: "onboarding.slide-01-badge",
     badgeIcon: "check",
     illustration: require("@/assets/from-design/onboarding/01-central-log.jpg"),
-  },
+},
   {
     id: "due-dates",
     labelKey: "onboarding.slide-02-label",
@@ -32,7 +32,7 @@ export const ONBOARDING_SLIDES: OnboardingSlideData[] = [
     badgeKey: "onboarding.slide-02-badge",
     badgeIcon: "bell",
     illustration: require("@/assets/from-design/onboarding/02-due-dates.jpg"),
-  },
+},
   {
     id: "inspection",
     labelKey: "onboarding.slide-03-label",
@@ -42,5 +42,5 @@ export const ONBOARDING_SLIDES: OnboardingSlideData[] = [
     badgeKey: "onboarding.slide-03-badge",
     badgeIcon: "share",
     illustration: require("@/assets/from-design/onboarding/03-inspection.jpg"),
-  },
+},
 ];

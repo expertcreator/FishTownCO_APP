@@ -95,7 +95,7 @@ export default function CreateAccountScreen() {
       toast.success(t("auth.create-account-success"));
       router.replace("/(auth)/login");
     } catch (error) {
-      console.error("[CreateAccountScreen] submit failed", error);
+
       toast.error(mapAuthError(error, t));
       setIsSubmitting(false);
     }
@@ -125,7 +125,7 @@ export default function CreateAccountScreen() {
       await loginWithGoogle();
       await afterSocialAuthSuccess();
     } catch (error) {
-      console.error("[CreateAccountScreen] google failed", error);
+
       const message = error instanceof Error ? error.message : "";
       if (message !== "GOOGLE_SIGNIN_CANCELLED") {
         toast.error(mapAuthError(error, t));
@@ -148,7 +148,7 @@ export default function CreateAccountScreen() {
       await loginWithApple();
       await afterSocialAuthSuccess();
     } catch (error) {
-      console.error("[CreateAccountScreen] apple failed", error);
+
       const message = error instanceof Error ? error.message : "";
       if (message !== "APPLE_SIGNIN_CANCELLED") {
         toast.error(mapAuthError(error, t));

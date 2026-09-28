@@ -130,7 +130,7 @@ export default function AddDocumentScreen() {
       toast.success(t("wallet.save-success"));
       router.back();
     } catch (error) {
-      console.error("[AddDocumentScreen] save failed", error);
+
       if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
         toast.error(t("wallet.sign-in-required"));
       } else {

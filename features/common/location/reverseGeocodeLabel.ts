@@ -91,8 +91,8 @@ async function reverseGeocodeWithBigDataCloud(
     const data = (await response.json()) as BigDataCloudReverseGeoJson;
     const label = formatAddressFromBigDataCloud(data).trim();
     return label.length > 0 ? label : null;
-  } catch (error) {
-    console.warn("[reverseGeocodeLabel] BigDataCloud failed", error);
+  } catch {
+
     return null;
   }
 }
@@ -127,11 +127,8 @@ export async function reverseGeocodeLabel(
     if (unique.length > 0) {
       return unique.join(", ");
     }
-  } catch (error) {
-    console.warn(
-      "[reverseGeocodeLabel] Expo reverse geocode failed — trying BigDataCloud",
-      error
-    );
+  } catch {
+
   }
 
   const fallback = await reverseGeocodeWithBigDataCloud(latitude, longitude);

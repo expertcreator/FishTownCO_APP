@@ -40,17 +40,13 @@ export function waitForAuthUser(timeoutMs = 2500): Promise<AuthUser> {
  * @returns Promise that resolves when prefetch finishes (or is skipped)
  */
 export async function prefetchSafetyCategories(): Promise<void> {
-  console.log("[prefetchSafetyCategories] start");
+  
   const user = await waitForAuthUser();
   if (!user) {
-    console.log(
-      "[prefetchSafetyCategories] skipped — no auth session on splash"
-    );
+    
     return;
   }
 
   await useSafetyCategoriesStore.getState().loadCategories();
-  console.log("[prefetchSafetyCategories] done", {
-    count: useSafetyCategoriesStore.getState().categories.length,
-  });
+  
 }

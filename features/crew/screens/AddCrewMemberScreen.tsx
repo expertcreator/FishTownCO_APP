@@ -337,7 +337,7 @@ export default function AddCrewMemberScreen() {
       );
       router.back();
     } catch (error) {
-      console.error("[AddCrewMemberScreen] save failed", error);
+
       if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
         toast.error(t("crew.sign-in-required"));
       } else {

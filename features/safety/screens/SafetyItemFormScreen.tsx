@@ -244,7 +244,7 @@ export default function SafetyItemFormScreen() {
       });
       toast.success(t("safety.location-updated"));
     } catch (error) {
-      console.error("[SafetyItemFormScreen] location failed", error);
+
       const code = error instanceof Error ? error.message : "LOCATION_FAILED";
       toast.error(
         code === "LOCATION_PERMISSION_DENIED"
@@ -337,7 +337,7 @@ export default function SafetyItemFormScreen() {
       }
       router.back();
     } catch (error) {
-      console.error("[SafetyItemFormScreen] save failed", error);
+
       if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
         toast.error(t("safety.sign-in-required"));
       } else {

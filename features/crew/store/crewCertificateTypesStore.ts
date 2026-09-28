@@ -33,11 +33,8 @@ export const useCrewCertificateTypesStore = create<CrewCertificateTypesState>(
       try {
         try {
           await upsertCrewCertificateTypeSeed();
-        } catch (seedError) {
-          console.warn(
-            "[crewCertificateTypesStore] seed failed (check Firestore write rules)",
-            seedError
-          );
+        } catch {
+          
         }
 
         const types = await fetchCrewCertificateTypes();
@@ -51,7 +48,7 @@ export const useCrewCertificateTypesStore = create<CrewCertificateTypesState>(
               : null,
         });
       } catch (error) {
-        console.error("[crewCertificateTypesStore] load failed", error);
+        
         set({
           types: [],
           isLoaded: true,
@@ -63,5 +60,5 @@ export const useCrewCertificateTypesStore = create<CrewCertificateTypesState>(
         });
       }
     },
-  })
+})
 );

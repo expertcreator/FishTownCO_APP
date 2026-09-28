@@ -36,11 +36,6 @@ export async function patchCrewCertificateMedia(
   }
 
   const path = `users/${user.uid}/crew/${input.memberId}`;
-  console.log("[patchCrewCertificateMedia] start", {
-    path,
-    certificateId: input.certificateId,
-    mediaStatus: input.mediaStatus,
-  });
 
   try {
     const ref = doc(
@@ -84,23 +79,13 @@ export async function patchCrewCertificateMedia(
       updatedAt: serverTimestamp(),
     });
 
-    console.log("[patchCrewCertificateMedia] success", {
-      path,
-      certificateId: input.certificateId,
-    });
     await queryClient.invalidateQueries({ queryKey: CREW_MEMBERS_QUERY_KEY });
     await queryClient.invalidateQueries({
       queryKey: ["crew", "member", input.memberId],
     });
     return { path };
   } catch (error) {
-    console.error("[patchCrewCertificateMedia] failed", {
-      path,
-      certificateId: input.certificateId,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

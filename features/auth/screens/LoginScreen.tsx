@@ -66,7 +66,7 @@ export default function LoginScreen() {
   const onSubmit = async (values: LoginSchema) => {
     if (isSubmitting) return;
     setIsSubmitting(true);
-    console.log("[LoginScreen] submit", { email: values.email.trim() });
+
     try {
       await login({
         email: values.email,
@@ -76,7 +76,6 @@ export default function LoginScreen() {
       toast.success(t("auth.log-in-success"));
       router.replace("/(tabs)/home");
     } catch (error) {
-      console.error("[LoginScreen] submit failed", error);
       toast.error(mapAuthError(error, t));
       setIsSubmitting(false);
     }
@@ -103,7 +102,7 @@ export default function LoginScreen() {
       await loginWithGoogle();
       await afterAuthSuccess();
     } catch (error) {
-      console.error("[LoginScreen] google failed", error);
+
       const message =
         error instanceof Error ? error.message : "";
       if (message !== "GOOGLE_SIGNIN_CANCELLED") {
@@ -124,7 +123,7 @@ export default function LoginScreen() {
       await loginWithApple();
       await afterAuthSuccess();
     } catch (error) {
-      console.error("[LoginScreen] apple failed", error);
+
       const message =
         error instanceof Error ? error.message : "";
       if (message !== "APPLE_SIGNIN_CANCELLED") {

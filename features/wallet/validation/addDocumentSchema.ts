@@ -31,7 +31,7 @@ export const createAddDocumentSchema = (t: Translate) =>
     reference: z.string().trim(),
     issueDate: required(t),
     expiryDate: required(t),
-  });
+});
 
 export type AddDocumentSchema = z.infer<
   ReturnType<typeof createAddDocumentSchema>

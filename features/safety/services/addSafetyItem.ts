@@ -55,13 +55,6 @@ export async function addSafetyItem(
   );
   const consolePath = `users/${user.uid}/safety`;
 
-  console.log("[addSafetyItem] start", {
-    consolePath,
-    uid: user.uid,
-    name: input.name,
-    itemType: input.itemType,
-  });
-
   const hasPhoto = Boolean(input.photoLocalUri?.trim());
   const hasCert = Boolean(input.certLocalUri?.trim());
 
@@ -96,22 +89,12 @@ export async function addSafetyItem(
     });
 
     const fullPath = `${consolePath}/${ref.id}`;
-    console.log("[addSafetyItem] success — open this in Firebase Console:", {
-      id: ref.id,
-      fullPath,
-      lookUnder: "Firestore → users → (your user id) → safety",
-    });
 
     await queryClient.invalidateQueries({ queryKey: SAFETY_ITEMS_QUERY_KEY });
 
     return { id: ref.id, path: fullPath };
   } catch (error) {
-    console.error("[addSafetyItem] failed", {
-      consolePath,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+    
     throw error;
   }
 }

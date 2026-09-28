@@ -1,10 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
 import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { StatusTone } from "@/features/common/data/demo";
-import { pickDisplayMediaUri } from "@/features/common/media/mediaStatus";
-import { getSafetyCategoryIcon } from "@/features/safety/services/mapSafetyItemDoc";
+import { resolveSafetyCategoryIcon } from "@/features/safety/services/safetyCategories";
+import { useSafetyCategoriesStore } from "@/features/safety/store/safetyCategoriesStore";
 import type { SafetyItem } from "@/features/safety/types/safetyItem";
 import {
   AppText,
@@ -34,7 +33,8 @@ type SafetyItemCardProps = {
 
 /**
  * Safety inventory card matching https://fishtownco.itoasis.co/ (screens 11–12).
- * Uses live Firestore item fields for name, due date, tone, and photo.
+ * Uses live Firestore item fields for name, due date, and tone.
+ * The leading mark is always the category icon.
  * Replacement CTA is a sibling pressable (not nested) so it receives taps.
  * @param props - Card props
  * @param props.item - Safety item from Firestore
@@ -52,12 +52,8 @@ export function SafetyItemCard({
   const { t } = useTranslation();
   const toast = useToast();
   const toneStyle = getToneStyle(colors, item.tone);
-  const icon = getSafetyCategoryIcon(item.category || item.name);
-  const photoUri = pickDisplayMediaUri({
-    thumbURL: item.photoThumbURL,
-    downloadURL: item.photoDownloadURL,
-    localUri: item.photoLocalUri,
-  });
+  const categories = useSafetyCategoriesStore((state) => state.categories);
+  const icon = resolveSafetyCategoryIcon(item.category, categories);
 
   const showButton =
     showReplacement === "action"
@@ -98,17 +94,7 @@ export function SafetyItemCard({
         <View style={styles.topRow}>
           <View style={styles.left}>
             <View style={[styles.iconWrap, { backgroundColor: toneStyle.iconBg }]}>
-              {photoUri ? (
-                <Image
-                  source={{ uri: photoUri }}
-                  style={styles.thumb}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={150}
-                />
-              ) : (
-                <Ionicons name={icon} size={26} color={toneStyle.icon} />
-              )}
+              <Ionicons name={icon} size={26} color={toneStyle.icon} />
             </View>
             <View style={styles.body}>
               <AppText style={styles.name} numberOfLines={1}>
@@ -255,11 +241,6 @@ function getStyles(colors: ThemeColors) {
       borderRadius: 12,
       alignItems: "center",
       justifyContent: "center",
-      overflow: "hidden",
-    },
-    thumb: {
-      width: 48,
-      height: 48,
     },
     body: { flex: 1, minWidth: 0, gap: 4 },
     name: {

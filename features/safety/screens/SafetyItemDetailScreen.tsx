@@ -14,7 +14,8 @@ import {
 import type { StatusTone } from "@/features/common/data/demo";
 import { pickDisplayMediaUri } from "@/features/common/media/mediaStatus";
 import { fetchSafetyItem } from "@/features/safety/services/fetchSafetyItem";
-import { getSafetyCategoryIcon } from "@/features/safety/services/mapSafetyItemDoc";
+import { resolveSafetyCategoryIcon } from "@/features/safety/services/safetyCategories";
+import { useSafetyCategoriesStore } from "@/features/safety/store/safetyCategoriesStore";
 import { markSafetyItemServiced } from "@/features/safety/services/markSafetyItemServiced";
 import {
   formatSafetyDueDateLong,
@@ -51,6 +52,7 @@ export default function SafetyItemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const itemId = typeof id === "string" ? id : "";
   const [isServicing, setIsServicing] = useState(false);
+  const categories = useSafetyCategoriesStore((state) => state.categories);
 
   const { data: item, isLoading, isFetching, isError, refetch } = useQuery({
     queryKey: ["safety", "item", itemId],
@@ -81,7 +83,7 @@ export default function SafetyItemDetailScreen() {
     : parseSafetyDueDate(item.dueDate);
   const days = dueDateObj ? daysUntilDue(dueDateObj) : 0;
   const tone = item.tone;
-  const icon = getSafetyCategoryIcon(item.category || item.name);
+  const icon = resolveSafetyCategoryIcon(item.category, categories);
   const progress = getComplianceProgress(days);
   const timelineLabel = getComplianceTimelineLabel(days);
   const banner = getBannerCopy(tone, item.dueDate, t);
@@ -128,7 +130,7 @@ export default function SafetyItemDetailScreen() {
         })
       );
     } catch (error) {
-      console.error("[SafetyItemDetailScreen] mark serviced failed", error);
+
       if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
         toast.error(t("safety.sign-in-required"));
       } else {
@@ -159,7 +161,6 @@ export default function SafetyItemDetailScreen() {
       <StatusToneBanner tone={tone} text={banner} />
 
       <ItemHeroCard
-        imageUri={photoUri}
         fallbackIcon={icon}
         topBadge={item.category || undefined}
         bottomBadge={item.location || undefined}
@@ -291,17 +292,7 @@ export default function SafetyItemDetailScreen() {
         <Card style={styles.certCard}>
           <View style={styles.certTop}>
             <View style={[styles.certIcon, { backgroundColor: colors.softTeal }]}>
-              {photoUri ? (
-                <Image
-                  source={{ uri: photoUri }}
-                  style={styles.certThumb}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={150}
-                />
-              ) : (
-                <Ionicons name="image-outline" size={22} color={colors.teal} />
-              )}
+              <Ionicons name="image-outline" size={22} color={colors.teal} />
             </View>
             <Ionicons name="arrow-up-outline" size={18} color={colors.muted} />
           </View>

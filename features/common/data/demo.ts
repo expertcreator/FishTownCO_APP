@@ -101,7 +101,7 @@ export const DEMO_SAFETY_ITEMS: SafetyItem[] = [
     tone: "due",
     serial: "LR-8-44291",
     notes: "Serviced annually. Hydrostatic release fitted.",
-  },
+},
   {
     id: "epirb",
     name: "EPIRB",
@@ -111,7 +111,7 @@ export const DEMO_SAFETY_ITEMS: SafetyItem[] = [
     status: "Valid",
     tone: "ok",
     serial: "EP-99102",
-  },
+},
   {
     id: "fire-ext",
     name: "Fire Extinguisher CO₂",
@@ -121,7 +121,7 @@ export const DEMO_SAFETY_ITEMS: SafetyItem[] = [
     status: "Overdue",
     tone: "overdue",
     serial: "FE-CO2-118",
-  },
+},
   {
     id: "flares",
     name: "Distress Flares Pack",
@@ -130,7 +130,7 @@ export const DEMO_SAFETY_ITEMS: SafetyItem[] = [
     dueDate: "30 Sep 2026",
     status: "Valid",
     tone: "ok",
-  },
+},
   {
     id: "lifejackets",
     name: "Lifejackets (x8)",
@@ -139,7 +139,7 @@ export const DEMO_SAFETY_ITEMS: SafetyItem[] = [
     dueDate: "14 Jun 2026",
     status: "Valid",
     tone: "ok",
-  },
+},
 ];
 
 /**
@@ -153,7 +153,7 @@ export const DEMO_WALLET: WalletDoc[] = [
     expires: "Expires 22 Nov 2026",
     tone: "ok",
     code: "SC-NS-2024",
-  },
+},
   {
     id: "radio-lic",
     title: "Ship Radio Licence",
@@ -161,7 +161,7 @@ export const DEMO_WALLET: WalletDoc[] = [
     expires: "Expires 09 Mar 2026",
     tone: "due",
     code: "SRL-77821",
-  },
+},
   {
     id: "insurance",
     title: "Hull & P&I Insurance",
@@ -169,7 +169,7 @@ export const DEMO_WALLET: WalletDoc[] = [
     expires: "Expires 01 Jan 2027",
     tone: "ok",
     code: "POL-448291",
-  },
+},
 ];
 
 /**
@@ -192,7 +192,7 @@ export const DEMO_CREW: CrewMember[] = [
       { id: "jh-5", title: "Health & Safety", expires: "19 Jan 2027", tone: "ok", hasAttachment: true },
       { id: "jh-6", title: "Radio (GMDSS / VHF)", expires: "30 Sep 2028", tone: "ok", hasAttachment: true },
     ],
-  },
+},
   {
     id: "callum",
     name: "Callum Reid",
@@ -205,7 +205,7 @@ export const DEMO_CREW: CrewMember[] = [
       { id: "cr-1", title: "Medical (ENG1)", expires: "01 Sep 2026", tone: "due", hasAttachment: true },
       { id: "cr-2", title: "MEOL / Engineering", expires: "15 Mar 2028", tone: "ok", hasAttachment: true },
     ],
-  },
+},
   {
     id: "elena",
     name: "Elena Rostova",
@@ -218,7 +218,7 @@ export const DEMO_CREW: CrewMember[] = [
       { id: "er-1", title: "Medical (ENG1)", expires: "18 May 2027", tone: "ok", hasAttachment: true },
       { id: "er-2", title: "Advanced Fire Fighting", expires: "22 Oct 2027", tone: "ok", hasAttachment: true },
     ],
-  },
+},
   {
     id: "marcus",
     name: "Marcus Vance",
@@ -230,7 +230,7 @@ export const DEMO_CREW: CrewMember[] = [
     certificates: [
       { id: "mv-1", title: "Medical (ENG1)", expires: "20 Jan 2029", tone: "ok", hasAttachment: true },
     ],
-  },
+},
   {
     id: "tom",
     name: "Tom Fletcher",
@@ -242,7 +242,7 @@ export const DEMO_CREW: CrewMember[] = [
     certificates: [
       { id: "tf-1", title: "Medical (ENG1)", expires: "14 Jul 2026", tone: "due", hasAttachment: true },
     ],
-  },
+},
   {
     id: "sarah",
     name: "Sarah Bell",
@@ -254,7 +254,7 @@ export const DEMO_CREW: CrewMember[] = [
     certificates: [
       { id: "sb-1", title: "Medical (ENG1)", expires: "14 Feb 2028", tone: "ok", hasAttachment: true },
     ],
-  },
+},
 ];
 
 /**
@@ -267,21 +267,21 @@ export const DEMO_BILLING: BillingRow[] = [
     date: "12 Jan 2026",
     amount: "£149.00",
     status: "Paid",
-  },
+},
   {
     id: "b2",
     label: "Vessel Companion — Annual",
     date: "12 Jan 2025",
     amount: "£129.00",
     status: "Paid",
-  },
+},
   {
     id: "b3",
     label: "Extra crew seats (×2)",
     date: "03 Jun 2025",
     amount: "£36.00",
     status: "Paid",
-  },
+},
 ];
 
 /**
@@ -292,22 +292,22 @@ export const DEMO_CHECKLIST = [
     id: "life",
     title: "Life-saving appliances",
     items: ["Liferaft", "Lifejackets", "Immersion suits", "MOB recovery"],
-  },
+},
   {
     id: "fire",
     title: "Fire fighting",
     items: ["Extinguishers", "Fire blanket", "Detection system"],
-  },
+},
   {
     id: "nav",
     title: "Navigation & radio",
     items: ["EPIRB", "VHF", "AIS", "Charts / ECDIS"],
-  },
+},
   {
     id: "docs",
     title: "Certificates & docs",
     items: ["Safety certificate", "Insurance", "Radio licence", "Crew tickets"],
-  },
+},
 ];
 
 /**

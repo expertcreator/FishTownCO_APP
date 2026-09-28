@@ -57,12 +57,6 @@ export async function createBillingPayment(
   );
   const consolePath = `users/${user.uid}/billing`;
 
-  console.log("[createBillingPayment] start", {
-    consolePath,
-    planId: input.planId,
-    amountValue,
-  });
-
   try {
     const ref = await addDoc(billingCollection, {
       planId: input.planId,
@@ -77,16 +71,11 @@ export async function createBillingPayment(
     });
 
     const fullPath = `${consolePath}/${ref.id}`;
-    console.log("[createBillingPayment] success", { id: ref.id, fullPath });
+
     await queryClient.invalidateQueries({ queryKey: BILLING_QUERY_KEY });
     return { id: ref.id, path: fullPath };
   } catch (error) {
-    console.error("[createBillingPayment] failed", {
-      consolePath,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+
     throw error;
   }
 }

@@ -34,11 +34,6 @@ export async function updateSafetyItem(
   }
 
   const path = `users/${user.uid}/safety/${input.id}`;
-  console.log("[updateSafetyItem] start", {
-    path,
-    name: input.name,
-    itemType: input.itemType,
-  });
 
   const hasPhoto = Boolean(input.photoLocalUri?.trim());
   const hasCert = Boolean(input.certLocalUri?.trim());
@@ -93,7 +88,6 @@ export async function updateSafetyItem(
       updatedAt: serverTimestamp(),
     });
 
-    console.log("[updateSafetyItem] success", { path });
     await queryClient.invalidateQueries({ queryKey: SAFETY_ITEMS_QUERY_KEY });
     await queryClient.invalidateQueries({
       queryKey: ["safety", "item", input.id],
@@ -101,12 +95,7 @@ export async function updateSafetyItem(
 
     return { id: input.id, path };
   } catch (error) {
-    console.error("[updateSafetyItem] failed", {
-      path,
-      code: (error as { code?: string })?.code,
-      message: (error as { message?: string })?.message,
-      error,
-    });
+    
     throw error;
   }
 }

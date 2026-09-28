@@ -127,5 +127,5 @@ function getStyles(colors: ThemeColors) {
     textDecorationLine: "underline",
     fontWeight: "700",
   },
-});
+  });
 }
