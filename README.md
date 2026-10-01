@@ -32,15 +32,13 @@ bun run win:android:dev
 bun run win:android:staging
 bun run win:android:prod
 
-# Build APK into project root (like customer-app eas --local → abcd-ef01.apk)
-bun run win:android:apk
+# Production APK on this PC, signed with the Expo keystore (@naveed.dev__fishtownco.jks).
+# The file is copied into the project folder as xxxx-yyyy.apk.
 bun run win:android:apk:release
 
-# Cloud EAS development build
+# Same cloud EAS builds, named by environment
 bun run win:eas:build:android:dev
-
-# Local-style on Windows (falls back to expo run:android)
-bun run win:eas:build:local:android:dev
+bun run win:eas:build:android:prod-apk
 ```
 
 ## EAS builds (same pattern as Foori scripts)

@@ -88,6 +88,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "@react-native-firebase/auth",
       "@react-native-google-signin/google-signin",
       "./plugins/withIosAppleSignIn",
+      "./plugins/withAndroidReleaseSigning",
       [
         "expo-splash-screen",
         {

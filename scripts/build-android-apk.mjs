@@ -51,7 +51,8 @@ function run(command, args, cwd) {
         ...process.env,
         EXPO_PUBLIC_APP_BRAND: process.env.EXPO_PUBLIC_APP_BRAND ?? "fishtownco",
         EXPO_PUBLIC_APP_VARIANT:
-          process.env.EXPO_PUBLIC_APP_VARIANT ?? "development",
+          process.env.EXPO_PUBLIC_APP_VARIANT ??
+          (wantRelease ? "production" : "development"),
         SENTRY_DISABLE_AUTO_UPLOAD: "true",
       },
     });

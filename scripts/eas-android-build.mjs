@@ -2,8 +2,8 @@
  * Cross-platform Android EAS / local build helper.
  *
  * - macOS / Linux + `--local`: `eas build --local` (official support)
- * - Windows + `--local`: falls back to `expo run:android` (EAS local is unsupported on Windows)
- * - Without `--local`: cloud `eas build` (works on Windows)
+ * - Windows: always a cloud `eas build` (EAS --local is unsupported).
+ *   Cloud builds use the remote Expo keystore from eas.json (`credentialsSource: remote`).
  *
  * Usage:
  *   node scripts/eas-android-build.mjs --profile development --local
@@ -59,34 +59,13 @@ const isWindows = process.platform === "win32";
 
 process.env.SENTRY_DISABLE_AUTO_UPLOAD ??= "true";
 
-const variantByProfile = {
-  development: "development",
-  preview: "staging",
-  production: "production",
-  "production-apk": "production",
-};
-
 if (wantLocal && isWindows) {
-  const variant = variantByProfile[profile] ?? "development";
   console.log(
-    `[eas-android-build] Windows detected: EAS --local is unsupported here.`
+    "[eas-android-build] Windows cannot run eas build --local."
   );
   console.log(
-    `[eas-android-build] Building project-root APK instead (customer-app style).`
+    `[eas-android-build] Starting a cloud EAS build (profile ${profile}) so the Expo keystore is used.`
   );
-  const code = await run(
-    "bun",
-    [
-      "scripts/build-android-apk.mjs",
-      profile === "development" ? "" : "--release",
-    ].filter(Boolean),
-    {
-      EXPO_PUBLIC_APP_VARIANT: variant,
-      EXPO_PUBLIC_APP_BRAND: "fishtownco",
-      SENTRY_DISABLE_AUTO_UPLOAD: "true",
-    }
-  );
-  process.exit(code);
 }
 
 const easArgs = [
@@ -96,8 +75,9 @@ const easArgs = [
   profile,
   "--platform",
   "android",
+  "--non-interactive",
 ];
-if (wantLocal) {
+if (wantLocal && !isWindows) {
   easArgs.push("--local");
 }
 
