@@ -4,7 +4,7 @@ import { Image } from "expo-image";
 import { router, useLocalSearchParams } from "expo-router";
 import { useQuery } from "@tanstack/react-query";
 import { useState } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Linking, Modal, Pressable, StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
 import {
   ComplianceTimelineCard,
@@ -12,7 +12,8 @@ import {
   StatusToneBanner,
 } from "@/features/common/components";
 import type { StatusTone } from "@/features/common/data/demo";
-import { pickDisplayMediaUri } from "@/features/common/media/mediaStatus";
+import { isImageUpload } from "@/features/common/media/uploadUserFile";
+import { deleteSafetyItem } from "@/features/safety/services/deleteSafetyItem";
 import { fetchSafetyItem } from "@/features/safety/services/fetchSafetyItem";
 import { resolveSafetyCategoryIcon } from "@/features/safety/services/safetyCategories";
 import { useSafetyCategoriesStore } from "@/features/safety/store/safetyCategoriesStore";
@@ -30,6 +31,7 @@ import {
   AppText,
   BackHeader,
   Card,
+  ConfirmModal,
   ItemDetailSkeleton,
   PrimaryButton,
   Screen,
@@ -52,6 +54,9 @@ export default function SafetyItemDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const itemId = typeof id === "string" ? id : "";
   const [isServicing, setIsServicing] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
   const categories = useSafetyCategoriesStore((state) => state.categories);
 
   const { data: item, isLoading, isFetching, isError, refetch } = useQuery({
@@ -62,8 +67,7 @@ export default function SafetyItemDetailScreen() {
 
   if (!item && (isLoading || isFetching || !isError)) {
     return (
-      <Screen>
-        <BackHeader title={t("safety.detail-title")} />
+      <Screen header={<BackHeader title={t("safety.detail-title")} />}>
         <ItemDetailSkeleton />
       </Screen>
     );
@@ -71,8 +75,7 @@ export default function SafetyItemDetailScreen() {
 
   if (!item) {
     return (
-      <Screen>
-        <BackHeader title={t("safety.detail-title")} />
+      <Screen header={<BackHeader title={t("safety.detail-title")} />}>
         <AppText style={styles.empty}>{t("safety.item-missing")}</AppText>
       </Screen>
     );
@@ -89,16 +92,36 @@ export default function SafetyItemDetailScreen() {
   const banner = getBannerCopy(tone, item.dueDate, t);
   const bannerColors = getBannerColors(colors, tone);
   const nextDueColors = getNextDueColors(colors, tone);
-  const photoUri = pickDisplayMediaUri({
-    thumbURL: item.photoThumbURL,
-    downloadURL: item.photoDownloadURL,
-    localUri: item.photoLocalUri,
-  });
-  const certUri = pickDisplayMediaUri({
-    thumbURL: item.certThumbURL,
-    downloadURL: item.certDownloadURL,
-    localUri: item.certLocalUri,
-  });
+  const photoUri = attachmentUri(
+    item.photoDownloadURL,
+    item.photoLocalUri,
+    item.photoThumbURL
+  );
+  const certUri = attachmentUri(
+    item.certDownloadURL,
+    item.certLocalUri,
+    item.certThumbURL
+  );
+  /**
+   * Opens an image in the preview, or a PDF in the device viewer.
+   * @param uri - Attachment URI, when one is saved
+   * @returns Promise that resolves after the preview opens or a toast is shown
+   */
+  const onPreviewAttachment = async (uri: string | null) => {
+    if (!uri) {
+      toast.info(t("safety.preview-empty"));
+      return;
+    }
+    if (isPreviewImage(uri)) {
+      setPreviewUri(uri);
+      return;
+    }
+    try {
+      await Linking.openURL(uri);
+    } catch {
+      toast.error(t("safety.preview-failed"));
+    }
+  };
 
   /**
    * Copies the serial number to the clipboard when present.
@@ -111,6 +134,29 @@ export default function SafetyItemDetailScreen() {
       toast.success(t("safety.serial-copied"));
     } catch {
       toast.error(t("safety.serial-copy-failed"));
+    }
+  };
+
+  /**
+   * Deletes the safety item and returns to the previous screen.
+   * @returns Promise that resolves when navigation starts or a toast is shown
+   */
+  const onDeleteItem = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await deleteSafetyItem(item.id);
+      setDeleteOpen(false);
+      toast.success(t("safety.delete-item-success"));
+      router.back();
+    } catch (error) {
+      if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
+        toast.error(t("safety.sign-in-required"));
+      } else {
+        toast.error(t("safety.delete-item-failed"));
+      }
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -142,25 +188,32 @@ export default function SafetyItemDetailScreen() {
   };
 
   return (
-    <Screen contentStyle={styles.content}>
-      <BackHeader
-        title={item.name}
-        right={
-          <Pressable
-            onPress={() => router.push(`/safety/edit/${item.id}`)}
-            hitSlop={10}
-            style={({ pressed }) => [styles.editBtn, pressed && styles.pressed]}
-            accessibilityRole="button"
-            accessibilityLabel={t("safety.edit-item")}
-          >
-            <Ionicons name="create-outline" size={22} color={colors.navy} />
-          </Pressable>
-        }
-      />
-
+    <Screen
+      header={
+        <BackHeader
+          title={item.name}
+          right={
+            <Pressable
+              onPress={() => router.push(`/safety/edit/${item.id}`)}
+              hitSlop={10}
+              style={({ pressed }) => [styles.editBtn, pressed && styles.pressed]}
+              accessibilityRole="button"
+              accessibilityLabel={t("safety.edit-item")}
+            >
+              <Ionicons name="create-outline" size={22} color={colors.navy} />
+            </Pressable>
+          }
+        />
+      }
+      contentStyle={styles.content}
+    >
       <StatusToneBanner tone={tone} text={banner} />
 
       <ItemHeroCard
+        imageUri={
+          photoUri ||
+          (certUri && isPreviewImage(certUri) ? certUri : null)
+        }
         fallbackIcon={icon}
         topBadge={item.category || undefined}
         bottomBadge={item.location || undefined}
@@ -261,48 +314,52 @@ export default function SafetyItemDetailScreen() {
 
       <AppText style={styles.certsTitle}>{t("safety.certificates-logs")}</AppText>
       <View style={styles.certsRow}>
-        <Card style={styles.certCard}>
-          <View style={styles.certTop}>
-            <View style={[styles.certIcon, { backgroundColor: colors.statusOverdueBg }]}>
-              {certUri ? (
-                <Image
-                  source={{ uri: certUri }}
-                  style={styles.certThumb}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={150}
-                />
-              ) : (
+        <Pressable
+          style={styles.certPress}
+          onPress={() => void onPreviewAttachment(certUri)}
+          accessibilityRole="button"
+          accessibilityLabel={t("safety.add-certificate")}
+        >
+          <Card style={styles.certCard}>
+            <View style={styles.certTop}>
+              <View style={[styles.certIcon, { backgroundColor: colors.statusOverdueBg }]}>
                 <Ionicons
                   name="document-text-outline"
                   size={22}
                   color={colors.statusOverdueText}
                 />
-              )}
+              </View>
+              <Ionicons name="arrow-up-outline" size={18} color={colors.muted} />
             </View>
-            <Ionicons name="arrow-up-outline" size={18} color={colors.muted} />
-          </View>
-          <AppText style={styles.certName} numberOfLines={1}>
-            {certUri ? t("safety.add-certificate") : t("safety.no-certificate")}
-          </AppText>
-          <AppText style={styles.certMeta}>
-            {certUri ? t("safety.file-on-file") : t("safety.upload-later")}
-          </AppText>
-        </Card>
-        <Card style={styles.certCard}>
-          <View style={styles.certTop}>
-            <View style={[styles.certIcon, { backgroundColor: colors.softTeal }]}>
-              <Ionicons name="image-outline" size={22} color={colors.teal} />
+            <AppText style={styles.certName} numberOfLines={1}>
+              {certUri ? t("safety.add-certificate") : t("safety.no-certificate")}
+            </AppText>
+            <AppText style={styles.certMeta}>
+              {certUri ? t("safety.file-on-file") : t("safety.upload-later")}
+            </AppText>
+          </Card>
+        </Pressable>
+        <Pressable
+          style={styles.certPress}
+          onPress={() => void onPreviewAttachment(photoUri)}
+          accessibilityRole="button"
+          accessibilityLabel={t("safety.add-photo")}
+        >
+          <Card style={styles.certCard}>
+            <View style={styles.certTop}>
+              <View style={[styles.certIcon, { backgroundColor: colors.softTeal }]}>
+                <Ionicons name="image-outline" size={22} color={colors.teal} />
+              </View>
+              <Ionicons name="arrow-up-outline" size={18} color={colors.muted} />
             </View>
-            <Ionicons name="arrow-up-outline" size={18} color={colors.muted} />
-          </View>
-          <AppText style={styles.certName} numberOfLines={1}>
-            {photoUri ? t("safety.add-photo") : t("safety.no-photo")}
-          </AppText>
-          <AppText style={styles.certMeta}>
-            {photoUri ? t("safety.file-on-file") : t("safety.upload-later")}
-          </AppText>
-        </Card>
+            <AppText style={styles.certName} numberOfLines={1}>
+              {photoUri ? t("safety.add-photo") : t("safety.no-photo")}
+            </AppText>
+            <AppText style={styles.certMeta}>
+              {photoUri ? t("safety.file-on-file") : t("safety.upload-later")}
+            </AppText>
+          </Card>
+        </Pressable>
       </View>
 
       <PrimaryButton
@@ -312,8 +369,89 @@ export default function SafetyItemDetailScreen() {
         onPress={() => void onMarkServiced()}
         style={styles.servicedBtn}
       />
+      <Pressable
+        onPress={() => setDeleteOpen(true)}
+        disabled={isDeleting || isServicing}
+        accessibilityRole="button"
+        accessibilityLabel={t("safety.delete-item")}
+        style={({ pressed }) => [
+          styles.deleteBtn,
+          pressed && styles.pressed,
+        ]}
+      >
+        <Ionicons name="trash-outline" size={18} color={colors.statusOverdueText} />
+        <AppText style={styles.deleteText}>{t("safety.delete-item")}</AppText>
+      </Pressable>
+
+      <ConfirmModal
+        visible={deleteOpen}
+        title={t("safety.delete-item-title")}
+        description={t("safety.delete-item-description")}
+        confirmLabel={t("safety.delete-item")}
+        icon="trash-outline"
+        loading={isDeleting}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => {
+          void onDeleteItem();
+        }}
+      />
+
+      <Modal
+        visible={previewUri != null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewUri(null)}
+      >
+        <View style={styles.viewerBackdrop}>
+          <Pressable
+            onPress={() => setPreviewUri(null)}
+            hitSlop={12}
+            style={styles.viewerClose}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close")}
+          >
+            <Ionicons name="close" size={24} color={colors.onInverse} />
+          </Pressable>
+          {previewUri ? (
+            <Image
+              source={{ uri: previewUri }}
+              style={styles.viewerImage}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+            />
+          ) : null}
+        </View>
+      </Modal>
     </Screen>
   );
+}
+
+/**
+ * Prefers the full file, then a local copy, then a thumb.
+ * @param downloadURL - Stored download URL
+ * @param localUri - Local picker URI
+ * @param thumbURL - Optional thumb URL
+ * @returns Best URI for preview
+ */
+function attachmentUri(
+  downloadURL?: string | null,
+  localUri?: string | null,
+  thumbURL?: string | null
+): string | null {
+  return (
+    downloadURL?.trim() || localUri?.trim() || thumbURL?.trim() || null
+  );
+}
+
+/**
+ * True when the attachment should open in the image preview.
+ * @param uri - File URI
+ * @returns Whether the file is an image
+ */
+function isPreviewImage(uri: string): boolean {
+  const path = decodeURIComponent(uri.split("?")[0] ?? uri);
+  if (/\.pdf$/i.test(path)) return false;
+  return isImageUpload(undefined, path) || !/\.[a-z0-9]+$/i.test(path);
 }
 
 type SpecRowProps = { label: string; value: string };
@@ -692,6 +830,9 @@ function getStyles(colors: ThemeColors) {
       gap: 10,
       marginBottom: 18,
     },
+    certPress: {
+      flex: 1,
+    },
     certCard: {
       flex: 1,
       gap: 10,
@@ -710,9 +851,25 @@ function getStyles(colors: ThemeColors) {
       justifyContent: "center",
       overflow: "hidden",
     },
-    certThumb: {
+    viewerBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.92)",
+      justifyContent: "center",
+      padding: 16,
+    },
+    viewerClose: {
+      position: "absolute",
+      top: 48,
+      right: 16,
+      zIndex: 2,
       width: 40,
       height: 40,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    viewerImage: {
+      width: "100%",
+      height: "70%",
     },
     certName: {
       color: colors.navy,
@@ -725,6 +882,20 @@ function getStyles(colors: ThemeColors) {
     },
     servicedBtn: {
       marginTop: 4,
+    },
+    deleteBtn: {
+      marginTop: 8,
+      minHeight: 48,
+      borderRadius: 14,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+    },
+    deleteText: {
+      color: colors.statusOverdueText,
+      fontSize: 15,
+      fontWeight: "700",
     },
   });
 }

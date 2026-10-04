@@ -14,8 +14,7 @@ import {
   createLoginSchema,
   type LoginSchema,
 } from "@/features/auth/validation/authSchema";
-import { useSafetyCategoriesStore } from "@/features/safety/store/safetyCategoriesStore";
-import { prefetchVesselCatalogs } from "@/features/vessel/services/prefetchVesselCatalogs";
+import { startSessionPrefetch } from "@/features/vessel/services/prefetchVesselCatalogs";
 import {
   AppText,
   Card,
@@ -73,8 +72,7 @@ export default function LoginScreen() {
         email: values.email,
         password: values.password,
       });
-      await useSafetyCategoriesStore.getState().loadCategories();
-      await prefetchVesselCatalogs();
+      startSessionPrefetch();
       toast.success(t("auth.log-in-success"));
       router.replace("/(tabs)/home");
     } catch (error) {
@@ -87,9 +85,8 @@ export default function LoginScreen() {
    * Completes post-auth navigation after email or social sign-in.
    * @returns Promise that resolves when home opens
    */
-  const afterAuthSuccess = async () => {
-    await useSafetyCategoriesStore.getState().loadCategories();
-    await prefetchVesselCatalogs();
+  const afterAuthSuccess = () => {
+    startSessionPrefetch();
     toast.success(t("auth.log-in-success"));
     router.replace("/(tabs)/home");
   };
@@ -375,8 +372,8 @@ function getStyles(colors: ThemeColors) {
     },
     link: {
       color: colors.teal,
-      fontWeight: "800",
-      fontSize: 16,
+      fontWeight: "700",
+      textDecorationLine: "underline",
     },
   });
 }

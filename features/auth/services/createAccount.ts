@@ -1,6 +1,5 @@
 import {
   createUserWithEmailAndPassword,
-  signOut,
   updateProfile,
 } from "@react-native-firebase/auth";
 import {
@@ -28,7 +27,7 @@ export type CreateAccountResult = {
 
 /**
  * Creates a Firebase Auth user and writes their profile doc at `users/{uid}`.
- * Signs the user out afterward so they continue on the login screen.
+ * Leaves the new user signed in so they can continue into vessel setup.
  * @param input - Display name, email, and password
  * @returns Created user ids and profile fields
  * @throws {Error} When Auth or Firestore write fails (Firebase error `code` preserved when present)
@@ -52,7 +51,6 @@ export async function createAccount(
     createdAt: serverTimestamp(),
     updatedAt: serverTimestamp(),
   });
-  await signOut(firebaseAuth);
 
   return {
     uid: user.uid,

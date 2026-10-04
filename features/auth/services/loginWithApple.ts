@@ -8,6 +8,7 @@ import { Platform } from "react-native";
 import { firebaseAuth } from "@/features/common/firebase";
 import { ensureUserProfile } from "@/features/auth/services/ensureUserProfile";
 import type { SocialLoginResult } from "@/features/auth/services/loginWithGoogle";
+import { isNewAuthUser } from "@/features/auth/utils/isNewAuthUser";
 
 /**
  * Signs in with Apple via native Apple Auth + Firebase Auth credential.
@@ -58,6 +59,7 @@ export async function loginWithApple(): Promise<SocialLoginResult> {
     return {
       uid: result.user.uid,
       email: result.user.email,
+      isNewUser: isNewAuthUser(result.user),
     };
   } catch (error) {
     const code = (error as { code?: string | number })?.code;

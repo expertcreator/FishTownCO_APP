@@ -20,6 +20,13 @@ type DocumentUploadFieldProps = {
   emptyLabel: string;
   /** Label used when a file has no name. */
   filledLabel: string;
+  /** Secondary line under the title on the card layout. */
+  hint?: string;
+  /**
+   * `card` matches the tall Add photo tile.
+   * `row` is the compact document button.
+   */
+  layout?: "row" | "card";
   /** Accessibility label for the close control. */
   removeAccessibilityLabel: string;
   /**
@@ -31,6 +38,7 @@ type DocumentUploadFieldProps = {
 
 /**
  * PDF or image upload field used by crew, safety, vessel, and wallet.
+ * `card` uses the same tall tile as Add photo. `row` stays a compact button.
  * A photo shows the image with a close button. A document shows an icon and name.
  * @param props - Field props
  * @returns Document upload field
@@ -41,18 +49,22 @@ export function DocumentUploadField({
   mimeType = "",
   emptyLabel,
   filledLabel,
+  hint,
+  layout = "row",
   removeAccessibilityLabel,
   onChange,
 }: DocumentUploadFieldProps) {
   const [open, setOpen] = useState(false);
   const hasFile = Boolean(uri?.trim());
   const showImage = hasFile && isImageUpload(mimeType, fileName);
+  const title = hasFile ? fileName.trim() || filledLabel : emptyLabel;
 
   return (
     <>
       <UploadDropzone
-        variant="document"
-        title={hasFile ? fileName.trim() || filledLabel : emptyLabel}
+        variant={layout === "card" ? "photo" : "document"}
+        title={title}
+        hint={layout === "card" && !hasFile ? hint : undefined}
         icon="document-text-outline"
         imageUri={showImage ? uri : null}
         onPress={() => setOpen(true)}

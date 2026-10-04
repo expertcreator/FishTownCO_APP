@@ -53,10 +53,10 @@ export default function CrewListScreen() {
 
   if (isInitialLoad && isError) {
     return (
-      <Screen edges={["top", "left", "right"]}>
-        <View style={styles.headerPad}>
-          <BackHeader title={t("crew.title")} />
-        </View>
+      <Screen
+        edges={["top", "left", "right"]}
+        header={<BackHeader title={t("crew.title")} />}
+      >
         <AppText style={styles.empty}>{t("crew.load-failed")}</AppText>
         <PrimaryButton
           label={t("common.try-again")}

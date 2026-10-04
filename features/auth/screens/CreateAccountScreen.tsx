@@ -13,8 +13,7 @@ import {
   createAccountSchema,
   type CreateAccountSchema,
 } from "@/features/auth/validation/authSchema";
-import { useSafetyCategoriesStore } from "@/features/safety/store/safetyCategoriesStore";
-import { prefetchVesselCatalogs } from "@/features/vessel/services/prefetchVesselCatalogs";
+import { startSessionPrefetch } from "@/features/vessel/services/prefetchVesselCatalogs";
 import {
   AppText,
   Card,
@@ -93,8 +92,7 @@ export default function CreateAccountScreen() {
         email: values.email,
         password: values.password,
       });
-      toast.success(t("auth.create-account-success"));
-      router.replace("/(auth)/login");
+      openVesselOnboarding();
     } catch (error) {
 
       toast.error(mapAuthError(error, t));
@@ -103,12 +101,28 @@ export default function CreateAccountScreen() {
   };
 
   /**
-   * Completes post-auth navigation after social sign-in.
-   * @returns Promise that resolves when home opens
+   * Opens the vessel form so a new account can add its first boat.
+   * Catalogs keep loading after the screen opens.
+   * @returns void
    */
-  const afterSocialAuthSuccess = async () => {
-    await useSafetyCategoriesStore.getState().loadCategories();
-    await prefetchVesselCatalogs();
+  const openVesselOnboarding = () => {
+    startSessionPrefetch();
+    toast.success(t("auth.create-account-success"));
+    router.replace("/vessel/edit");
+  };
+
+  /**
+   * Completes post-auth navigation after social sign-in.
+   * A new account opens the add-vessel form. An existing account opens Home.
+   * @param isNewUser - Whether this sign-in created the account
+   * @returns Promise that resolves when navigation starts
+   */
+  const afterSocialAuthSuccess = async (isNewUser: boolean) => {
+    if (isNewUser) {
+      openVesselOnboarding();
+      return;
+    }
+    startSessionPrefetch();
     toast.success(t("auth.log-in-success"));
     router.replace("/(tabs)/home");
   };
@@ -124,8 +138,8 @@ export default function CreateAccountScreen() {
     }
     setIsGoogleLoading(true);
     try {
-      await loginWithGoogle();
-      await afterSocialAuthSuccess();
+      const result = await loginWithGoogle();
+      await afterSocialAuthSuccess(result.isNewUser);
     } catch (error) {
 
       const message = error instanceof Error ? error.message : "";
@@ -147,8 +161,8 @@ export default function CreateAccountScreen() {
     }
     setIsAppleLoading(true);
     try {
-      await loginWithApple();
-      await afterSocialAuthSuccess();
+      const result = await loginWithApple();
+      await afterSocialAuthSuccess(result.isNewUser);
     } catch (error) {
 
       const message = error instanceof Error ? error.message : "";

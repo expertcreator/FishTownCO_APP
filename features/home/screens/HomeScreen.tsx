@@ -121,17 +121,22 @@ export default function HomeScreen() {
       !safetyError)
   ) {
     return (
-      <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
-        <AppHeader title={t("home.title")} />
+      <Screen
+        edges={["top", "left", "right"]}
+        header={<AppHeader title={t("home.title")} />}
+        contentStyle={styles.content}
+      >
         <HomeDashboardSkeleton />
       </Screen>
     );
   }
 
   return (
-    <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
-      <AppHeader title={t("home.title")} />
-
+    <Screen
+      edges={["top", "left", "right"]}
+      header={<AppHeader title={t("home.title")} />}
+      contentStyle={styles.content}
+    >
       <Pressable
         onPress={() =>
           router.push(vessel?.name ? "/(tabs)/vessel" : "/vessel/edit")

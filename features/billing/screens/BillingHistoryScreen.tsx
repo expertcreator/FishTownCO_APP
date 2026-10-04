@@ -112,11 +112,14 @@ export default function BillingHistoryScreen() {
 
   if (isInitialLoad && (isLoading || isFetching || !isError)) {
     return (
-      <Screen>
-        <BackHeader
-          title={t("billing.title")}
-          subtitle={t("billing.subtitle")}
-        />
+      <Screen
+        header={
+          <BackHeader
+            title={t("billing.title")}
+            subtitle={t("billing.subtitle")}
+          />
+        }
+      >
         <BillingListSkeleton />
       </Screen>
     );
@@ -124,11 +127,14 @@ export default function BillingHistoryScreen() {
 
   if (isInitialLoad && isError) {
     return (
-      <Screen>
-        <BackHeader
-          title={t("billing.title")}
-          subtitle={t("billing.subtitle")}
-        />
+      <Screen
+        header={
+          <BackHeader
+            title={t("billing.title")}
+            subtitle={t("billing.subtitle")}
+          />
+        }
+      >
         <AppText style={styles.empty}>{t("billing.load-failed")}</AppText>
         <PrimaryButton
           label={t("common.try-again")}
@@ -139,12 +145,15 @@ export default function BillingHistoryScreen() {
   }
 
   return (
-    <Screen contentStyle={styles.content}>
-      <BackHeader
-        title={t("billing.title")}
-        subtitle={t("billing.subtitle")}
-      />
-
+    <Screen
+      header={
+        <BackHeader
+          title={t("billing.title")}
+          subtitle={t("billing.subtitle")}
+        />
+      }
+      contentStyle={styles.content}
+    >
       <Card style={styles.filterCard}>
         <AppText style={styles.filterLabel}>{t("billing.filter-by-date")}</AppText>
         <View style={styles.chips}>

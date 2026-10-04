@@ -233,7 +233,8 @@ export default function AddCrewMemberScreen() {
   const certsValid = certificates.every(
     (cert) => cert.type.trim() && cert.issueDate.trim() && cert.expiryDate.trim()
   );
-  const footerError = submitAttempted ? t("validation.required") : null;
+  const certFieldError = (value: string) =>
+    submitAttempted && !value.trim() ? t("validation.required") : undefined;
 
   const activeCertType =
     certificates.find((cert) => cert.key === certTypeKey)?.type ?? "";
@@ -376,8 +377,10 @@ export default function AddCrewMemberScreen() {
 
   if (isEdit && (isMemberError || !member)) {
     return (
-      <Screen edges={["top", "left", "right"]}>
-        <BackHeader title={t("crew.edit-title")} />
+      <Screen
+        edges={["top", "left", "right"]}
+        header={<BackHeader title={t("crew.edit-title")} />}
+      >
         <AppText style={styles.empty}>{t("crew.load-member-failed")}</AppText>
         <PrimaryButton
           label={t("common.try-again")}
@@ -393,9 +396,11 @@ export default function AddCrewMemberScreen() {
       edges={["top", "left", "right"]}
       contentStyle={styles.screen}
     >
-      <BackHeader
-        title={isEdit ? t("crew.edit-title") : t("crew.add-title")}
-      />
+      <View style={styles.headerPad}>
+        <BackHeader
+          title={isEdit ? t("crew.edit-title") : t("crew.add-title")}
+        />
+      </View>
 
       <KeyboardAwareContainer
         useSafeAreaWrapper={false}
@@ -481,6 +486,7 @@ export default function AddCrewMemberScreen() {
                   label={t("crew.certificate-type")}
                   value={cert.type}
                   placeholder={t("crew.certificate-type-placeholder")}
+                  error={certFieldError(cert.type)}
                   onPress={() => setCertTypeKey(cert.key)}
                 />
                 <Field
@@ -493,6 +499,7 @@ export default function AddCrewMemberScreen() {
                   label={t("crew.issue-date")}
                   value={cert.issueDate}
                   placeholder={t("safety.date-placeholder")}
+                  error={certFieldError(cert.issueDate)}
                   onPress={() =>
                     setDateTarget({ certKey: cert.key, field: "issueDate" })
                   }
@@ -501,6 +508,7 @@ export default function AddCrewMemberScreen() {
                   label={t("crew.expiry-date")}
                   value={cert.expiryDate}
                   placeholder={t("safety.date-placeholder")}
+                  error={certFieldError(cert.expiryDate)}
                   onPress={() =>
                     setDateTarget({ certKey: cert.key, field: "expiryDate" })
                   }
@@ -550,7 +558,7 @@ export default function AddCrewMemberScreen() {
         </FormCard>
       </KeyboardAwareContainer>
 
-      <StickyFormFooter error={footerError}>
+      <StickyFormFooter>
         <PrimaryButton
           label={isEdit ? t("crew.update-member") : t("crew.save-member")}
           icon="save-outline"
@@ -624,6 +632,9 @@ function getStyles(colors: ThemeColors) {
       flex: 1,
       paddingHorizontal: 0,
       paddingBottom: 0,
+    },
+    headerPad: {
+      paddingHorizontal: 20,
     },
     scroll: { flex: 1 },
     scrollContent: {

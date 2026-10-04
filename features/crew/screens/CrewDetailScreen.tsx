@@ -67,8 +67,7 @@ export default function CrewDetailScreen() {
 
   if (!member && (isLoading || isFetching || !isError)) {
     return (
-      <Screen>
-        <BackHeader title={t("crew.detail-title")} />
+      <Screen header={<BackHeader title={t("crew.detail-title")} />}>
         <CrewDetailSkeleton />
       </Screen>
     );
@@ -76,8 +75,7 @@ export default function CrewDetailScreen() {
 
   if (!member) {
     return (
-      <Screen>
-        <BackHeader title={t("crew.detail-title")} />
+      <Screen header={<BackHeader title={t("crew.detail-title")} />}>
         <AppText style={styles.empty}>{t("crew.load-member-failed")}</AppText>
         <PrimaryButton
           label={t("common.try-again")}
@@ -88,9 +86,10 @@ export default function CrewDetailScreen() {
   }
 
   return (
-    <Screen contentStyle={styles.content}>
-      <BackHeader title={t("crew.detail-title")} />
-
+    <Screen
+      header={<BackHeader title={t("crew.detail-title")} />}
+      contentStyle={styles.content}
+    >
       <Card style={styles.profileCard}>
         <View style={styles.profileTop}>
           <View style={styles.avatar}>

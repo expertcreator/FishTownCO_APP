@@ -4,7 +4,6 @@ import { useRef, useState } from "react";
 import {
   Alert,
   Modal,
-  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -14,7 +13,7 @@ import { pickImage } from "@/features/common/utils/imagePicker";
 import { pickDocument } from "@/features/common/utils/pickDocument";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
-import { OutlineButton, TextLink } from "./Buttons";
+import { OutlineButton } from "./Buttons";
 import AppText from "./Text";
 
 export type ImagePickerSheetProps = {
@@ -148,7 +147,7 @@ export function ImagePickerSheet({
         <View
           style={[
             styles.sheet,
-            { paddingBottom: Math.max(insets.bottom, Platform.OS === "ios" ? 20 : 12) },
+            { paddingBottom: Math.max(insets.bottom, 20) },
           ]}
         >
           <View style={styles.handle} />
@@ -190,9 +189,17 @@ export function ImagePickerSheet({
             />
           ) : null}
 
-          <TextLink onPress={onClose} align="center">
-            {t("common.cancel")}
-          </TextLink>
+          <Pressable
+            onPress={onClose}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.cancel")}
+            style={({ pressed }) => [
+              styles.cancelBtn,
+              pressed && styles.pressed,
+            ]}
+          >
+            <AppText style={styles.cancelText}>{t("common.cancel")}</AppText>
+          </Pressable>
         </View>
       </View>
     </Modal>
@@ -250,6 +257,18 @@ function getStyles(colors: ThemeColors) {
     },
     cameraButton: {
       borderColor: colors.orange,
+    },
+    cancelBtn: {
+      alignSelf: "stretch",
+      minHeight: 48,
+      borderRadius: 14,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    cancelText: {
+      color: colors.navy,
+      fontSize: 15,
+      fontWeight: "700",
     },
     pressed: { opacity: 0.9 },
   });

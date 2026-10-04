@@ -83,6 +83,8 @@ export function mapAuthError(error: unknown, t: Translate): string {
       return t("auth.error-invalid-credentials");
     case "auth/user-disabled":
       return t("auth.error-user-disabled");
+    case "auth/requires-recent-login":
+      return t("auth.delete-account-recent-login");
     case "auth/configuration-not-found":
     case "auth/invalid-api-key":
     case "auth/app-not-authorized":

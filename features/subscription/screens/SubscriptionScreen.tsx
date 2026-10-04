@@ -69,12 +69,14 @@ export default function SubscriptionScreen() {
   };
 
   return (
-    <Screen>
-      <BackHeader
-        title={t("subscription.title")}
-        subtitle={t("subscription.subtitle")}
-      />
-
+    <Screen
+      header={
+        <BackHeader
+          title={t("subscription.title")}
+          subtitle={t("subscription.subtitle")}
+        />
+      }
+    >
       {PLANS.map((p) => {
         const selected = plan === p.id;
         return (

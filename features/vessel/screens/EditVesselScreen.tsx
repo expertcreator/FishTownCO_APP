@@ -66,6 +66,8 @@ export default function EditVesselScreen() {
   const loadUses = useVesselUsesStore((state) => state.loadUses);
   /** `undefined` until first fetch settles — never paint an empty form early. */
   const isInitialLoad = vessel === undefined;
+  const isAdding = !vessel?.name;
+  const headerTitle = isAdding ? t("vessel.add-title") : t("vessel.edit-title");
 
   const { control, handleSubmit, reset, setValue, watch } = useForm<EditVesselSchema>({
     resolver: zodResolver(schema),
@@ -119,7 +121,8 @@ export default function EditVesselScreen() {
   }, [vessel, hydrated, reset]);
 
   /**
-   * Saves the vessel profile to Firestore and returns to My Vessel.
+   * Saves the vessel profile to Firestore.
+   * A new vessel continues to the checklist. An existing vessel returns to the previous screen.
    * Preserves photo / next-service / checklist fields not shown on this form.
    * @param values - Validated form values
    * @returns Promise that resolves when navigation starts or a toast is shown
@@ -164,7 +167,11 @@ export default function EditVesselScreen() {
         photoThumbUrl: vessel?.photoThumbUrl,
       });
       toast.success(t("vessel.save-success"));
-      router.back();
+      if (isAdding) {
+        router.replace("/vessel/build-checklist");
+      } else {
+        router.back();
+      }
     } catch (error) {
 
       if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
@@ -183,7 +190,7 @@ export default function EditVesselScreen() {
     return (
       <Screen>
         <View style={styles.headerPad}>
-          <BackHeader title={t("vessel.edit-title")} />
+          <BackHeader title={headerTitle} />
         </View>
         <FormScreenSkeleton />
       </Screen>
@@ -194,7 +201,7 @@ export default function EditVesselScreen() {
     return (
       <Screen>
         <View style={styles.headerPad}>
-          <BackHeader title={t("vessel.edit-title")} />
+          <BackHeader title={headerTitle} />
         </View>
         <AppText style={styles.hint}>{t("vessel.load-failed")}</AppText>
         <PrimaryButton
@@ -212,7 +219,7 @@ export default function EditVesselScreen() {
     return (
       <Screen>
         <View style={styles.headerPad}>
-          <BackHeader title={t("vessel.edit-title")} />
+          <BackHeader title={headerTitle} />
         </View>
         <FormScreenSkeleton />
       </Screen>
@@ -226,7 +233,7 @@ export default function EditVesselScreen() {
       contentStyle={styles.screen}
     >
       <View style={styles.headerPad}>
-        <BackHeader title={t("vessel.edit-title")} />
+        <BackHeader title={headerTitle} />
       </View>
 
       <KeyboardAwareContainer
@@ -296,10 +303,12 @@ export default function EditVesselScreen() {
             }}
           />
           <DocumentUploadField
+            layout="card"
             uri={documentUri}
             fileName={documentName}
             mimeType={documentMime}
             emptyLabel={t("vessel.upload-document")}
+            hint={t("crew.upload-cert-hint")}
             filledLabel={t("vessel.document-added")}
             removeAccessibilityLabel={t("vessel.remove-document")}
             onChange={(file) => {
@@ -313,7 +322,7 @@ export default function EditVesselScreen() {
 
       <StickyFormFooter>
         <PrimaryButton
-          label={t("vessel.save-profile")}
+          label={isAdding ? t("vessel.add-profile") : t("vessel.save-profile")}
           icon="save-outline"
           iconPosition="leading"
           loading={isSubmitting}

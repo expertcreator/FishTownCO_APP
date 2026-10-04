@@ -126,7 +126,7 @@ export function DatePickerModal({
         <View
           style={[
             styles.sheet,
-            { paddingBottom: Math.max(insets.bottom, 16) },
+            { paddingBottom: Math.max(insets.bottom, 20) },
           ]}
         >
           <View style={styles.handle} />
@@ -197,16 +197,6 @@ export function DatePickerModal({
           </View>
 
           <View style={styles.actions}>
-            <Pressable
-              onPress={handleClose}
-              accessibilityRole="button"
-              style={({ pressed }) => [
-                styles.cancelBtn,
-                pressed && styles.pressed,
-              ]}
-            >
-              <AppText style={styles.cancelText}>{t("common.cancel")}</AppText>
-            </Pressable>
             <PrimaryButton
               label={t("common.done")}
               icon="checkmark"
@@ -214,6 +204,17 @@ export function DatePickerModal({
               onPress={handleConfirm}
               style={styles.confirmBtn}
             />
+            <Pressable
+              onPress={handleClose}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.cancel")}
+              style={({ pressed }) => [
+                styles.cancelBtn,
+                pressed && styles.pressed,
+              ]}
+            >
+              <AppText style={styles.cancelText}>{t("common.cancel")}</AppText>
+            </Pressable>
           </View>
         </View>
       </View>
@@ -303,20 +304,15 @@ function getStyles(colors: ThemeColors) {
       borderRadius: 16,
     },
     actions: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 10,
       marginTop: 14,
     },
     cancelBtn: {
-      minHeight: 52,
-      paddingHorizontal: 18,
+      alignSelf: "stretch",
+      minHeight: 48,
       borderRadius: 14,
-      borderWidth: 1,
-      borderColor: colors.border,
-      backgroundColor: colors.card,
       alignItems: "center",
       justifyContent: "center",
+      marginTop: 10,
     },
     cancelText: {
       color: colors.navy,
@@ -324,7 +320,7 @@ function getStyles(colors: ThemeColors) {
       fontWeight: "700",
     },
     confirmBtn: {
-      flex: 1,
+      alignSelf: "stretch",
     },
     pressed: { opacity: 0.85 },
   });

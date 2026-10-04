@@ -8,16 +8,7 @@ type Translate = (
 const required = (t: Translate) =>
   z.string().trim().min(1, t("validation.required"));
 
-/** Document type options on Add Document (prototype screen 17). */
-export const WALLET_DOCUMENT_TYPES = [
-  "Insurance",
-  "Registration",
-  "Compliance Code",
-  "VHF Licence",
-  "Certificate",
-  "Manual",
-  "Other",
-] as const;
+export { WALLET_DOCUMENT_TYPES } from "@/features/wallet/types/wallet";
 
 /**
  * Add-document schema matching prototype screen 17.

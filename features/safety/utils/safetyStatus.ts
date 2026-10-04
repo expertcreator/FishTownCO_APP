@@ -72,12 +72,37 @@ export function getComplianceTimelineLabel(days: number): string {
 }
 
 /**
- * Progress fill (0–1) for the compliance bar based on days until due.
+ * Marker centers on the compliance bar, left to right.
+ * The five labels sit in equal columns, so 7D is the center of the fourth column.
+ */
+const COMPLIANCE_STOPS: { days: number; position: number }[] = [
+  { days: SAFETY_DUE_SOON_DAYS, position: 0.1 },
+  { days: 60, position: 0.3 },
+  { days: 30, position: 0.5 },
+  { days: 7, position: 0.7 },
+  { days: 0, position: 0.9 },
+];
+
+/**
+ * Progress fill (0–1) for the compliance bar.
+ * More than 90 days remaining leaves the bar empty. It reaches 90D at 90 days,
+ * 30D at 30 days, 7D at 7 days, and the overdue marker once the date has passed.
  * @param days - Days until due (negative when overdue)
- * @returns Fraction of the bar filled in teal before the danger zone
+ * @returns Fraction of the bar filled from the left
  */
 export function getComplianceProgress(days: number): number {
-  if (days < 0) return 0.85;
-  if (days >= SAFETY_DUE_SOON_DAYS) return 1;
-  return Math.max(0.15, days / SAFETY_DUE_SOON_DAYS);
+  if (!Number.isFinite(days) || days > SAFETY_DUE_SOON_DAYS) return 0;
+  if (days <= 0) return COMPLIANCE_STOPS[COMPLIANCE_STOPS.length - 1].position;
+
+  for (let index = 0; index < COMPLIANCE_STOPS.length - 1; index += 1) {
+    const start = COMPLIANCE_STOPS[index];
+    const end = COMPLIANCE_STOPS[index + 1];
+    if (days <= start.days && days >= end.days) {
+      const span = start.days - end.days;
+      const traveled = (start.days - days) / span;
+      return start.position + traveled * (end.position - start.position);
+    }
+  }
+
+  return 0;
 }

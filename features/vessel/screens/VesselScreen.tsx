@@ -61,8 +61,10 @@ export default function VesselScreen() {
 
   if (isInitialLoad && (isLoading || isFetching || !isError)) {
     return (
-      <Screen edges={["top", "left", "right"]}>
-        <AppHeader title={t("tabs.vessel")} />
+      <Screen
+        edges={["top", "left", "right"]}
+        header={<AppHeader title={t("tabs.vessel")} />}
+      >
         <VesselScreenSkeleton />
       </Screen>
     );
@@ -70,8 +72,10 @@ export default function VesselScreen() {
 
   if (isInitialLoad && isError) {
     return (
-      <Screen edges={["top", "left", "right"]}>
-        <AppHeader title={t("tabs.vessel")} />
+      <Screen
+        edges={["top", "left", "right"]}
+        header={<AppHeader title={t("tabs.vessel")} />}
+      >
         <AppText style={styles.empty}>{t("vessel.load-failed")}</AppText>
         <PrimaryButton
           label={t("common.try-again")}
@@ -83,13 +87,16 @@ export default function VesselScreen() {
 
   if (!hasVessel) {
     return (
-      <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
-        <AppHeader title={t("tabs.vessel")} />
+      <Screen
+        edges={["top", "left", "right"]}
+        header={<AppHeader title={t("tabs.vessel")} />}
+        contentStyle={styles.content}
+      >
         <EmptyState
           icon="boat-outline"
           title={t("vessel.empty-title")}
           body={t("vessel.empty-body")}
-          actionLabel={t("vessel.edit-profile")}
+          actionLabel={t("vessel.add-profile")}
           actionIcon="create-outline"
           onActionPress={() => router.push("/vessel/edit")}
         />
@@ -108,9 +115,11 @@ export default function VesselScreen() {
       : t("vessel.maintenance-sub-empty");
 
   return (
-    <Screen edges={["top", "left", "right"]} contentStyle={styles.content}>
-      <AppHeader title={t("tabs.vessel")} />
-
+    <Screen
+      edges={["top", "left", "right"]}
+      header={<AppHeader title={t("tabs.vessel")} />}
+      contentStyle={styles.content}
+    >
       <Card style={styles.heroCard}>
         <Image
           source={getVesselHeroSource(vessel)}

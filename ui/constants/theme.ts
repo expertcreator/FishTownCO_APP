@@ -48,7 +48,7 @@ export const lightColors: ThemeColors = {
   inverse: "#0D2C41",
   onInverse: "#FFFFFF",
   tabInactive: "#8A93A3",
-  chipIdle: "#EFE8DC",
+  chipIdle: "#E5DFD5",
   attentionBorder: "#F7C7AE",
   statusOkBg: "#E4F5EC",
   statusOkText: "#1F7A4D",

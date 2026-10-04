@@ -2,7 +2,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
 import {
   formatSafetyDueDate,
@@ -16,6 +16,7 @@ import {
   type AddDocumentSchema,
 } from "@/features/wallet/validation/addDocumentSchema";
 import {
+  AppText,
   BackHeader,
   DatePickerModal,
   FormCard,
@@ -52,6 +53,7 @@ export default function AddDocumentScreen() {
   const [fileUri, setFileUri] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [fileMime, setFileMime] = useState("");
+  const [fileError, setFileError] = useState<string | null>(null);
   const [typeOpen, setTypeOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [hydrated, setHydrated] = useState(false);
@@ -62,7 +64,7 @@ export default function AddDocumentScreen() {
   const { control, handleSubmit, setValue, reset } = useForm<AddDocumentSchema>({
     resolver: zodResolver(schema),
     defaultValues: {
-      docType: WALLET_DOCUMENT_TYPES[0],
+      docType: WALLET_DOCUMENT_TYPES[0].label,
       title: "",
       reference: "",
       issueDate: "",
@@ -82,15 +84,16 @@ export default function AddDocumentScreen() {
         ? expiryDate
         : "";
 
-  const typeOptions: PickerOption[] = WALLET_DOCUMENT_TYPES.map((label) => ({
-    id: label,
-    label,
+  const typeOptions: PickerOption[] = WALLET_DOCUMENT_TYPES.map((type) => ({
+    id: type.label,
+    label: type.label,
+    icon: type.icon,
   }));
 
   useFocusEffect(
     useCallback(() => {
       reset({
-        docType: WALLET_DOCUMENT_TYPES[0],
+        docType: WALLET_DOCUMENT_TYPES[0].label,
         title: "",
         reference: "",
         issueDate: "",
@@ -99,6 +102,7 @@ export default function AddDocumentScreen() {
       setFileUri(null);
       setFileName("");
       setFileMime("");
+      setFileError(null);
       setActiveDateField(null);
       setIsSubmitting(false);
       setHydrated(true);
@@ -110,8 +114,22 @@ export default function AddDocumentScreen() {
    * @param values - Validated form values
    * @returns Promise that resolves when navigation starts or a toast is shown
    */
+  /**
+   * Marks the upload as required when no file is attached.
+   * @returns Whether a file is present
+   */
+  const hasRequiredFile = () => {
+    if (fileUri?.trim()) {
+      setFileError(null);
+      return true;
+    }
+    setFileError(t("validation.required"));
+    return false;
+  };
+
   const onSubmit = async (values: AddDocumentSchema) => {
     if (isSubmitting) return;
+    if (!hasRequiredFile()) return;
     setIsSubmitting(true);
     try {
       const expiry = parseSafetyDueDate(values.expiryDate) ?? new Date();
@@ -152,7 +170,9 @@ export default function AddDocumentScreen() {
         edges={["top", "left", "right"]}
         contentStyle={styles.screen}
       >
-        <BackHeader title={t("wallet.add-doc-title")} />
+        <View style={styles.headerPad}>
+          <BackHeader title={t("wallet.add-doc-title")} />
+        </View>
         <FormScreenSkeleton />
       </Screen>
     );
@@ -164,7 +184,9 @@ export default function AddDocumentScreen() {
       edges={["top", "left", "right"]}
       contentStyle={styles.screen}
     >
-      <BackHeader title={t("wallet.add-doc-title")} />
+      <View style={styles.headerPad}>
+        <BackHeader title={t("wallet.add-doc-title")} />
+      </View>
 
       <KeyboardAwareContainer
         useSafeAreaWrapper={false}
@@ -210,18 +232,25 @@ export default function AddDocumentScreen() {
         <FormCard style={styles.card}>
           <SectionHeader title={t("wallet.upload-file")} />
           <DocumentUploadField
+            layout="card"
             uri={fileUri}
             fileName={fileName}
             mimeType={fileMime}
             emptyLabel={t("wallet.upload-file-title")}
+            hint={t("wallet.upload-file-hint")}
             filledLabel={t("wallet.file-added")}
             removeAccessibilityLabel={t("crew.remove-cert-file")}
             onChange={(file) => {
-              setFileUri(file?.uri ?? null);
+              const nextUri = file?.uri ?? null;
+              setFileUri(nextUri);
               setFileName(file?.name ?? "");
               setFileMime(file?.mimeType ?? "");
+              if (nextUri?.trim()) setFileError(null);
             }}
           />
+          {fileError ? (
+            <AppText style={styles.fileError}>{fileError}</AppText>
+          ) : null}
         </FormCard>
       </KeyboardAwareContainer>
 
@@ -230,7 +259,14 @@ export default function AddDocumentScreen() {
           label={t("wallet.save-document")}
           icon="save-outline"
           loading={isSubmitting}
-          onPress={handleSubmit(onSubmit)}
+          onPress={handleSubmit(
+            (values) => {
+              void onSubmit(values);
+            },
+            () => {
+              hasRequiredFile();
+            }
+          )}
         />
       </StickyFormFooter>
 
@@ -271,12 +307,15 @@ export default function AddDocumentScreen() {
  * @param colors - Active theme colors
  * @returns Style sheet
  */
-function getStyles(_colors: ThemeColors) {
+function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     screen: {
       flex: 1,
       paddingHorizontal: 0,
       paddingBottom: 0,
+    },
+    headerPad: {
+      paddingHorizontal: 20,
     },
     scroll: { flex: 1 },
     scrollContent: {
@@ -284,5 +323,11 @@ function getStyles(_colors: ThemeColors) {
       paddingBottom: 24,
     },
     card: { marginBottom: 14 },
+    fileError: {
+      color: colors.statusOverdueText,
+      fontSize: 12,
+      fontWeight: "600",
+      marginTop: 8,
+    },
   });
 }

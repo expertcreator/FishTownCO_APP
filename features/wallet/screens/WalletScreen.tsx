@@ -83,8 +83,10 @@ export default function WalletScreen() {
 
   if (isInitialLoad && isError) {
     return (
-      <Screen edges={["top", "left", "right"]}>
-        <AppHeader title={t("tabs.wallet")} />
+      <Screen
+        edges={["top", "left", "right"]}
+        header={<AppHeader title={t("tabs.wallet")} />}
+      >
         <AppText style={styles.empty}>{t("wallet.load-failed")}</AppText>
         <PrimaryButton
           label={t("common.try-again")}

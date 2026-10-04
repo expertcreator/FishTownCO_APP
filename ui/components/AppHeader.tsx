@@ -2,9 +2,12 @@ import { useState, type ReactNode } from "react";
 import { Image, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
+import { deleteAccount } from "@/features/auth/services/deleteAccount";
+import { getAuthErrorCode } from "@/features/auth/utils/mapAuthError";
 import { logout } from "@/features/auth/services/logout";
 import { useColors, useTheme, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
+import { ConfirmModal } from "./ConfirmModal";
 import { LogoutModal } from "./LogoutModal";
 import { getPressedItemStyle } from "./pressableStyles";
 import AppText from "./Text";
@@ -70,7 +73,7 @@ export function AppHeader({
 }
 
 /**
- * Theme toggle and logout icons shown on bottom-navigation tab headers.
+ * Theme toggle, delete account, and logout icons on tab headers.
  * @returns Header action buttons
  */
 function AppHeaderActions() {
@@ -81,6 +84,32 @@ function AppHeaderActions() {
   const styles = getStyles(colors);
   const [logoutOpen, setLogoutOpen] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+
+  /**
+   * Deletes the Firebase account and returns to the login screen.
+   * @returns Promise that resolves when navigation starts or a toast is shown
+   */
+  const onConfirmDelete = async () => {
+    if (deleting) return;
+    setDeleting(true);
+    try {
+      await deleteAccount();
+      setDeleteOpen(false);
+      toast.success(t("auth.delete-account-success"));
+      router.replace("/(auth)/login");
+    } catch (error) {
+      const code = getAuthErrorCode(error);
+      toast.error(
+        code === "auth/requires-recent-login"
+          ? t("auth.delete-account-recent-login")
+          : t("auth.delete-account-failed")
+      );
+    } finally {
+      setDeleting(false);
+    }
+  };
 
   /**
    * Signs out of Firebase Auth and returns to the login screen.
@@ -123,6 +152,18 @@ function AppHeaderActions() {
         />
       </Pressable>
       <Pressable
+        onPress={() => setDeleteOpen(true)}
+        hitSlop={10}
+        style={({ pressed }) => [
+          styles.actionButton,
+          getPressedItemStyle(pressed),
+        ]}
+        accessibilityRole="button"
+        accessibilityLabel={t("auth.delete-account")}
+      >
+        <Ionicons name="trash-outline" size={22} color={colors.navy} />
+      </Pressable>
+      <Pressable
         onPress={() => setLogoutOpen(true)}
         hitSlop={10}
         style={({ pressed }) => [
@@ -140,6 +181,18 @@ function AppHeaderActions() {
         onClose={() => setLogoutOpen(false)}
         onConfirm={() => {
           void onConfirmLogout();
+        }}
+      />
+      <ConfirmModal
+        visible={deleteOpen}
+        title={t("auth.delete-account-title")}
+        description={t("auth.delete-account-description")}
+        confirmLabel={t("auth.delete-account")}
+        icon="trash-outline"
+        loading={deleting}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => {
+          void onConfirmDelete();
         }}
       />
     </View>
@@ -171,7 +224,7 @@ function getStyles(colors: ThemeColors) {
       alignItems: "center",
     },
     side: {
-      width: 88,
+      width: 112,
       height: 36,
       justifyContent: "center",
     },

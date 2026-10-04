@@ -35,6 +35,20 @@ export type WalletDoc = {
   mediaStatus?: "none" | "pending" | "ready" | "failed";
 };
 
+/** Document type choices for Add Document, including the list-card icon. */
+export const WALLET_DOCUMENT_TYPES: {
+  label: string;
+  icon: keyof typeof Ionicons.glyphMap;
+}[] = [
+  { label: "Insurance", icon: "shield-outline" },
+  { label: "Registration", icon: "ribbon-outline" },
+  { label: "Compliance Code", icon: "checkmark-done-outline" },
+  { label: "VHF Licence", icon: "radio-outline" },
+  { label: "Certificate", icon: "document-text-outline" },
+  { label: "Manual", icon: "book-outline" },
+  { label: "Other", icon: "folder-outline" },
+];
+
 /**
  * Maps an Add Document type label to a wallet category key.
  * @param docType - Document type from the form
@@ -52,6 +66,21 @@ export function mapDocTypeToCategory(docType: string): WalletCategory {
   if (value.includes("certificate") || value.includes("safety") || value.includes("manual"))
     return "safety";
   return "other";
+}
+
+/**
+ * Picks the icon shown for a document type, matching the type picker.
+ * @param docType - Document type label saved on the wallet doc
+ * @returns Ionicons glyph name
+ */
+export function getWalletDocTypeIcon(
+  docType: string
+): keyof typeof Ionicons.glyphMap {
+  const match = WALLET_DOCUMENT_TYPES.find(
+    (type) => type.label.toLowerCase() === docType.trim().toLowerCase()
+  );
+  if (match) return match.icon;
+  return getWalletCategoryIcon(mapDocTypeToCategory(docType));
 }
 
 /**

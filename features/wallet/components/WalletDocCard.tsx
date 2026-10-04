@@ -1,10 +1,10 @@
 import { Ionicons } from "@expo/vector-icons";
-import { Image } from "expo-image";
+import { router } from "expo-router";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { StatusTone } from "@/features/common/data/demo";
 import { getCrewStatusIcon } from "@/features/crew/utils/crewStatus";
 import {
-  getWalletCategoryIcon,
+  getWalletDocTypeIcon,
   type WalletDoc,
 } from "@/features/wallet/types/wallet";
 import {
@@ -12,20 +12,19 @@ import {
   CARD_RIPPLE,
   Card,
   getPressedItemStyle,
-  useToast,
 } from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
 
 type WalletDocCardProps = {
   doc: WalletDoc;
-  /** Overrides the default document-viewer coming-soon toast. */
+  /** Overrides opening the document detail screen. */
   onPress?: () => void;
 };
 
 /**
  * Wallet document card matching prototype screen 14.
- * Prefers thumbURL, then downloadURL, then localUri for the leading image.
+ * Leading glyph matches the document-type picker icon.
  * @param props - Card props
  * @param props.doc - Wallet document to display
  * @param props.onPress - Optional press handler
@@ -35,11 +34,9 @@ export function WalletDocCard({ doc, onPress }: WalletDocCardProps) {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
-  const toast = useToast();
   const toneStyle = getToneStyle(colors, doc.tone);
   const statusIcon = getCrewStatusIcon(doc.tone);
-  const categoryIcon = getWalletCategoryIcon(doc.category);
-  const imageUri = doc.thumbURL || doc.downloadURL || doc.localUri || null;
+  const categoryIcon = getWalletDocTypeIcon(doc.docType);
 
   const expiresLine = doc.expiresMeta
     ? t("wallet.expires-with-meta", {
@@ -50,11 +47,7 @@ export function WalletDocCard({ doc, onPress }: WalletDocCardProps) {
 
   return (
     <Pressable
-      onPress={
-        onPress ??
-        (() =>
-          toast.info(t("wallet.viewer-coming-soon", { title: doc.title })))
-      }
+      onPress={onPress ?? (() => router.push(`/wallet/${doc.id}`))}
       android_ripple={CARD_RIPPLE}
       style={({ pressed }) => [getPressedItemStyle(pressed)]}
       accessibilityRole="button"
@@ -66,21 +59,11 @@ export function WalletDocCard({ doc, onPress }: WalletDocCardProps) {
             <View
               style={[styles.iconWrap, { backgroundColor: toneStyle.iconBg }]}
             >
-              {imageUri ? (
-                <Image
-                  source={{ uri: imageUri }}
-                  style={styles.thumb}
-                  contentFit="cover"
-                  cachePolicy="memory-disk"
-                  transition={150}
-                />
-              ) : (
-                <Ionicons
-                  name={categoryIcon}
-                  size={22}
-                  color={toneStyle.icon}
-                />
-              )}
+              <Ionicons
+                name={categoryIcon}
+                size={22}
+                color={toneStyle.icon}
+              />
             </View>
             <View style={styles.body}>
               <AppText style={styles.category}>{doc.categoryLabel}</AppText>
@@ -204,10 +187,6 @@ function getStyles(colors: ThemeColors) {
       alignItems: "center",
       justifyContent: "center",
       overflow: "hidden",
-    },
-    thumb: {
-      width: 44,
-      height: 44,
     },
     body: { flex: 1, minWidth: 0, gap: 4 },
     category: {

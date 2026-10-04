@@ -1,4 +1,4 @@
-﻿import { Ionicons } from "@expo/vector-icons";
+import { Ionicons } from "@expo/vector-icons";
 import { Image } from "expo-image";
 import { Pressable, StyleSheet, View } from "react-native";
 import type { StatusTone } from "@/features/common/data/demo";
@@ -147,10 +147,11 @@ export function ComplianceTimelineCard({
               styles.barFill,
               {
                 width: `${Math.round(Math.min(1, Math.max(0, progress)) * 100)}%`,
+                backgroundColor:
+                  tone === "overdue" ? colors.statusOverdueText : colors.teal,
               },
             ]}
           />
-          {tone === "overdue" ? <View style={styles.barDanger} /> : null}
         </View>
       </View>
 
@@ -329,7 +330,6 @@ function getStyles(colors: ThemeColors) {
     },
     barWrap: {
       paddingTop: 22,
-      paddingHorizontal: 4,
     },
     nowBadge: {
       position: "absolute",
@@ -364,17 +364,10 @@ function getStyles(colors: ThemeColors) {
       height: "100%",
       backgroundColor: colors.teal,
     },
-    barDanger: {
-      flex: 1,
-      height: "100%",
-      backgroundColor: colors.statusOverdueText,
-    },
     markers: {
       flexDirection: "row",
-      justifyContent: "space-between",
-      paddingHorizontal: 2,
     },
-    marker: { alignItems: "center", gap: 4 },
+    marker: { flex: 1, alignItems: "center", gap: 4 },
     markerDot: {
       width: 10,
       height: 10,

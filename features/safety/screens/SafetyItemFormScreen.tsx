@@ -504,10 +504,12 @@ export default function SafetyItemFormScreen() {
         <FormCard>
           <SectionHeader title={t("safety.certificates-photos")} />
           <DocumentUploadField
+            layout="card"
             uri={certificateUri}
             fileName={certificateName}
             mimeType={certificateMime}
             emptyLabel={t("crew.upload-cert")}
+            hint={t("crew.upload-cert-hint")}
             filledLabel={t("safety.file-on-file")}
             removeAccessibilityLabel={t("crew.remove-cert-file")}
             onChange={(file) => {

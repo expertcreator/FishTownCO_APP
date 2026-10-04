@@ -1,3 +1,4 @@
-import VesselSetupScreen from "@/features/vessel/screens/VesselSetupScreen";
+import EditVesselScreen from "@/features/vessel/screens/EditVesselScreen";
 
-export default VesselSetupScreen;
+/** Signup vessel setup uses the same form as Edit Vessel. */
+export default EditVesselScreen;

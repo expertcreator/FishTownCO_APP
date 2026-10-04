@@ -1,6 +1,8 @@
 // @ts-check
 /**
- * Signs release APKs with the Expo keystore after `expo prebuild`.
+ * Signs debug and release APKs with the Expo keystore after `expo prebuild`.
+ * `bun android` (`expo run:android`) installs the debug variant, so that
+ * variant must use the same keystore as EAS.
  * Reads `credentials.json` (android.keystore) or ANDROID_KEYSTORE_* env vars.
  * Default keystore file: `@naveed.dev__fishtownco.jks` in the repo root.
  */
@@ -10,7 +12,7 @@ const MARKER = "// @fishtownco-android-release-signing";
 
 const DEFS = `
 ${MARKER}
-// Release APKs use the Expo keystore (credentials.json or ANDROID_KEYSTORE_*).
+// Debug and release builds use the Expo keystore (credentials.json or ANDROID_KEYSTORE_*).
 def fishtowncoRepoRoot = rootDir.getParentFile()
 def fishtowncoSigningEnv = { String key ->
     def v = System.getenv(key)
@@ -38,24 +40,33 @@ if (fishtowncoCredFile.exists()) {
 
 `;
 
-const RELEASE_CONFIG = `        release {
+const EXPO_SIGNING_BLOCK = `    signingConfigs {
+        debug {
             storeFile fishtowncoKeystoreFile
             storePassword fishtowncoStorePassword ?: ""
             keyAlias fishtowncoKeyAlias ?: ""
             keyPassword fishtowncoKeyPassword ?: ""
         }
-`;
+        release {
+            storeFile fishtowncoKeystoreFile
+            storePassword fishtowncoStorePassword ?: ""
+            keyAlias fishtowncoKeyAlias ?: ""
+            keyPassword fishtowncoKeyPassword ?: ""
+        }
+    }`;
 
 const GUARD = `
 afterEvaluate {
-    def releaseTask = tasks.findByName("assembleRelease")
-    if (releaseTask != null) {
-        releaseTask.doFirst {
-            if (!fishtowncoKeystoreFile.exists() || !fishtowncoStorePassword || !fishtowncoKeyPassword || !fishtowncoKeyAlias) {
-                throw new GradleException(
-                    "Release APK must be signed with the Expo keystore at " + fishtowncoKeystoreFile + ". " +
-                    "Add credentials.json with android.keystore.keystorePath, keystorePassword, keyAlias, and keyPassword."
-                )
+    ["assembleDebug", "assembleRelease"].each { taskName ->
+        def signingTask = tasks.findByName(taskName)
+        if (signingTask != null) {
+            signingTask.doFirst {
+                if (!fishtowncoKeystoreFile.exists() || !fishtowncoStorePassword || !fishtowncoKeyPassword || !fishtowncoKeyAlias) {
+                    throw new GradleException(
+                        "Android builds must be signed with the Expo keystore at " + fishtowncoKeystoreFile + ". " +
+                        "Add credentials.json with android.keystore.keystorePath, keystorePassword, keyAlias, and keyPassword."
+                    )
+                }
             }
         }
     }
@@ -77,8 +88,8 @@ const withAndroidReleaseSigning = (config) =>
       (match) => `${match}\n${DEFS}`
     );
     contents = contents.replace(
-      /keyPassword 'android'\s*\}\s*\}/,
-      (match) => `${match.slice(0, -1)}\n${RELEASE_CONFIG}    }`
+      /signingConfigs \{\s*debug \{\s*storeFile file\('debug\.keystore'\)[\s\S]*?keyPassword 'android'\s*\}\s*\}/,
+      EXPO_SIGNING_BLOCK
     );
     contents = contents.replace(
       /release \{\s*\n\s*signingConfig signingConfigs\.debug/,

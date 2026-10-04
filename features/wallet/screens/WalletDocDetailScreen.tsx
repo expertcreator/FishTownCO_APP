@@ -1,14 +1,17 @@
 import { Ionicons } from "@expo/vector-icons";
+import { Image } from "expo-image";
 import { useQuery } from "@tanstack/react-query";
 import { router, useLocalSearchParams } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { Linking, Modal, Pressable, StyleSheet, View } from "react-native";
 import {
   ComplianceTimelineCard,
   ItemHeroCard,
   StatusToneBanner,
   getBannerColors,
 } from "@/features/common/components";
-import { getWalletCategoryIcon } from "@/features/wallet/types/wallet";
+import { isImageUpload } from "@/features/common/media/uploadUserFile";
+import { getWalletDocTypeIcon } from "@/features/wallet/types/wallet";
 import {
   daysUntilDue,
   getComplianceProgress,
@@ -21,6 +24,7 @@ import {
   Card,
   ItemDetailSkeleton,
   Screen,
+  useToast,
 } from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
@@ -34,6 +38,8 @@ export default function WalletDocDetailScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
+  const toast = useToast();
+  const [previewUri, setPreviewUri] = useState<string | null>(null);
   const { id } = useLocalSearchParams<{ id: string }>();
   const docId = typeof id === "string" ? id : "";
 
@@ -45,8 +51,7 @@ export default function WalletDocDetailScreen() {
 
   if (!doc && (isLoading || isFetching || !isError)) {
     return (
-      <Screen>
-        <BackHeader title={t("wallet.detail-title")} />
+      <Screen header={<BackHeader title={t("wallet.detail-title")} />}>
         <ItemDetailSkeleton />
       </Screen>
     );
@@ -54,8 +59,7 @@ export default function WalletDocDetailScreen() {
 
   if (!doc) {
     return (
-      <Screen>
-        <BackHeader title={t("wallet.detail-title")} />
+      <Screen header={<BackHeader title={t("wallet.detail-title")} />}>
         <AppText style={styles.empty}>{t("wallet.item-missing")}</AppText>
       </Screen>
     );
@@ -67,8 +71,32 @@ export default function WalletDocDetailScreen() {
   const timelineLabel = getComplianceTimelineLabel(days);
   const tone = doc.tone;
   const bannerColors = getBannerColors(colors, tone);
-  const imageUri = doc.thumbURL || doc.downloadURL || doc.localUri || null;
-  const icon = getWalletCategoryIcon(doc.category);
+  const fileUri =
+    doc.downloadURL?.trim() || doc.localUri?.trim() || doc.thumbURL?.trim() || null;
+  const imageUri = fileUri && isPreviewImage(fileUri) ? fileUri : null;
+  const icon = getWalletDocTypeIcon(doc.docType);
+
+  /**
+   * Opens an image in the preview, or a PDF in the device viewer.
+   * @param uri - Attachment URI, when one is saved
+   * @param asImage - Whether this card expects an image
+   * @returns Promise that resolves after the preview opens or a toast is shown
+   */
+  const onPreviewAttachment = async (uri: string | null, asImage: boolean) => {
+    if (!uri || isPreviewImage(uri) !== asImage) {
+      toast.info(t("wallet.preview-empty"));
+      return;
+    }
+    if (asImage) {
+      setPreviewUri(uri);
+      return;
+    }
+    try {
+      await Linking.openURL(uri);
+    } catch {
+      toast.error(t("wallet.preview-failed"));
+    }
+  };
 
   const banner =
     tone === "overdue"
@@ -78,12 +106,12 @@ export default function WalletDocDetailScreen() {
         : t("wallet.banner-ok", { date: doc.expires });
 
   return (
-    <Screen contentStyle={styles.content}>
-      <BackHeader
-        title={doc.title}
-        onBack={() => router.back()}
-      />
-
+    <Screen
+      header={
+        <BackHeader title={doc.title} onBack={() => router.back()} />
+      }
+      contentStyle={styles.content}
+    >
       <StatusToneBanner tone={tone} text={banner} />
 
       <ItemHeroCard
@@ -93,15 +121,65 @@ export default function WalletDocDetailScreen() {
         bottomBadge={doc.detail || undefined}
       />
 
-      <ComplianceTimelineCard
-        title={t("safety.compliance-timeline")}
-        label={timelineLabel}
-        tone={tone}
-        daysUntil={days}
-        progress={progress}
-        nowLabel={t("safety.now")}
-        overdueLabel={t("safety.status-overdue").toUpperCase()}
-      />
+      {dueDateObj ? (
+        <ComplianceTimelineCard
+          title={t("safety.compliance-timeline")}
+          label={timelineLabel}
+          tone={tone}
+          daysUntil={days}
+          progress={progress}
+          nowLabel={t("safety.now")}
+          overdueLabel={t("safety.status-overdue").toUpperCase()}
+        />
+      ) : null}
+
+      <AppText style={styles.certsTitle}>{t("wallet.attachment")}</AppText>
+      <View style={styles.certsRow}>
+        <Pressable
+          style={styles.certPress}
+          onPress={() => void onPreviewAttachment(fileUri, false)}
+          accessibilityRole="button"
+          accessibilityLabel={t("wallet.upload-file-title")}
+        >
+          <Card style={styles.certCard}>
+            <View style={styles.certTop}>
+              <View style={[styles.certIcon, { backgroundColor: colors.statusOverdueBg }]}>
+                <Ionicons
+                  name="document-text-outline"
+                  size={22}
+                  color={colors.statusOverdueText}
+                />
+              </View>
+            </View>
+            <AppText style={styles.certName} numberOfLines={1}>
+              {fileUri && !imageUri ? t("wallet.upload-file-title") : t("wallet.no-file")}
+            </AppText>
+            <AppText style={styles.certMeta}>
+              {fileUri && !imageUri ? t("wallet.file-on-file") : t("safety.upload-later")}
+            </AppText>
+          </Card>
+        </Pressable>
+        <Pressable
+          style={styles.certPress}
+          onPress={() => void onPreviewAttachment(fileUri, true)}
+          accessibilityRole="button"
+          accessibilityLabel={t("safety.add-photo")}
+        >
+          <Card style={styles.certCard}>
+            <View style={styles.certTop}>
+              <View style={[styles.certIcon, { backgroundColor: colors.softTeal }]}>
+                <Ionicons name="image-outline" size={22} color={colors.teal} />
+              </View>
+            </View>
+            <AppText style={styles.certName} numberOfLines={1}>
+              {imageUri ? t("safety.add-photo") : t("safety.no-photo")}
+            </AppText>
+            <AppText style={styles.certMeta}>
+              {imageUri ? t("wallet.file-on-file") : t("safety.upload-later")}
+            </AppText>
+          </Card>
+        </Pressable>
+      </View>
 
       <AppText style={styles.sectionLabel}>{t("wallet.details-section")}</AppText>
       <Card style={styles.specs}>
@@ -165,8 +243,46 @@ export default function WalletDocDetailScreen() {
           </View>
         </View>
       </Card>
+
+      <Modal
+        visible={previewUri != null}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setPreviewUri(null)}
+      >
+        <View style={styles.viewerBackdrop}>
+          <Pressable
+            onPress={() => setPreviewUri(null)}
+            hitSlop={12}
+            style={styles.viewerClose}
+            accessibilityRole="button"
+            accessibilityLabel={t("common.close")}
+          >
+            <Ionicons name="close" size={24} color={colors.onInverse} />
+          </Pressable>
+          {previewUri ? (
+            <Image
+              source={{ uri: previewUri }}
+              style={styles.viewerImage}
+              contentFit="contain"
+              cachePolicy="memory-disk"
+            />
+          ) : null}
+        </View>
+      </Modal>
     </Screen>
   );
+}
+
+/**
+ * True when the attachment should open in the image preview.
+ * @param uri - File URI
+ * @returns Whether the file is an image
+ */
+function isPreviewImage(uri: string): boolean {
+  const path = decodeURIComponent(uri.split("?")[0] ?? uri);
+  if (/\.pdf$/i.test(path)) return false;
+  return isImageUpload(undefined, path) || !/\.[a-z0-9]+$/i.test(path);
 }
 
 type SpecProps = {
@@ -219,6 +335,61 @@ function getStyles(colors: ThemeColors) {
       color: colors.muted,
       textAlign: "center",
       marginTop: 32,
+    },
+    certsTitle: {
+      color: colors.navy,
+      fontSize: 14,
+      fontWeight: "800",
+      letterSpacing: 0.6,
+      marginBottom: 10,
+    },
+    certsRow: {
+      flexDirection: "row",
+      gap: 10,
+      marginBottom: 18,
+    },
+    certPress: { flex: 1 },
+    certCard: { flex: 1, gap: 10, minHeight: 110 },
+    certTop: {
+      flexDirection: "row",
+      justifyContent: "space-between",
+      alignItems: "flex-start",
+    },
+    certIcon: {
+      width: 40,
+      height: 40,
+      borderRadius: 12,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    certName: {
+      color: colors.navy,
+      fontSize: 12,
+      fontWeight: "700",
+    },
+    certMeta: {
+      color: colors.muted,
+      fontSize: 11,
+    },
+    viewerBackdrop: {
+      flex: 1,
+      backgroundColor: "rgba(0,0,0,0.92)",
+      justifyContent: "center",
+      padding: 16,
+    },
+    viewerClose: {
+      position: "absolute",
+      top: 48,
+      right: 16,
+      zIndex: 2,
+      width: 40,
+      height: 40,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    viewerImage: {
+      width: "100%",
+      height: "70%",
     },
     sectionLabel: {
       color: colors.muted,
