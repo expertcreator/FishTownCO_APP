@@ -193,15 +193,35 @@ export default function SafetyItemDetailScreen() {
         <BackHeader
           title={item.name}
           right={
-            <Pressable
-              onPress={() => router.push(`/safety/edit/${item.id}`)}
-              hitSlop={10}
-              style={({ pressed }) => [styles.editBtn, pressed && styles.pressed]}
-              accessibilityRole="button"
-              accessibilityLabel={t("safety.edit-item")}
-            >
-              <Ionicons name="create-outline" size={22} color={colors.navy} />
-            </Pressable>
+            <View style={styles.headerActions}>
+              <Pressable
+                onPress={() => router.push(`/safety/edit/${item.id}`)}
+                hitSlop={10}
+                style={({ pressed }) => [styles.editBtn, pressed && styles.pressed]}
+                accessibilityRole="button"
+                accessibilityLabel={t("safety.edit-item")}
+              >
+                <Ionicons name="create-outline" size={22} color={colors.navy} />
+              </Pressable>
+              <Pressable
+                onPress={() => setDeleteOpen(true)}
+                disabled={isDeleting || isServicing}
+                hitSlop={10}
+                style={({ pressed }) => [
+                  styles.deleteIconBtn,
+                  pressed && styles.pressed,
+                  (isDeleting || isServicing) && styles.disabled,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t("safety.delete-item")}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={20}
+                  color={colors.statusOverdueText}
+                />
+              </Pressable>
+            </View>
           }
         />
       }
@@ -369,19 +389,6 @@ export default function SafetyItemDetailScreen() {
         onPress={() => void onMarkServiced()}
         style={styles.servicedBtn}
       />
-      <Pressable
-        onPress={() => setDeleteOpen(true)}
-        disabled={isDeleting || isServicing}
-        accessibilityRole="button"
-        accessibilityLabel={t("safety.delete-item")}
-        style={({ pressed }) => [
-          styles.deleteBtn,
-          pressed && styles.pressed,
-        ]}
-      >
-        <Ionicons name="trash-outline" size={18} color={colors.statusOverdueText} />
-        <AppText style={styles.deleteText}>{t("safety.delete-item")}</AppText>
-      </Pressable>
 
       <ConfirmModal
         visible={deleteOpen}
@@ -567,12 +574,26 @@ function getStyles(colors: ThemeColors) {
       textAlign: "center",
       marginTop: 32,
     },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+    },
     editBtn: {
       width: 36,
       height: 36,
       alignItems: "center",
       justifyContent: "center",
     },
+    deleteIconBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.statusOverdueBg,
+    },
+    disabled: { opacity: 0.5 },
     pressed: { opacity: 0.75 },
     banner: {
       flexDirection: "row",
@@ -882,20 +903,6 @@ function getStyles(colors: ThemeColors) {
     },
     servicedBtn: {
       marginTop: 4,
-    },
-    deleteBtn: {
-      marginTop: 8,
-      minHeight: 48,
-      borderRadius: 14,
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 8,
-    },
-    deleteText: {
-      color: colors.statusOverdueText,
-      fontSize: 15,
-      fontWeight: "700",
     },
   });
 }

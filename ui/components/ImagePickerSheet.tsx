@@ -1,5 +1,4 @@
 import { Ionicons } from "@expo/vector-icons";
-import { LinearGradient } from "expo-linear-gradient";
 import { useRef, useState } from "react";
 import {
   Alert,
@@ -13,7 +12,6 @@ import { pickImage } from "@/features/common/utils/imagePicker";
 import { pickDocument } from "@/features/common/utils/pickDocument";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
-import { OutlineButton } from "./Buttons";
 import AppText from "./Text";
 
 export type ImagePickerSheetProps = {
@@ -151,55 +149,87 @@ export function ImagePickerSheet({
           ]}
         >
           <View style={styles.handle} />
-
-          <Pressable
-            onPress={handleGallerySelection}
-            style={({ pressed }) => [
-              styles.galleryButton,
-              pressed && styles.pressed,
-            ]}
-            accessibilityRole="button"
-            accessibilityLabel={t("imagePicker.choose-from-library")}
-          >
-            <LinearGradient
-              colors={[colors.teal, colors.navy]}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.gradient}
+          <View style={styles.header}>
+            <AppText style={styles.title}>
+              {allowDocuments
+                ? t("imagePicker.title-file")
+                : t("imagePicker.title")}
+            </AppText>
+            <Pressable
+              onPress={onClose}
+              hitSlop={12}
+              accessibilityRole="button"
+              accessibilityLabel={t("common.close")}
+              style={({ pressed }) => [
+                styles.closeBtn,
+                pressed && styles.pressed,
+              ]}
             >
-              <AppText style={styles.galleryText}>
+              <Ionicons name="close" size={22} color={colors.navy} />
+            </Pressable>
+          </View>
+
+          <View style={styles.options}>
+            <Pressable
+              onPress={handleGallerySelection}
+              style={({ pressed }) => [
+                styles.option,
+                pressed && styles.pressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t("imagePicker.choose-from-library")}
+            >
+              <View style={[styles.iconWrap, styles.iconLibrary]}>
+                <Ionicons name="images-outline" size={22} color={colors.teal} />
+              </View>
+              <AppText style={styles.optionLabel}>
                 {t("imagePicker.choose-from-library")}
               </AppText>
-              <Ionicons name="cloud-upload-outline" size={22} color={colors.white} />
-            </LinearGradient>
-          </Pressable>
+              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+            </Pressable>
 
-          <OutlineButton
-            label={t("imagePicker.take-photo")}
-            icon="camera-outline"
-            onPress={handleCameraSelection}
-            style={styles.cameraButton}
-          />
+            <Pressable
+              onPress={handleCameraSelection}
+              style={({ pressed }) => [
+                styles.option,
+                pressed && styles.pressed,
+              ]}
+              accessibilityRole="button"
+              accessibilityLabel={t("imagePicker.take-photo")}
+            >
+              <View style={[styles.iconWrap, styles.iconCamera]}>
+                <Ionicons name="camera-outline" size={22} color={colors.orange} />
+              </View>
+              <AppText style={styles.optionLabel}>
+                {t("imagePicker.take-photo")}
+              </AppText>
+              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+            </Pressable>
 
-          {allowDocuments ? (
-            <OutlineButton
-              label={t("imagePicker.choose-document")}
-              icon="document-text-outline"
-              onPress={handleDocumentSelection}
-            />
-          ) : null}
-
-          <Pressable
-            onPress={onClose}
-            accessibilityRole="button"
-            accessibilityLabel={t("common.cancel")}
-            style={({ pressed }) => [
-              styles.cancelBtn,
-              pressed && styles.pressed,
-            ]}
-          >
-            <AppText style={styles.cancelText}>{t("common.cancel")}</AppText>
-          </Pressable>
+            {allowDocuments ? (
+              <Pressable
+                onPress={handleDocumentSelection}
+                style={({ pressed }) => [
+                  styles.option,
+                  pressed && styles.pressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t("imagePicker.choose-document")}
+              >
+                <View style={[styles.iconWrap, styles.iconDocument]}>
+                  <Ionicons
+                    name="document-text-outline"
+                    size={22}
+                    color={colors.navy}
+                  />
+                </View>
+                <AppText style={styles.optionLabel}>
+                  {t("imagePicker.choose-document")}
+                </AppText>
+                <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+              </Pressable>
+            ) : null}
+          </View>
         </View>
       </View>
     </Modal>
@@ -222,52 +252,79 @@ function getStyles(colors: ThemeColors) {
       ...StyleSheet.absoluteFill,
     },
     sheet: {
-      backgroundColor: colors.card,
+      backgroundColor: colors.background,
       borderTopLeftRadius: 22,
       borderTopRightRadius: 22,
-      paddingHorizontal: 20,
+      paddingHorizontal: 16,
       paddingTop: 10,
-      gap: 12,
     },
     handle: {
       alignSelf: "center",
-      width: 42,
+      width: 40,
       height: 4,
       borderRadius: 2,
       backgroundColor: colors.border,
-      marginBottom: 14,
+      marginBottom: 8,
     },
-    galleryButton: {
-      borderRadius: 14,
-      overflow: "hidden",
-      minHeight: 54,
-    },
-    gradient: {
-      minHeight: 54,
-      paddingHorizontal: 18,
+    header: {
       flexDirection: "row",
       alignItems: "center",
+      justifyContent: "space-between",
+      paddingHorizontal: 4,
+      paddingBottom: 14,
+      gap: 12,
+    },
+    title: {
+      flex: 1,
+      color: colors.navy,
+      fontSize: 18,
+      fontWeight: "800",
+    },
+    closeBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
       justifyContent: "center",
-      gap: 8,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
-    galleryText: {
-      color: colors.white,
-      fontSize: 16,
-      fontWeight: "700",
+    options: {
+      gap: 10,
     },
-    cameraButton: {
-      borderColor: colors.orange,
+    option: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      minHeight: 64,
+      paddingHorizontal: 14,
+      paddingVertical: 12,
+      borderRadius: 16,
+      backgroundColor: colors.card,
+      borderWidth: 1,
+      borderColor: colors.border,
     },
-    cancelBtn: {
-      alignSelf: "stretch",
-      minHeight: 48,
-      borderRadius: 14,
+    iconWrap: {
+      width: 40,
+      height: 40,
+      borderRadius: 20,
       alignItems: "center",
       justifyContent: "center",
     },
-    cancelText: {
+    iconLibrary: {
+      backgroundColor: colors.softTeal,
+    },
+    iconCamera: {
+      backgroundColor: colors.softOrange,
+    },
+    iconDocument: {
+      backgroundColor: colors.cardSoft,
+    },
+    optionLabel: {
+      flex: 1,
       color: colors.navy,
-      fontSize: 15,
+      fontSize: 16,
       fontWeight: "700",
     },
     pressed: { opacity: 0.9 },

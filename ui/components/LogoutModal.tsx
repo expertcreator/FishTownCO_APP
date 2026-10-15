@@ -19,12 +19,12 @@ type LogoutModalProps = {
 };
 
 /**
- * Logout confirmation sheet. Copy comes from `auth.log-out-*` and
- * `common.cancel`. Colors follow the active light or dark palette, and the
+ * Logout confirmation sheet. Copy comes from `auth.log-out-*`.
+ * Colors follow the active light or dark palette, and the
  * close button flips when the locale is RTL.
  * @param props - Sheet props
  * @param props.visible - Whether the sheet is shown
- * @param props.onClose - Dismiss handler (backdrop, back, close, Cancel)
+ * @param props.onClose - Dismiss handler (backdrop, back, or close)
  * @param props.onConfirm - Confirm handler
  * @param props.loading - Disables actions and shows a spinner on confirm
  * @returns Logout confirmation modal
@@ -102,21 +102,6 @@ export function LogoutModal({
             onPress={onConfirm}
             style={styles.confirmBtn}
           />
-          <Pressable
-            onPress={dismiss}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel={t("common.cancel")}
-            style={({ pressed }) => [
-              styles.cancelBtn,
-              pressed && !loading && styles.pressed,
-              loading && styles.disabled,
-            ]}
-          >
-            <AppText style={[styles.cancelText, { writingDirection: direction }]}>
-              {t("common.cancel")}
-            </AppText>
-          </Pressable>
         </View>
       </View>
     </Modal>
@@ -211,19 +196,6 @@ function getStyles(colors: ThemeColors, isDark: boolean) {
     },
     confirmBtn: {
       alignSelf: "stretch",
-      marginBottom: 10,
-    },
-    cancelBtn: {
-      alignSelf: "stretch",
-      minHeight: 48,
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    cancelText: {
-      color: colors.navy,
-      fontSize: 15,
-      fontWeight: "700",
     },
     pressed: { opacity: 0.85 },
     disabled: { opacity: 0.6 },

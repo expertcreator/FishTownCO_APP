@@ -1,6 +1,7 @@
 import { resolveAppLaunchRoute } from "@/features/auth/utils/resolveAppLaunchRoute";
 import { firebaseAuth } from "@/features/common/firebase";
 import { useOnboardingStore } from "@/features/onboarding/store/onboardingStore";
+import { fetchVesselProfile } from "@/features/vessel/services/fetchVesselProfile";
 import { onAuthStateChanged } from "@react-native-firebase/auth";
 import { Redirect, type Href } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -12,7 +13,8 @@ const MIN_SPLASH_MS = 1000;
 /**
  * App entry under the native splash.
  * Waits for onboarding hydration and Firebase Auth, then opens Welcome, Login,
- * or Home. The splash stays up until that screen is ready, so the boot
+ * Add Vessel, or Home. A signed-in user with no saved vessel returns to Add Vessel.
+ * The splash stays up until that screen is ready, so the boot
  * skeleton never appears in front of the bottom tabs.
  * @returns Redirect once the launch route is known
  */
@@ -45,16 +47,32 @@ export default function Index() {
     let cancelled = false;
 
     const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
-      if (cancelled) return;
-      try {
-        setRedirectTo(
-          resolveAppLaunchRoute(hasCompletedOnboarding, Boolean(user))
-        );
-      } catch {
-        setRedirectTo("/welcome");
-      } finally {
-        setIsReady(true);
-      }
+      void (async () => {
+        if (cancelled) return;
+        try {
+          let hasVessel = true;
+          if (hasCompletedOnboarding && user) {
+            try {
+              const profile = await fetchVesselProfile();
+              hasVessel = Boolean(profile?.name.trim());
+            } catch {
+              hasVessel = true;
+            }
+          }
+          if (cancelled) return;
+          setRedirectTo(
+            resolveAppLaunchRoute(
+              hasCompletedOnboarding,
+              Boolean(user),
+              hasVessel
+            )
+          );
+        } catch {
+          if (!cancelled) setRedirectTo("/welcome");
+        } finally {
+          if (!cancelled) setIsReady(true);
+        }
+      })();
     });
 
     return () => {

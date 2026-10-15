@@ -14,6 +14,7 @@ import {
   createLoginSchema,
   type LoginSchema,
 } from "@/features/auth/validation/authSchema";
+import { registerPushTokenAfterAuth } from "@/features/common/notifications/useNotifications";
 import { startSessionPrefetch } from "@/features/vessel/services/prefetchVesselCatalogs";
 import {
   AppText,
@@ -73,6 +74,7 @@ export default function LoginScreen() {
         password: values.password,
       });
       startSessionPrefetch();
+      registerPushTokenAfterAuth();
       toast.success(t("auth.log-in-success"));
       router.replace("/(tabs)/home");
     } catch (error) {
@@ -87,6 +89,7 @@ export default function LoginScreen() {
    */
   const afterAuthSuccess = () => {
     startSessionPrefetch();
+    registerPushTokenAfterAuth();
     toast.success(t("auth.log-in-success"));
     router.replace("/(tabs)/home");
   };
@@ -367,11 +370,12 @@ function getStyles(colors: ThemeColors) {
     },
     footerText: {
       color: colors.muted,
-      fontSize: 12,
+      fontSize: 13,
       textAlign: "center",
     },
     link: {
       color: colors.teal,
+      fontSize: 13,
       fontWeight: "700",
       textDecorationLine: "underline",
     },

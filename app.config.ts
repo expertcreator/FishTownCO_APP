@@ -67,6 +67,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       "expo-font",
       "expo-location",
       [
+        "expo-notifications",
+        {
+          defaultChannel: "default_high",
+        },
+      ],
+      [
         "react-native-maps",
         {
           // Same as customer app: library plugin owns both platforms.

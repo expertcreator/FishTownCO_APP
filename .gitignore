@@ -48,6 +48,7 @@ android/
 ios/
 
 credentials.json
+*firebase-adminsdk*.json
 **/graphify-out/
 
 .tmp-export-check/

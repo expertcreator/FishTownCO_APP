@@ -13,6 +13,7 @@ import {
   createAccountSchema,
   type CreateAccountSchema,
 } from "@/features/auth/validation/authSchema";
+import { registerPushTokenAfterAuth } from "@/features/common/notifications/useNotifications";
 import { startSessionPrefetch } from "@/features/vessel/services/prefetchVesselCatalogs";
 import {
   AppText,
@@ -107,6 +108,7 @@ export default function CreateAccountScreen() {
    */
   const openVesselOnboarding = () => {
     startSessionPrefetch();
+    registerPushTokenAfterAuth();
     toast.success(t("auth.create-account-success"));
     router.replace("/vessel/edit");
   };
@@ -123,6 +125,7 @@ export default function CreateAccountScreen() {
       return;
     }
     startSessionPrefetch();
+    registerPushTokenAfterAuth();
     toast.success(t("auth.log-in-success"));
     router.replace("/(tabs)/home");
   };
@@ -299,7 +302,7 @@ export default function CreateAccountScreen() {
 
       <AppText style={styles.footer}>
         {t("auth.already-have-account")}{" "}
-        <AppText style={styles.link} onPress={goToLogin}>
+        <AppText style={[styles.link, styles.footerLink]} onPress={goToLogin}>
           {t("auth.log-in")}
         </AppText>
       </AppText>
@@ -496,8 +499,11 @@ function getStyles(colors: ThemeColors) {
     footer: {
       textAlign: "center",
       color: colors.muted,
-      fontSize: 12,
+      fontSize: 13,
       marginTop: 4,
+    },
+    footerLink: {
+      fontSize: 13,
     },
     modalOverlay: {
       flex: 1,

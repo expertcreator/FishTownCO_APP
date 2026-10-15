@@ -18,7 +18,7 @@ type ConfirmModalProps = {
 };
 
 /**
- * Confirmation sheet using the same Cancel spacing as the logout sheet.
+ * Confirmation sheet. Dismiss with the close button or by tapping outside.
  * @param props - Sheet props
  * @param props.visible - Whether the sheet is shown
  * @param props.title - Sheet title
@@ -100,21 +100,6 @@ export function ConfirmModal({
             onPress={onConfirm}
             style={styles.confirmBtn}
           />
-          <Pressable
-            onPress={dismiss}
-            disabled={loading}
-            accessibilityRole="button"
-            accessibilityLabel={t("common.cancel")}
-            style={({ pressed }) => [
-              styles.cancelBtn,
-              pressed && !loading && styles.pressed,
-              loading && styles.disabled,
-            ]}
-          >
-            <AppText style={[styles.cancelText, { writingDirection: direction }]}>
-              {t("common.cancel")}
-            </AppText>
-          </Pressable>
         </View>
       </View>
     </Modal>
@@ -203,19 +188,6 @@ function getStyles(colors: ThemeColors, isDark: boolean) {
     },
     confirmBtn: {
       alignSelf: "stretch",
-      marginBottom: 10,
-    },
-    cancelBtn: {
-      alignSelf: "stretch",
-      minHeight: 48,
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    cancelText: {
-      color: colors.navy,
-      fontSize: 15,
-      fontWeight: "700",
     },
     pressed: { opacity: 0.85 },
     disabled: { opacity: 0.6 },

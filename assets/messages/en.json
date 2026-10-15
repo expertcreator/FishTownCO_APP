@@ -509,6 +509,8 @@
     "error-title": "Error",
     "gallery-error": "Failed to select image from gallery. Please try again.",
     "camera-error": "Failed to take photo. Please check camera permissions.",
+    "title": "Add a photo",
+    "title-file": "Add a file",
     "choose-from-library": "Choose from library",
     "take-photo": "Take a photo",
     "choose-document": "Choose document",

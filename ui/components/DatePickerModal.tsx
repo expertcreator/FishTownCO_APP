@@ -204,17 +204,6 @@ export function DatePickerModal({
               onPress={handleConfirm}
               style={styles.confirmBtn}
             />
-            <Pressable
-              onPress={handleClose}
-              accessibilityRole="button"
-              accessibilityLabel={t("common.cancel")}
-              style={({ pressed }) => [
-                styles.cancelBtn,
-                pressed && styles.pressed,
-              ]}
-            >
-              <AppText style={styles.cancelText}>{t("common.cancel")}</AppText>
-            </Pressable>
           </View>
         </View>
       </View>
@@ -305,19 +294,6 @@ function getStyles(colors: ThemeColors) {
     },
     actions: {
       marginTop: 14,
-    },
-    cancelBtn: {
-      alignSelf: "stretch",
-      minHeight: 48,
-      borderRadius: 14,
-      alignItems: "center",
-      justifyContent: "center",
-      marginTop: 10,
-    },
-    cancelText: {
-      color: colors.navy,
-      fontSize: 15,
-      fontWeight: "700",
     },
     confirmBtn: {
       alignSelf: "stretch",

@@ -1,4 +1,5 @@
 import { BrandLogoWarmup } from "@/features/auth/components/BrandLogoWarmup/BrandLogoWarmup";
+import { useNotifications } from "@/features/common/notifications/useNotifications";
 import { configureGoogleSignIn } from "@/features/auth/utils/configureGoogleSignIn";
 import { queryClient } from "@/features/common/firebase";
 import { prefetchSafetyCategories } from "@/features/safety/services/prefetchSafetyCategories";
@@ -84,6 +85,7 @@ export default function RootLayout() {
 function ThemedShell() {
   const colors = useColors();
   const { isDark } = useTheme();
+  useNotifications();
 
   return (
     <View style={{ flex: 1, backgroundColor: colors.background }}>
