@@ -1,0 +1,22 @@
+{
+  "name": "fishtownco-functions",
+  "private": true,
+  "main": "lib/index.js",
+  "engines": {
+    "node": "22"
+  },
+  "scripts": {
+    "build": "tsc",
+    "gcp-build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "expo-server-sdk": "^4.0.0",
+    "firebase-admin": "^13.6.0",
+    "firebase-functions": "^7.4.0",
+    "stripe": "^23.0.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

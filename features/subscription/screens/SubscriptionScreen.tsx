@@ -1,8 +1,11 @@
+import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
 import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import { mapAuthError } from "@/features/auth/utils/mapAuthError";
-import { createBillingPayment } from "@/features/billing/services/createBillingPayment";
+import {
+  createSubscriptionSheet,
+  recordSubscriptionPayment,
+} from "@/features/subscription/services/startStripeSubscription";
 import type { BillingPlanId } from "@/features/billing/types/billing";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import {
@@ -32,37 +35,110 @@ const PLANS = [
 },
 ] as const;
 
+const STRIPE_PUBLISHABLE_KEY =
+  process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
+
 /**
  * Subscription screen matching prototype screen 10.
- * Starting a plan writes a Paid billing row, then opens Home.
+ * Starting a plan opens the Stripe card sheet, then Home.
  * @returns Subscription plan picker UI
  */
 export default function SubscriptionScreen() {
+  return (
+    <StripeProvider
+      publishableKey={STRIPE_PUBLISHABLE_KEY}
+      merchantIdentifier="merchant.com.itoasis.Fishtownco"
+      urlScheme="fishtownco"
+    >
+      <SubscriptionForm />
+    </StripeProvider>
+  );
+}
+
+/**
+ * Plan picker and Stripe Payment Sheet.
+ * @returns Subscription form
+ */
+function SubscriptionForm() {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
   const toast = useToast();
+  const { initPaymentSheet, presentPaymentSheet } = useStripe();
   /** Prototype defaults to the Skipper Plan (£10/month). */
   const [plan, setPlan] = useState<BillingPlanId>("monthly");
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   /**
-   * Records the selected plan payment in Firestore, then opens Home.
+   * Opens the Stripe card sheet for the selected plan, then opens Home.
    * @returns Promise that resolves when navigation starts or a toast is shown
    */
   const onStart = async () => {
     if (isSubmitting) return;
+    if (!STRIPE_PUBLISHABLE_KEY) {
+      console.log("[Payment] missing publishable key");
+      toast.error(t("subscription.payment-failed"));
+      return;
+    }
     setIsSubmitting(true);
     try {
-      await createBillingPayment({ planId: plan, status: "Paid" });
-      toast.success(t("subscription.start-success"));
+      console.log("[Payment] start", plan);
+      const sheet = await createSubscriptionSheet(plan);
+      console.log("[Payment] sheet", {
+        alreadyActive: sheet.alreadyActive,
+        hasCustomer: Boolean(sheet.customerId),
+        hasEphemeralKey: Boolean(sheet.ephemeralKey),
+        hasPaymentSecret: Boolean(sheet.paymentIntentClientSecret),
+        subscriptionId: sheet.subscriptionId ?? "",
+      });
+      if (!sheet.alreadyActive) {
+        if (
+          !sheet.customerId ||
+          !sheet.ephemeralKey ||
+          !sheet.paymentIntentClientSecret ||
+          !sheet.subscriptionId
+        ) {
+          throw new Error("PAYMENT_NOT_READY");
+        }
+        const init = await initPaymentSheet({
+          merchantDisplayName: "Fishtownco",
+          customerId: sheet.customerId,
+          customerEphemeralKeySecret: sheet.ephemeralKey,
+          paymentIntentClientSecret: sheet.paymentIntentClientSecret,
+          returnURL: "fishtownco://stripe-redirect",
+        });
+        if (init.error) {
+          console.log("[Payment] init sheet failed", init.error.code, init.error.message);
+          throw new Error(init.error.message);
+        }
+        const presented = await presentPaymentSheet();
+        if (presented.error) {
+          console.log("[Payment] sheet closed", presented.error.code, presented.error.message);
+          if (presented.error.code === "Canceled") {
+            setIsSubmitting(false);
+            return;
+          }
+          throw new Error(presented.error.message);
+        }
+        console.log("[Payment] card accepted", sheet.subscriptionId);
+        await recordSubscriptionPayment(sheet.subscriptionId);
+      }
+      toast.success(
+        sheet.alreadyActive
+          ? t("subscription.already-subscribed")
+          : t("subscription.start-success")
+      );
       router.replace("/(tabs)/home");
     } catch (error) {
-
-      if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
+      console.log(
+        "[Payment] failed",
+        error instanceof Error ? error.message : error
+      );
+      const code = error instanceof Error ? error.message : "";
+      if (code === "NOT_SIGNED_IN") {
         toast.error(t("subscription.sign-in-required"));
       } else {
-        toast.error(mapAuthError(error, t));
+        toast.error(t("subscription.payment-failed"));
       }
       setIsSubmitting(false);
     }

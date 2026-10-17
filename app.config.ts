@@ -5,15 +5,13 @@ const SPLASH_BG = "#F3EBDD";
 const BRAND_ROOT = "./assets/branding/fishtownco";
 
 /**
- * Resolves the Google Maps key the same way as the customer app.
+ * Resolves one Google Maps key from the public env.
+ * @param name - Env var name
+ * @param fallback - Value used when that var is empty
  * @returns Trimmed Maps API key, or empty string
  */
-function resolveGoogleMapsKey(): string {
-  return (
-    process.env.EXPO_PUBLIC_GOOGLE_MAPS_API_KEY ??
-    process.env.GOOGLE_MAPS_API_KEY ??
-    ""
-  ).trim();
+function resolveGoogleMapsKey(name: string, fallback = ""): string {
+  return (process.env[name] ?? fallback).trim();
 }
 
 /**
@@ -26,7 +24,14 @@ function resolveGoogleMapsKey(): string {
  * @returns Expo app configuration
  */
 export default ({ config }: ConfigContext): ExpoConfig => {
-  const googleMapsKey = resolveGoogleMapsKey();
+  const androidMapsKey = resolveGoogleMapsKey(
+    "EXPO_PUBLIC_GOOGLE_MAPS_API_KEY",
+    process.env.GOOGLE_MAPS_API_KEY ?? ""
+  );
+  const iosMapsKey = resolveGoogleMapsKey(
+    "EXPO_PUBLIC_GOOGLE_MAPS_IOS_API_KEY",
+    androidMapsKey
+  );
 
   return {
     ...config,
@@ -41,6 +46,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       supportsTablet: true,
       bundleIdentifier: "com.itoasis.Fishtownco",
       usesAppleSignIn: true,
+      config: {
+        googleMapsApiKey: iosMapsKey,
+      },
     },
     android: {
       adaptiveIcon: {
@@ -52,7 +60,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       googleServicesFile: "./google-services.json",
       config: {
         googleMaps: {
-          apiKey: googleMapsKey,
+          apiKey: androidMapsKey,
         },
       },
     },
@@ -76,8 +84,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         "react-native-maps",
         {
           // Same as customer app: library plugin owns both platforms.
-          iosGoogleMapsApiKey: googleMapsKey,
-          androidGoogleMapsApiKey: googleMapsKey,
+          iosGoogleMapsApiKey: iosMapsKey,
+          androidGoogleMapsApiKey: androidMapsKey,
         },
       ],
       [
@@ -90,6 +98,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       "expo-image",
+      [
+        "@stripe/stripe-react-native",
+        {
+          merchantIdentifier: "merchant.com.itoasis.Fishtownco",
+          enableGooglePay: false,
+        },
+      ],
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "@react-native-google-signin/google-signin",
@@ -135,7 +150,8 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     extra: {
       appBrand: "fishtownco",
       /** Same runtime key surface as customer app. */
-      googleMapsApiKey: googleMapsKey,
+      googleMapsApiKey: androidMapsKey,
+      googleMapsIosApiKey: iosMapsKey,
       eas: {
         projectId: "985db04d-69f5-433b-bd3f-7266b4ec2275",
       },

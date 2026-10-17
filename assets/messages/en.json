@@ -159,7 +159,9 @@
     "start-monthly": "Subscribe — £10/month",
     "skip": "Skip for now",
     "start-success": "Subscription started",
-    "sign-in-required": "Please log in to start a subscription."
+    "sign-in-required": "Please log in to start a subscription.",
+    "payment-failed": "Payment could not be completed.",
+    "already-subscribed": "You already have an active subscription."
   },
   "home": {
     "title": "Home",
