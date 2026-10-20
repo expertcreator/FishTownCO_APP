@@ -146,7 +146,7 @@ export default function HomeScreen() {
       >
         <View style={styles.hero}>
           <Image
-            source={require("@/assets/from-design/onboarding/01-central-log.jpg")}
+            source={getVesselHeroSource(vessel)}
             style={styles.heroImage}
             resizeMode="cover"
           />

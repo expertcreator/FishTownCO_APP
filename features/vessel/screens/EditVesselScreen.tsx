@@ -5,9 +5,11 @@ import { useForm } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
 import { isLocalMediaUri } from "@/features/common/media/mediaStatus";
+import { isImageUpload } from "@/features/common/media/uploadUserFile";
 import { useVesselProfile } from "@/features/vessel/hooks/useVesselProfile";
 import { saveVesselProfile } from "@/features/vessel/services/saveVesselProfile";
 import { uploadVesselDocument } from "@/features/vessel/services/uploadVesselDocument";
+import { uploadVesselPhoto } from "@/features/vessel/services/uploadVesselPhoto";
 import { useVesselTypesStore } from "@/features/vessel/store/vesselTypesStore";
 import { useVesselUsesStore } from "@/features/vessel/store/vesselUsesStore";
 import {
@@ -58,6 +60,7 @@ export default function EditVesselScreen() {
   const [documentUri, setDocumentUri] = useState<string | null>(null);
   const [documentName, setDocumentName] = useState("");
   const [documentMime, setDocumentMime] = useState("");
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const vesselTypes = useVesselTypesStore((state) => state.types);
   const typesLoading = useVesselTypesStore((state) => state.isLoading);
   const loadTypes = useVesselTypesStore((state) => state.loadTypes);
@@ -113,9 +116,19 @@ export default function EditVesselScreen() {
         engineHours: vessel.engineHours,
         usage: vessel.usage,
       });
-      setDocumentUri(vessel.documentUrl || null);
-      setDocumentName(vessel.documentName || "");
-      setDocumentMime("");
+      const existingPhoto = vessel.photoUrl || vessel.photoThumbUrl || "";
+      if (existingPhoto) {
+        setDocumentUri(existingPhoto);
+        setDocumentName(vessel.documentName || "vessel-photo.jpg");
+        setDocumentMime("image/jpeg");
+      } else if (
+        vessel.documentUrl &&
+        isImageUpload("", vessel.documentName)
+      ) {
+        setDocumentUri(vessel.documentUrl);
+        setDocumentName(vessel.documentName || "");
+        setDocumentMime("image/jpeg");
+      }
     }
     setHydrated(true);
   }, [vessel, hydrated, reset]);
@@ -123,12 +136,20 @@ export default function EditVesselScreen() {
   /**
    * Saves the vessel profile to Firestore.
    * A new vessel continues to the checklist. An existing vessel returns to the previous screen.
-   * Preserves photo / next-service / checklist fields not shown on this form.
+   * A newly chosen photo also becomes the image on Home and My Vessel.
    * @param values - Validated form values
    * @returns Promise that resolves when navigation starts or a toast is shown
    */
   const onSubmit = async (values: EditVesselSchema) => {
     if (isSubmitting) return;
+    const hasPhoto =
+      Boolean(documentUri?.trim()) &&
+      isImageUpload(documentMime, documentName || documentUri || "");
+    if (!hasPhoto) {
+      setPhotoError(t("validation.required"));
+      return;
+    }
+    setPhotoError(null);
     setIsSubmitting(true);
     try {
       let nextDocumentUrl = documentUri;
@@ -143,6 +164,18 @@ export default function EditVesselScreen() {
         nextDocumentUrl = uploaded.downloadURL;
         nextDocumentName = uploaded.fileName;
         nextDocumentPath = uploaded.storagePath;
+      }
+
+      let photoUrl = vessel?.photoUrl ?? "";
+      let photoThumbUrl = vessel?.photoThumbUrl ?? "";
+      if (
+        documentUri &&
+        isLocalMediaUri(documentUri) &&
+        isImageUpload(documentMime, documentName)
+      ) {
+        const photo = await uploadVesselPhoto(documentUri);
+        photoUrl = photo.downloadURL;
+        photoThumbUrl = photo.thumbURL;
       }
 
       await saveVesselProfile({
@@ -163,8 +196,8 @@ export default function EditVesselScreen() {
         yearBuilt: vessel?.yearBuilt,
         skipper: vessel?.skipper,
         nextServiceIn: vessel?.nextServiceIn,
-        photoUrl: vessel?.photoUrl,
-        photoThumbUrl: vessel?.photoThumbUrl,
+        photoUrl,
+        photoThumbUrl,
       });
       toast.success(t("vessel.save-success"));
       if (isAdding) {
@@ -307,16 +340,23 @@ export default function EditVesselScreen() {
             uri={documentUri}
             fileName={documentName}
             mimeType={documentMime}
-            emptyLabel={t("vessel.upload-document")}
-            hint={t("crew.upload-cert-hint")}
-            filledLabel={t("vessel.document-added")}
+            emptyLabel={t("vessel.photo-upload")}
+            hint={t("vessel.photo-hint")}
+            filledLabel={t("vessel.photo-change")}
             removeAccessibilityLabel={t("vessel.remove-document")}
+            allowDocuments={false}
             onChange={(file) => {
               setDocumentUri(file?.uri ?? null);
               setDocumentName(file?.name ?? "");
               setDocumentMime(file?.mimeType ?? "");
+              setPhotoError(
+                file?.uri?.trim() ? null : t("validation.required")
+              );
             }}
           />
+          {photoError ? (
+            <AppText style={styles.photoError}>{photoError}</AppText>
+          ) : null}
         </FormCard>
       </KeyboardAwareContainer>
 
@@ -394,6 +434,12 @@ function getStyles(colors: ThemeColors) {
       color: colors.muted,
       fontSize: 13,
       textAlign: "center",
+    },
+    photoError: {
+      color: colors.statusOverdueText,
+      fontSize: 12,
+      fontWeight: "600",
+      marginTop: -6,
     },
   });
 }

@@ -29,6 +29,8 @@ type DocumentUploadFieldProps = {
   layout?: "row" | "card";
   /** Accessibility label for the close control. */
   removeAccessibilityLabel: string;
+  /** When false, the sheet offers camera and gallery only. */
+  allowDocuments?: boolean;
   /**
    * Called with the picked file, or null when it is cleared.
    * @param file - Selected file, or null
@@ -52,6 +54,7 @@ export function DocumentUploadField({
   hint,
   layout = "row",
   removeAccessibilityLabel,
+  allowDocuments = true,
   onChange,
 }: DocumentUploadFieldProps) {
   const [open, setOpen] = useState(false);
@@ -79,7 +82,7 @@ export function DocumentUploadField({
       />
       <ImagePickerSheet
         visible={open}
-        allowDocuments
+        allowDocuments={allowDocuments}
         onClose={() => setOpen(false)}
         onImageSelected={(nextUri, file) => {
           onChange({
