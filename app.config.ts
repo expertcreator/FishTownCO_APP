@@ -133,6 +133,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           android: {
             // Required by recent Google / Firebase Android stacks
             minSdkVersion: 24,
+            // Compress native libraries so a sideloaded APK installs.
+            // Uncompressed libs install with adb and fail from the phone installer.
+            useLegacyPackaging: true,
           },
         },
       ],

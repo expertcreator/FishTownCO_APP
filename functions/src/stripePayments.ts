@@ -15,8 +15,8 @@ const PRICE_IDS = {
 type PlanId = keyof typeof PRICE_IDS;
 
 const REGION = "europe-west2";
-/** Matches @stripe/stripe-react-native 0.64 Payment Sheet. */
-const EPHEMERAL_API_VERSION = "2024-12-15";
+/** Pinned to the stripe Node SDK. 2024-12-15 is not a published Stripe version. */
+const EPHEMERAL_API_VERSION = "2026-09-30.endive";
 
 /**
  * Builds a Stripe client from the server secret.
