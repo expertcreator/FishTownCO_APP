@@ -49,7 +49,12 @@ ios/
 
 credentials.json
 *firebase-adminsdk*.json
+# Client iOS certificates, profiles, and keys (local only)
+/ios-signing/
 **/graphify-out/
 
 .tmp-export-check/
 
+/ios-signing/Certificates
+ios-signing/Certificates/distribution.cer
+ios-signing/Certificates/development.cer

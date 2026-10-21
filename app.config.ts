@@ -43,11 +43,21 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: "automatic",
     icon: `${BRAND_ROOT}/icon.png`,
     ios: {
+      // iPad gets all four orientations (Expo adds them; App Store requires them for multitasking).
       supportsTablet: true,
       bundleIdentifier: "com.itoasis.Fishtownco",
+      /** Client's Apple Developer team. */
+      appleTeamId: "5G3N4M29YF",
       usesAppleSignIn: true,
+      googleServicesFile: "./GoogleService-Info.plist",
       config: {
         googleMapsApiKey: iosMapsKey,
+        // Only standard HTTPS. Skips the export-compliance prompt per upload.
+        usesNonExemptEncryption: false,
+      },
+      infoPlist: {
+        // iPhone stays portrait only (`orientation` would also allow upside down).
+        UISupportedInterfaceOrientations: ["UIInterfaceOrientationPortrait"],
       },
     },
     android: {
@@ -105,7 +115,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           enableGooglePay: false,
         },
       ],
-      "@react-native-firebase/app",
+      [
+        "@react-native-firebase/app",
+        {
+          // Resolve Firebase through CocoaPods. SPM needs dynamic frameworks.
+          ios: { disableSPM: true },
+        },
+      ],
       "@react-native-firebase/auth",
       "@react-native-google-signin/google-signin",
       "./plugins/withIosAppleSignIn",
@@ -136,6 +152,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             // Compress native libraries so a sideloaded APK installs.
             // Uncompressed libs install with adb and fail from the phone installer.
             useLegacyPackaging: true,
+          },
+          ios: {
+            // Firebase iOS pods need frameworks for their Swift modules.
+            useFrameworks: "static",
           },
         },
       ],
