@@ -50,6 +50,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       appleTeamId: "5G3N4M29YF",
       usesAppleSignIn: true,
       googleServicesFile: "./GoogleService-Info.plist",
+      backgroundColor: SPLASH_BG,
       config: {
         googleMapsApiKey: iosMapsKey,
         // Only standard HTTPS. Skips the export-compliance prompt per upload.
@@ -134,12 +135,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           ios: {
             image: `${BRAND_ROOT}/splash.png`,
             backgroundColor: SPLASH_BG,
-            resizeMode: "contain",
+            imageWidth: 240,
           },
           android: {
             image: `${BRAND_ROOT}/splash.png`,
             backgroundColor: SPLASH_BG,
-            imageWidth: 240,
+            imageWidth: 180,
           },
         },
       ],
