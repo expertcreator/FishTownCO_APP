@@ -46,6 +46,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       // iPad gets all four orientations (Expo adds them; App Store requires them for multitasking).
       supportsTablet: true,
       bundleIdentifier: "com.itoasis.Fishtownco",
+      // Build number for Xcode archives / TestFlight. Raise it for every upload.
+      // (EAS builds ignore this and use the remote build number from eas.json.)
+      buildNumber: "2",
       /** Client's Apple Developer team. */
       appleTeamId: "5G3N4M29YF",
       usesAppleSignIn: true,
