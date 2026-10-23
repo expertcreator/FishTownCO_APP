@@ -163,7 +163,7 @@ export default function VesselScreen() {
           iconColor={colors.navy}
           title={t("vessel.details")}
           subtitle={t("vessel.details-sub")}
-          onPress={() => toast.info(t("vessel.details-coming-soon"))}
+          onPress={() => router.push("/vessel/details")}
         />
         <MenuRow
           icon="globe-outline"
