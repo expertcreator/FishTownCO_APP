@@ -149,7 +149,8 @@ export default function VesselScreen() {
             <AppText style={styles.lengthLabel}>
               {t("vessel.length-overall")}
             </AppText>
-            <AppText style={styles.lengthValue}>
+            {/* Long values wrap to 2 lines, then end with "…" */}
+            <AppText style={styles.lengthValue} numberOfLines={2}>
               {vessel.length || "—"}
             </AppText>
           </View>
@@ -348,6 +349,7 @@ function getStyles(colors: ThemeColors) {
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
+      gap: 12,
       backgroundColor: colors.cardSoft,
       borderWidth: 1,
       borderColor: colors.border,
@@ -355,13 +357,18 @@ function getStyles(colors: ThemeColors) {
       paddingHorizontal: 14,
       paddingVertical: 12,
     },
+    // Label never shrinks, so long values can't squeeze it.
     lengthLabel: {
       color: colors.muted,
       fontSize: 11,
       fontWeight: "800",
       letterSpacing: 0.6,
+      flexShrink: 0,
     },
+    // Takes the space left after the label, right-aligned.
     lengthValue: {
+      flex: 1,
+      textAlign: "right",
       color: colors.navy,
       fontSize: 14,
       fontWeight: "800",
