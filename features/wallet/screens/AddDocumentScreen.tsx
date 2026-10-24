@@ -1,14 +1,21 @@
 import { zodResolver } from "@hookform/resolvers/zod";
-import { router, useFocusEffect } from "expo-router";
-import { useCallback, useMemo, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { router, useFocusEffect, useLocalSearchParams } from "expo-router";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { useForm, useWatch } from "react-hook-form";
 import { StyleSheet, View } from "react-native";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
+import {
+  isLocalMediaUri,
+  pickDisplayMediaUri,
+} from "@/features/common/media/mediaStatus";
 import {
   formatSafetyDueDate,
   parseSafetyDueDate,
 } from "@/features/safety/utils/formatSafetyDueDate";
 import { addWalletDoc } from "@/features/wallet/services/addWalletDoc";
+import { fetchWalletDoc } from "@/features/wallet/services/fetchWalletDoc";
+import { updateWalletDoc } from "@/features/wallet/services/updateWalletDoc";
 import { uploadWalletMediaInBackground } from "@/features/wallet/services/uploadWalletMediaInBackground";
 import {
   createAddDocumentSchema,
@@ -39,10 +46,22 @@ import { useTranslation } from "@/ui/translations";
 type DateField = "issueDate" | "expiryDate";
 
 /**
- * Add Document screen matching prototype screen 17
+ * Converts a stored date into `dd/mm/yyyy` for the shared form.
+ * @param value - ISO, dd/mm/yyyy, or long display date
+ * @returns Form date string, or empty
+ */
+function toFormDate(value?: string | null): string {
+  if (!value) return "";
+  const parsed = parseSafetyDueDate(value);
+  return parsed ? formatSafetyDueDate(parsed) : value;
+}
+
+/**
+ * Add / Edit Document screen matching prototype screen 17
  * (https://fishtownco.itoasis.co/).
- * Saves to Firestore immediately, then uploads media in the background.
- * @returns Add document form
+ * `/wallet/add` creates a document. `/wallet/edit/[id]` updates one.
+ * Saves to Firestore immediately, then uploads a new file in the background.
+ * @returns Document form
  */
 export default function AddDocumentScreen() {
   const colors = useColors();
@@ -50,6 +69,19 @@ export default function AddDocumentScreen() {
   const { t } = useTranslation();
   const toast = useToast();
   const schema = useMemo(() => createAddDocumentSchema(t), [t]);
+  const { id } = useLocalSearchParams<{ id?: string }>();
+  const docId = typeof id === "string" && id.length > 0 ? id : "";
+  const isEdit = Boolean(docId);
+  const {
+    data: existing,
+    isLoading: isDocLoading,
+    isFetching: isDocFetching,
+    isError: isDocError,
+  } = useQuery({
+    queryKey: ["wallet", "doc", docId],
+    enabled: isEdit,
+    queryFn: () => fetchWalletDoc(docId),
+  });
   const [fileUri, setFileUri] = useState<string | null>(null);
   const [fileName, setFileName] = useState("");
   const [fileMime, setFileMime] = useState("");
@@ -92,6 +124,7 @@ export default function AddDocumentScreen() {
 
   useFocusEffect(
     useCallback(() => {
+      if (isEdit) return;
       reset({
         docType: WALLET_DOCUMENT_TYPES[0].label,
         title: "",
@@ -106,14 +139,31 @@ export default function AddDocumentScreen() {
       setActiveDateField(null);
       setIsSubmitting(false);
       setHydrated(true);
-    }, [reset])
+    }, [isEdit, reset])
   );
 
-  /**
-   * Saves the wallet document to Firestore, kicks off background upload, then navigates back.
-   * @param values - Validated form values
-   * @returns Promise that resolves when navigation starts or a toast is shown
-   */
+  useEffect(() => {
+    if (!isEdit || !existing || hydrated) return;
+    reset({
+      docType: existing.docType || WALLET_DOCUMENT_TYPES[0].label,
+      title: existing.title || "",
+      reference: existing.reference || "",
+      issueDate: toFormDate(existing.issueDate),
+      expiryDate: toFormDate(existing.expiresIso) || toFormDate(existing.expires),
+    });
+    setFileUri(
+      pickDisplayMediaUri({
+        thumbURL: existing.thumbURL,
+        downloadURL: existing.downloadURL,
+        localUri: existing.localUri,
+      })
+    );
+    setFileName("");
+    setFileMime("");
+    setFileError(null);
+    setHydrated(true);
+  }, [existing, hydrated, isEdit, reset]);
+
   /**
    * Marks the upload as required when no file is attached.
    * @returns Whether a file is present
@@ -127,30 +177,51 @@ export default function AddDocumentScreen() {
     return false;
   };
 
+  /**
+   * Creates or updates the wallet document, then uploads a new file in the background.
+   * @param values - Validated form values
+   * @returns Promise that resolves when navigation starts or a toast is shown
+   */
   const onSubmit = async (values: AddDocumentSchema) => {
     if (isSubmitting) return;
     if (!hasRequiredFile()) return;
     setIsSubmitting(true);
     try {
       const expiry = parseSafetyDueDate(values.expiryDate) ?? new Date();
-      const { id } = await addWalletDoc({
+      const newFile = isLocalMediaUri(fileUri) ? fileUri : null;
+      const payload = {
         docType: values.docType,
         title: values.title,
         reference: values.reference,
         issueDate: values.issueDate,
         expiryDate: values.expiryDate,
         expiryDateIso: expiry.toISOString(),
-        localUri: fileUri,
-      });
+        localUri: newFile,
+      };
 
-      if (fileUri) {
-        void uploadWalletMediaInBackground(id, fileUri, {
-          fileName,
-          mimeType: fileMime,
+      if (isEdit) {
+        await updateWalletDoc({
+          id: docId,
+          ...payload,
+          replaceFile: Boolean(newFile),
         });
+        if (newFile) {
+          void uploadWalletMediaInBackground(docId, newFile, {
+            fileName,
+            mimeType: fileMime,
+          });
+        }
+        toast.success(t("wallet.update-success"));
+      } else {
+        const created = await addWalletDoc(payload);
+        if (newFile) {
+          void uploadWalletMediaInBackground(created.id, newFile, {
+            fileName,
+            mimeType: fileMime,
+          });
+        }
+        toast.success(t("wallet.save-success"));
       }
-
-      toast.success(t("wallet.save-success"));
       router.back();
     } catch (error) {
 
@@ -163,7 +234,12 @@ export default function AddDocumentScreen() {
     }
   };
 
-  if (!hydrated) {
+  if (
+    (!isEdit && !hydrated) ||
+    (isEdit &&
+      (!existing || !hydrated) &&
+      (isDocLoading || isDocFetching || !isDocError))
+  ) {
     return (
       <Screen
         scroll={false}
@@ -171,9 +247,26 @@ export default function AddDocumentScreen() {
         contentStyle={styles.screen}
       >
         <View style={styles.headerPad}>
-          <BackHeader title={t("wallet.add-doc-title")} />
+          <BackHeader
+            title={isEdit ? t("wallet.edit-title") : t("wallet.add-doc-title")}
+          />
         </View>
         <FormScreenSkeleton />
+      </Screen>
+    );
+  }
+
+  if (isEdit && (isDocError || !existing)) {
+    return (
+      <Screen
+        scroll={false}
+        edges={["top", "left", "right"]}
+        contentStyle={styles.screen}
+      >
+        <View style={styles.headerPad}>
+          <BackHeader title={t("wallet.edit-title")} />
+        </View>
+        <AppText style={styles.fileError}>{t("wallet.item-missing")}</AppText>
       </Screen>
     );
   }
@@ -185,7 +278,9 @@ export default function AddDocumentScreen() {
       contentStyle={styles.screen}
     >
       <View style={styles.headerPad}>
-        <BackHeader title={t("wallet.add-doc-title")} />
+        <BackHeader
+          title={isEdit ? t("wallet.edit-title") : t("wallet.add-doc-title")}
+        />
       </View>
 
       <KeyboardAwareContainer

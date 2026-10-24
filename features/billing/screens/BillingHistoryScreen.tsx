@@ -3,6 +3,7 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useBillingPayments } from "@/features/billing/hooks/useBillingPayments";
+import { cancelSubscription } from "@/features/subscription/services/cancelSubscription";
 import type { BillingRow } from "@/features/billing/types/billing";
 import {
   formatSafetyDueDate,
@@ -43,6 +44,7 @@ export default function BillingHistoryScreen() {
   const [fromDate, setFromDate] = useState("");
   const [toDate, setToDate] = useState("");
   const [activeRange, setActiveRange] = useState<RangeField | null>(null);
+  const [cancelling, setCancelling] = useState(false);
 
   const { data, isLoading, isFetching, isError, refetch } = useBillingPayments();
   const payments = data ?? [];
@@ -101,6 +103,25 @@ export default function BillingHistoryScreen() {
    * @param row - Payment row that was pressed
    * @returns void
    */
+  /**
+   * Opens the store subscription screen so the user can stop renewal.
+   * @returns Promise that resolves when a toast is shown
+   */
+  const onCancelSubscription = async () => {
+    if (cancelling) return;
+    setCancelling(true);
+    try {
+      const result = await cancelSubscription();
+      if (result === "cancelled") toast.success(t("subscription.cancel-done"));
+      else if (result === "still-renewing") toast.error(t("subscription.cancel-store"));
+      else toast.info(t("subscription.cancel-none"));
+    } catch {
+      toast.error(t("subscription.payment-failed"));
+    } finally {
+      setCancelling(false);
+    }
+  };
+
   const onPaymentPress = (row: BillingRow) => {
     toast.info(
       t("billing.receipt-coming-soon", {
@@ -205,6 +226,14 @@ export default function BillingHistoryScreen() {
           </View>
         </View>
       </Card>
+
+      <PrimaryButton
+        label={t("subscription.cancel")}
+        icon="close-circle-outline"
+        loading={cancelling}
+        onPress={() => void onCancelSubscription()}
+        style={styles.cancelButton}
+      />
 
       <AppText style={styles.summary}>
         {t("billing.summary", {
@@ -322,6 +351,7 @@ function getStyles(colors: ThemeColors) {
       flex: 1,
       minWidth: 0,
     },
+    cancelButton: { marginBottom: 16 },
     summary: {
       color: colors.muted,
       fontSize: 13,

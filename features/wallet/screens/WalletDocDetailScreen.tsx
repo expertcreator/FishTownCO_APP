@@ -18,10 +18,12 @@ import {
   getComplianceTimelineLabel,
 } from "@/features/safety/utils/safetyStatus";
 import { fetchWalletDoc } from "@/features/wallet/services/fetchWalletDoc";
+import { deleteWalletDoc } from "@/features/wallet/services/deleteWalletDoc";
 import {
   AppText,
   BackHeader,
   Card,
+  ConfirmModal,
   ItemDetailSkeleton,
   Screen,
   useToast,
@@ -40,6 +42,8 @@ export default function WalletDocDetailScreen() {
   const { t } = useTranslation();
   const toast = useToast();
   const [previewUri, setPreviewUri] = useState<string | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const { id } = useLocalSearchParams<{ id: string }>();
   const docId = typeof id === "string" ? id : "";
 
@@ -105,10 +109,67 @@ export default function WalletDocDetailScreen() {
         ? t("wallet.banner-due", { date: doc.expires })
         : t("wallet.banner-ok", { date: doc.expires });
 
+  /**
+   * Deletes the wallet document and returns to the previous screen.
+   * @returns Promise that resolves when navigation starts or a toast is shown
+   */
+  const onDeleteDocument = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await deleteWalletDoc(doc.id);
+      setDeleteOpen(false);
+      toast.success(t("wallet.delete-document-success"));
+      router.back();
+    } catch (error) {
+      if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
+        toast.error(t("wallet.sign-in-required"));
+      } else {
+        toast.error(t("wallet.delete-document-failed"));
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
   return (
     <Screen
       header={
-        <BackHeader title={doc.title} onBack={() => router.back()} />
+        <BackHeader
+          title={doc.title}
+          onBack={() => router.back()}
+          right={
+            <View style={styles.headerActions}>
+              <Pressable
+                onPress={() => router.push(`/wallet/edit/${doc.id}`)}
+                hitSlop={10}
+                style={({ pressed }) => [styles.editBtn, pressed && styles.pressed]}
+                accessibilityRole="button"
+                accessibilityLabel={t("wallet.edit-document")}
+              >
+                <Ionicons name="create-outline" size={22} color={colors.navy} />
+              </Pressable>
+              <Pressable
+                onPress={() => setDeleteOpen(true)}
+                disabled={isDeleting}
+                hitSlop={10}
+                style={({ pressed }) => [
+                  styles.deleteIconBtn,
+                  pressed && styles.pressed,
+                  isDeleting && styles.disabled,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t("wallet.delete-document")}
+              >
+                <Ionicons
+                  name="trash-outline"
+                  size={20}
+                  color={colors.statusOverdueText}
+                />
+              </Pressable>
+            </View>
+          }
+        />
       }
       contentStyle={styles.content}
     >
@@ -244,6 +305,19 @@ export default function WalletDocDetailScreen() {
         </View>
       </Card>
 
+      <ConfirmModal
+        visible={deleteOpen}
+        title={t("wallet.delete-document-title")}
+        description={t("wallet.delete-document-description")}
+        confirmLabel={t("wallet.delete-document")}
+        icon="trash-outline"
+        loading={isDeleting}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => {
+          void onDeleteDocument();
+        }}
+      />
+
       <Modal
         visible={previewUri != null}
         transparent
@@ -330,6 +404,27 @@ function Divider() {
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     content: { paddingBottom: 36 },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 2,
+    },
+    editBtn: {
+      width: 36,
+      height: 36,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    deleteIconBtn: {
+      width: 36,
+      height: 36,
+      borderRadius: 18,
+      alignItems: "center",
+      justifyContent: "center",
+      backgroundColor: colors.statusOverdueBg,
+    },
+    disabled: { opacity: 0.5 },
+    pressed: { opacity: 0.75 },
     loader: { marginTop: 40 },
     empty: {
       color: colors.muted,

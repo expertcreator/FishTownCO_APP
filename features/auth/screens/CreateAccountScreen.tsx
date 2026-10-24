@@ -9,6 +9,7 @@ import { createAccount } from "@/features/auth/services/createAccount";
 import { loginWithApple } from "@/features/auth/services/loginWithApple";
 import { loginWithGoogle } from "@/features/auth/services/loginWithGoogle";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
+import { resolveSignedInDestination } from "@/features/auth/utils/resolveSignedInDestination";
 import {
   createAccountSchema,
   type CreateAccountSchema,
@@ -114,8 +115,9 @@ export default function CreateAccountScreen() {
   };
 
   /**
-   * Completes post-auth navigation after social sign-in.
-   * A new account opens the add-vessel form. An existing account opens Home.
+   * Completes post-auth navigation after Google or Apple sign-in.
+   * A new account, or any account that still has no vessel, opens Add Vessel.
+   * That screen continues into the build checklist, then the trial or subscription.
    * @param isNewUser - Whether this sign-in created the account
    * @returns Promise that resolves when navigation starts
    */
@@ -127,7 +129,7 @@ export default function CreateAccountScreen() {
     startSessionPrefetch();
     registerPushTokenAfterAuth();
     toast.success(t("auth.log-in-success"));
-    router.replace("/(tabs)/home");
+    router.replace(await resolveSignedInDestination());
   };
 
   /**

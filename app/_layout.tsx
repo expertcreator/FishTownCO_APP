@@ -1,7 +1,10 @@
+import "@/features/common/silenceReleaseConsole";
 import { BrandLogoWarmup } from "@/features/auth/components/BrandLogoWarmup/BrandLogoWarmup";
 import { useNotifications } from "@/features/common/notifications/useNotifications";
 import { configureGoogleSignIn } from "@/features/auth/utils/configureGoogleSignIn";
-import { queryClient } from "@/features/common/firebase";
+import { firebaseAuth, queryClient } from "@/features/common/firebase";
+import { configurePurchases } from "@/features/subscription/services/configurePurchases";
+import { SubscriptionLock } from "@/features/subscription/components/SubscriptionLock";
 import { prefetchSafetyCategories } from "@/features/safety/services/prefetchSafetyCategories";
 import { prefetchVesselCatalogs } from "@/features/vessel/services/prefetchVesselCatalogs";
 import {
@@ -39,15 +42,12 @@ const SPLASH_MAX_MS = 8000;
 export default function RootLayout() {
   useLayoutEffect(() => {
     configureGoogleSignIn();
-    
-    // Initialize RevenueCat for In-App Purchases
-    try {
-      Purchases.setDebugLogsEnabled(true);
-      // Replace with your actual RevenueCat API keys when ready
-      Purchases.configure({ apiKey: "appl_placeholder_key" });
-    } catch (e) {
-      console.log("[RevenueCat] init error", e);
-    }
+  }, []);
+
+  useEffect(() => {
+    return onAuthStateChanged(firebaseAuth, (user) => {
+      void configurePurchases(user?.uid ?? null);
+    });
   }, []);
 
   useLayoutEffect(() => {
@@ -101,6 +101,7 @@ function ThemedShell() {
     <View style={{ flex: 1, backgroundColor: colors.background }}>
       <StatusBar style={isDark ? "light" : "dark"} />
       <BrandLogoWarmup />
+      <SubscriptionLock />
       <NetworkStatusProvider>
         <SafeKeyboardProvider>
           <Stack screenOptions={{ headerShown: false, animation: "fade" }}>

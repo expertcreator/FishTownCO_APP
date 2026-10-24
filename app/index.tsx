@@ -2,6 +2,7 @@ import { resolveAppLaunchRoute } from "@/features/auth/utils/resolveAppLaunchRou
 import { firebaseAuth } from "@/features/common/firebase";
 import { useOnboardingStore } from "@/features/onboarding/store/onboardingStore";
 import { fetchVesselProfile } from "@/features/vessel/services/fetchVesselProfile";
+import { canUseApp, fetchSubscriptionAccess } from "@/features/subscription/services/subscriptionAccess";
 import { onAuthStateChanged } from "@react-native-firebase/auth";
 import { Redirect, type Href } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
@@ -51,6 +52,7 @@ export default function Index() {
         if (cancelled) return;
         try {
           let hasVessel = true;
+          let requiresSubscription = false;
           if (hasCompletedOnboarding && user) {
             try {
               const profile = await fetchVesselProfile();
@@ -58,13 +60,22 @@ export default function Index() {
             } catch {
               hasVessel = true;
             }
+            if (hasVessel) {
+              try {
+                const access = await fetchSubscriptionAccess();
+                requiresSubscription = !canUseApp(access);
+              } catch {
+                requiresSubscription = false;
+              }
+            }
           }
           if (cancelled) return;
           setRedirectTo(
             resolveAppLaunchRoute(
               hasCompletedOnboarding,
               Boolean(user),
-              hasVessel
+              hasVessel,
+              requiresSubscription
             )
           );
         } catch {

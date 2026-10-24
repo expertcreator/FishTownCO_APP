@@ -4,21 +4,20 @@ import { getFirestore } from "firebase-admin/firestore";
 import { logger } from "firebase-functions";
 import { onSchedule } from "firebase-functions/v2/scheduler";
 import {
-  buildOverviewBody,
-  countAttention,
+  buildMilestoneBody,
+  collectMilestoneReminders,
   londonDateKey,
-  type AttentionCounts,
+  reminderItemsFromUserCollections,
+  type MilestoneReminder,
 } from "./attention";
 
-export {
-  createSubscriptionPayment,
-  recordSubscriptionPayment,
-} from "./stripePayments";
+export { deleteUserData } from "./deleteUserData";
+export { revenueCatWebhook } from "./revenueCatWebhook";
 
 initializeApp();
 
 const expo = new Expo();
-const OVERVIEW_TITLE = "Vessel overview";
+const REMINDER_TITLE = "Expiry reminder";
 
 type DeviceTarget = {
   token: string;
@@ -26,10 +25,9 @@ type DeviceTarget = {
 };
 
 /**
- * Sends one daily overview reminder at 08:00 UK time.
- * Counts safety items and wallet documents the same way Home does, then
- * pushes a single digest to each of the user's phones through Expo (FCM on
- * Android, APNs on iOS).
+ * Sends expiry reminders at 08:00 UK time.
+ * A safety item, wallet document, or crew certificate is included only when
+ * it is exactly 90, 60, 30, or 7 days from its due date. Other days send nothing.
  */
 export const sendOverviewReminders = onSchedule(
   {
@@ -72,22 +70,25 @@ export const sendOverviewReminders = onSchedule(
           continue;
         }
 
-        const [safety, wallet] = await Promise.all([
+        const [safety, wallet, crew] = await Promise.all([
           userRef.collection("safety").get(),
           userRef.collection("wallet").get(),
+          userRef.collection("crew").get(),
         ]);
-        const items = [...safety.docs, ...wallet.docs].map(
-          (doc) => doc.data() as Record<string, unknown>
-        );
-        const counts = countAttention(items, now);
-        const body = buildOverviewBody(counts);
+        const items = reminderItemsFromUserCollections({
+          safety: safety.docs.map((doc) => doc.data()),
+          wallet: wallet.docs.map((doc) => doc.data()),
+          crew: crew.docs.map((doc) => doc.data()),
+        });
+        const hits = collectMilestoneReminders(items, now);
+        const body = buildMilestoneBody(hits);
         if (!body) {
           await userRef.set({ overviewReminderOn: todayKey }, { merge: true });
           skipped += 1;
           continue;
         }
 
-        const delivered = await sendOverview(targets, body, counts);
+        const delivered = await sendOverview(targets, body, hits);
         if (!delivered) {
           failed += 1;
           continue;
@@ -122,29 +123,28 @@ export const sendOverviewReminders = onSchedule(
 );
 
 /**
- * Sends the overview to each phone and drops tokens Expo says are dead.
+ * Sends the expiry reminder to each phone and drops tokens Expo says are dead.
  * @param targets - Unique Expo tokens for one user
  * @param body - Notification body
- * @param counts - Counts included in the payload for the app
+ * @param hits - Items that reached a 90, 60, 30, or 7 day reminder today
  * @returns True when at least one phone accepted the message
  */
 async function sendOverview(
   targets: DeviceTarget[],
   body: string,
-  counts: AttentionCounts
+  hits: MilestoneReminder[]
 ): Promise<boolean> {
   const messages: ExpoPushMessage[] = targets.map((target) => ({
     to: target.token,
-    title: OVERVIEW_TITLE,
+    title: REMINDER_TITLE,
     body,
     sound: "default",
     priority: "high",
     channelId: "default_high",
     data: {
       screen: "home",
-      type: "overview",
-      overdue: counts.overdue,
-      due: counts.due,
+      type: "expiry-reminder",
+      count: hits.length,
     },
   }));
 

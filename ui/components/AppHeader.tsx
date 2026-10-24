@@ -3,6 +3,7 @@ import { Image, Pressable, StyleSheet, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { deleteAccount } from "@/features/auth/services/deleteAccount";
+import { cancelSubscription } from "@/features/subscription/services/cancelSubscription";
 import { getAuthErrorCode } from "@/features/auth/utils/mapAuthError";
 import { logout } from "@/features/auth/services/logout";
 import { useColors, useTheme, type ThemeColors } from "@/ui/theme";
@@ -95,6 +96,11 @@ function AppHeaderActions() {
     if (deleting) return;
     setDeleting(true);
     try {
+      const subscription = await cancelSubscription();
+      if (subscription === "still-renewing") {
+        toast.error(t("auth.delete-account-subscription"));
+        return;
+      }
       await deleteAccount();
       setDeleteOpen(false);
       toast.success(t("auth.delete-account-success"));

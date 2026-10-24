@@ -10,6 +10,7 @@ import { login } from "@/features/auth/services/login";
 import { loginWithApple } from "@/features/auth/services/loginWithApple";
 import { loginWithGoogle } from "@/features/auth/services/loginWithGoogle";
 import { mapAuthError } from "@/features/auth/utils/mapAuthError";
+import { resolveSignedInDestination } from "@/features/auth/utils/resolveSignedInDestination";
 import {
   createLoginSchema,
   type LoginSchema,
@@ -33,7 +34,7 @@ const LOGIN_BANNER = require("@/assets/from-design/login/marina-banner.jpg");
 /**
  * Log In screen matching prototype screen 5
  * (https://fishtownco.itoasis.co/ and fishtown-co LoginScreen layout).
- * Signs in with Firebase Auth, then opens the home tab.
+ * Signs in with Firebase Auth. A new Google or Apple account opens Add Vessel.
  * @returns Login UI
  */
 export default function LoginScreen() {
@@ -76,7 +77,7 @@ export default function LoginScreen() {
       startSessionPrefetch();
       registerPushTokenAfterAuth();
       toast.success(t("auth.log-in-success"));
-      router.replace("/(tabs)/home");
+      router.replace(await resolveSignedInDestination());
     } catch (error) {
       toast.error(mapAuthError(error, t));
       setIsSubmitting(false);
@@ -84,14 +85,16 @@ export default function LoginScreen() {
   };
 
   /**
-   * Completes post-auth navigation after email or social sign-in.
-   * @returns Promise that resolves when home opens
+   * Completes post-auth navigation after Google or Apple sign-in.
+   * A user with no vessel opens Add Vessel. An existing vessel opens Home
+   * or the payment screen.
+   * @returns Promise that resolves when navigation starts
    */
-  const afterAuthSuccess = () => {
+  const afterAuthSuccess = async () => {
     startSessionPrefetch();
     registerPushTokenAfterAuth();
     toast.success(t("auth.log-in-success"));
-    router.replace("/(tabs)/home");
+    router.replace(await resolveSignedInDestination());
   };
 
   /**

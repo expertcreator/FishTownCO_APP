@@ -71,9 +71,23 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     },
     plugins: [
       "expo-router",
-      "expo-secure-store",
+      [
+        "expo-secure-store",
+        {
+          faceIDPermission: false,
+        },
+      ],
       "expo-font",
-      "expo-location",
+      [
+        "expo-location",
+        {
+          locationWhenInUsePermission:
+            "Fishtownco uses your location while you add a safety item, so it can be placed on the vessel map.",
+          locationAlwaysAndWhenInUsePermission: false,
+          locationAlwaysPermission: false,
+          motionUsagePermission: false,
+        },
+      ],
       [
         "expo-notifications",
         {
@@ -95,6 +109,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             "Allow Fishtownco to access your photos for certificates and safety item images.",
           cameraPermission:
             "Allow Fishtownco to use the camera to take photos of certificates and safety items.",
+          microphonePermission: false,
         },
       ],
       "expo-image",

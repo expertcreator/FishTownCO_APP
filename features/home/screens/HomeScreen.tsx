@@ -183,7 +183,12 @@ export default function HomeScreen() {
           </View>
           <View style={styles.attentionText}>
             <AppText style={styles.attentionTitle} numberOfLines={1}>
-              {t("home.attention-title", { count: counts.overdue })}
+              {t(
+                counts.overdue === 1
+                  ? "home.attention-title-one"
+                  : "home.attention-title",
+                { count: counts.overdue }
+              )}
             </AppText>
             <AppText style={styles.attentionBody} numberOfLines={2}>
               {t("home.attention-body")}

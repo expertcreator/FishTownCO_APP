@@ -1,10 +1,24 @@
 import { router } from "expo-router";
 import { useState, useEffect } from "react";
-import { Pressable, StyleSheet, View } from "react-native";
-import Purchases, { type PurchasesPackage } from "react-native-purchases"; // RevenueCat imports added
+import { BackHandler, Pressable, StyleSheet, View } from "react-native";
+import Purchases, { type PurchasesPackage } from "react-native-purchases";
 import type { BillingPlanId } from "@/features/billing/types/billing";
+import { getCurrentUser } from "@/features/common/firebase";
+import {
+  configurePurchases,
+  PREMIUM_ENTITLEMENT_ID,
+} from "@/features/subscription/services/configurePurchases";
+import {
+  canUseApp,
+  fetchSubscriptionAccess,
+  isTrialActive,
+  notifySubscriptionAccessChanged,
+  startFreeTrial,
+  type SubscriptionAccess,
+} from "@/features/subscription/services/subscriptionAccess";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import {
+  AppHeader,
   AppText,
   BackHeader,
   CARD_RIPPLE,
@@ -33,7 +47,7 @@ const PLANS = [
 
 /**
  * Subscription screen matching prototype screen 10.
- * Integrated with RevenueCat for In-App Purchases (£25/month, £275/year).
+ * Buys a plan or starts the 7-day free trial.
  * @returns Subscription plan picker UI
  */
 export default function SubscriptionScreen() {
@@ -54,6 +68,10 @@ function SubscriptionForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
   const [annualPackage, setAnnualPackage] = useState<PurchasesPackage | null>(null);
+  const [access, setAccess] = useState<SubscriptionAccess | null>(null);
+  const [startingTrial, setStartingTrial] = useState(false);
+  const locked = access !== null && !canUseApp(access) && !isTrialActive(access) && Boolean(access.trialStartedAt);
+  const canStartTrial = access !== null && !access.trialStartedAt;
 
   // Fetch offerings from RevenueCat when screen loads
   useEffect(() => {
@@ -75,41 +93,71 @@ function SubscriptionForm() {
       }
     }
     void fetchOfferings();
+    void fetchSubscriptionAccess()
+      .then(setAccess)
+      .catch(() => setAccess(null));
   }, []);
 
+  useEffect(() => {
+    if (!locked) return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => true);
+    return () => sub.remove();
+  }, [locked]);
+
   /**
-   * Opens RevenueCat purchase sheet for the selected plan, then opens Home.
+   * Records the 7-day trial once, then opens Home.
    * @returns Promise that resolves when navigation starts or a toast is shown
    */
+  const onStartTrial = async () => {
+    if (startingTrial || isSubmitting) return;
+    setStartingTrial(true);
+    try {
+      await startFreeTrial();
+      router.replace("/(tabs)/home");
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message === "NOT_SIGNED_IN"
+          ? t("subscription.sign-in-required")
+          : t("subscription.payment-failed")
+      );
+      setStartingTrial(false);
+    }
+  };
+
   const onStart = async () => {
     if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
+      await configurePurchases(getCurrentUser()?.uid ?? null);
       const targetPackage = plan === "annual" ? annualPackage : monthlyPackage;
 
       if (!targetPackage) {
-        // Fallback if packages haven't loaded from RevenueCat dashboard yet
-        console.log("[RevenueCat] Package not found, simulating success for testing", plan);
-        toast.success(t("subscription.start-success"));
-        router.replace("/(tabs)/home");
+        console.log("[RevenueCat] package missing", plan);
+        toast.error(t("subscription.payment-failed"));
+        setIsSubmitting(false);
         return;
       }
 
       console.log("[RevenueCat] Purchasing package:", targetPackage.identifier);
       const { customerInfo } = await Purchases.purchasePackage(targetPackage);
+      const premium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
 
-      // Check if user has active entitlement
-      if (customerInfo.entitlements.active) {
-        console.log("[RevenueCat] Purchase successful!");
+      if (premium) {
+        console.log("[RevenueCat] Purchase successful");
+        notifySubscriptionAccessChanged();
         toast.success(t("subscription.start-success"));
         router.replace("/(tabs)/home");
       } else {
         throw new Error("PURCHASE_NOT_ACTIVE");
       }
-    } catch (error: any) {
-      if (error.userCancelled) {
-        console.log("[RevenueCat] User cancelled purchase");
+    } catch (error: unknown) {
+      const cancelled =
+        typeof error === "object" &&
+        error !== null &&
+        "userCancelled" in error &&
+        Boolean((error as { userCancelled?: boolean }).userCancelled);
+      if (cancelled) {
         setIsSubmitting(false);
         return;
       }
@@ -122,12 +170,19 @@ function SubscriptionForm() {
   return (
     <Screen
       header={
-        <BackHeader
-          title={t("subscription.title")}
-          subtitle={t("subscription.subtitle")}
-        />
+        locked ? (
+          <AppHeader title={t("subscription.title")} />
+        ) : (
+          <BackHeader
+            title={t("subscription.title")}
+            subtitle={t("subscription.subtitle")}
+          />
+        )
       }
     >
+      {locked ? (
+        <AppText style={styles.trialEnded}>{t("subscription.trial-ended")}</AppText>
+      ) : null}
       {PLANS.map((p) => {
         const selected = plan === p.id;
         return (
@@ -166,14 +221,16 @@ function SubscriptionForm() {
         loading={isSubmitting}
         onPress={() => void onStart()}
       />
-      <Pressable
-        disabled={isSubmitting}
-        onPress={() => router.replace("/(tabs)/home")}
-        style={({ pressed }) => [getPressedItemStyle(pressed)]}
-        accessibilityRole="button"
-      >
-        <AppText style={styles.skip}>{t("subscription.skip")}</AppText>
-      </Pressable>
+      {canStartTrial ? (
+        <Pressable
+          disabled={isSubmitting || startingTrial}
+          onPress={() => void onStartTrial()}
+          style={({ pressed }) => [getPressedItemStyle(pressed)]}
+          accessibilityRole="button"
+        >
+          <AppText style={styles.skip}>{t("subscription.trial")}</AppText>
+        </Pressable>
+      ) : null}
     </Screen>
   );
 }
@@ -208,6 +265,12 @@ function getStyles(colors: ThemeColors) {
     note: { color: colors.muted, fontSize: 13 },
     perks: { marginBottom: 16, gap: 8 },
     perk: { color: colors.navy, fontSize: 14 },
+    trialEnded: {
+      color: colors.navy,
+      fontSize: 15,
+      fontWeight: "700",
+      marginBottom: 14,
+    },
     skip: {
       textAlign: "center",
       color: colors.teal,

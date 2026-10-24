@@ -1,6 +1,18 @@
 /** Days before the due date that Home treats as "Due soon". */
 export const DUE_SOON_DAYS = 90;
 
+/** Days before a due date when the app promises an expiry reminder. */
+export const REMINDER_MILESTONES = [90, 60, 30, 7] as const;
+
+export type ReminderMilestone = (typeof REMINDER_MILESTONES)[number];
+
+export type MilestoneReminder = {
+  name: string;
+  days: ReminderMilestone;
+};
+
+const MILESTONE_DAYS = new Set<number>(REMINDER_MILESTONES);
+
 const LONDON = "Europe/London";
 
 const MONTH_SHORT = [
@@ -154,6 +166,102 @@ export function countAttention(
     if (tone === "due") counts.due += 1;
   }
   return counts;
+}
+
+/**
+ * Reads a display name from a safety item, wallet document, or certificate.
+ * @param data - Firestore field map
+ * @returns Item name
+ */
+export function itemReminderName(data: Record<string, unknown>): string {
+  const raw = data.name ?? data.title;
+  const name = typeof raw === "string" ? raw.trim() : "";
+  return name || "Item";
+}
+
+/**
+ * Flattens safety items, wallet documents, and crew certificates into reminder rows.
+ * A certificate keeps its expiry fields and is named after the certificate and crew member.
+ * @param input - User collection documents
+ * @returns Rows that can be checked for a 90, 60, 30, or 7 day reminder
+ */
+export function reminderItemsFromUserCollections(input: {
+  safety: Record<string, unknown>[];
+  wallet: Record<string, unknown>[];
+  crew: Record<string, unknown>[];
+}): Record<string, unknown>[] {
+  const certificates = input.crew.flatMap((member) => {
+    const memberName = typeof member.name === "string" ? member.name.trim() : "";
+    const rawCerts = Array.isArray(member.certificates) ? member.certificates : [];
+    return rawCerts.flatMap((cert) => {
+      if (!cert || typeof cert !== "object") return [];
+      const record = cert as Record<string, unknown>;
+      const title = typeof record.title === "string" ? record.title.trim() : "";
+      const name =
+        memberName && title
+          ? `${title} (${memberName})`
+          : title || memberName || "Certificate";
+      return [{ ...record, name }];
+    });
+  });
+  return [...input.safety, ...input.wallet, ...certificates];
+}
+
+/**
+ * Finds items whose due date is exactly 90, 60, 30, or 7 London days away.
+ * Items inside that window on any other day are not included.
+ * @param items - Safety, wallet, and certificate rows
+ * @param now - Reference instant
+ * @returns Milestone reminders for today
+ */
+export function collectMilestoneReminders(
+  items: Record<string, unknown>[],
+  now: Date
+): MilestoneReminder[] {
+  const hits: MilestoneReminder[] = [];
+  for (const item of items) {
+    const dueDate = readItemDueDate(item);
+    if (!dueDate) continue;
+    const days = daysUntilDueInLondon(dueDate, now);
+    if (!MILESTONE_DAYS.has(days)) continue;
+    hits.push({
+      name: itemReminderName(item),
+      days: days as ReminderMilestone,
+    });
+  }
+  return hits;
+}
+
+/**
+ * Builds the push body for today's milestone reminders.
+ * @param hits - Items due in 90, 60, 30, or 7 days
+ * @returns Body text, or null when nothing is due for a reminder today
+ */
+export function buildMilestoneBody(hits: MilestoneReminder[]): string | null {
+  if (hits.length === 0) return null;
+  if (hits.length === 1) {
+    const hit = hits[0];
+    return `${hit.name} is due in ${hit.days} days.`;
+  }
+
+  const grouped = new Map<ReminderMilestone, string[]>();
+  for (const hit of hits) {
+    const names = grouped.get(hit.days) ?? [];
+    names.push(hit.name);
+    grouped.set(hit.days, names);
+  }
+
+  const lines = REMINDER_MILESTONES.flatMap((days) => {
+    const names = grouped.get(days);
+    if (!names || names.length === 0) return [];
+    const shown = names.slice(0, 3);
+    const extra = names.length - shown.length;
+    const list =
+      extra > 0 ? `${shown.join(", ")}, and ${extra} more` : shown.join(", ");
+    const verb = names.length === 1 ? "is" : "are";
+    return [`${list} ${verb} due in ${days} days`];
+  });
+  return `${lines.join(". ")}.`;
 }
 
 /**

@@ -1,10 +1,14 @@
 import { describe, expect, test } from "bun:test";
 import {
+  buildMilestoneBody,
   buildOverviewBody,
+  collectMilestoneReminders,
   countAttention,
   daysUntilDueInLondon,
   londonDateKey,
+  londonDateParts,
   parseDueDate,
+  reminderItemsFromUserCollections,
 } from "./attention";
 
 /** 08:00 in London on 15 Oct 2026 (BST, UTC+1). */
@@ -36,6 +40,46 @@ describe("overview attention", () => {
       NOW
     );
     expect(counts).toEqual({ overdue: 1, due: 1 });
+  });
+
+  test("reminds only on day 90, 60, 30, and 7", () => {
+    const dueIn = (days: number) => {
+      const today = londonDateParts(NOW);
+      const date = new Date(
+        Date.UTC(today.year, today.month - 1, today.day + days, 12)
+      );
+      const day = String(date.getUTCDate()).padStart(2, "0");
+      const month = String(date.getUTCMonth() + 1).padStart(2, "0");
+      return `${day}/${month}/${date.getUTCFullYear()}`;
+    };
+    const hits = collectMilestoneReminders(
+      reminderItemsFromUserCollections({
+        safety: [
+          { name: "Fire extinguisher", dueDate: dueIn(90) },
+          { name: "Life raft", nextDueDate: dueIn(45) },
+        ],
+        wallet: [{ title: "Insurance", expiryDate: dueIn(7) }],
+        crew: [
+          {
+            name: "Ada Lowe",
+            certificates: [{ title: "ENG1 Medical", expires: dueIn(30) }],
+          },
+        ],
+      }),
+      NOW
+    );
+    expect(hits).toEqual([
+      { name: "Fire extinguisher", days: 90 },
+      { name: "Insurance", days: 7 },
+      { name: "ENG1 Medical (Ada Lowe)", days: 30 },
+    ]);
+    expect(buildMilestoneBody(hits)).toBe(
+      "Fire extinguisher is due in 90 days. ENG1 Medical (Ada Lowe) is due in 30 days. Insurance is due in 7 days."
+    );
+    expect(buildMilestoneBody([])).toBeNull();
+    expect(buildMilestoneBody([{ name: "Insurance", days: 7 }])).toBe(
+      "Insurance is due in 7 days."
+    );
   });
 
   test("writes one digest line", () => {
