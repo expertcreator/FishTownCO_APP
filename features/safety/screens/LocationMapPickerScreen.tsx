@@ -14,7 +14,6 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   StyleSheet,
   View,
@@ -23,8 +22,6 @@ import MapView, { type Region, PROVIDER_GOOGLE } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DEFAULT_DELTA = 0.024;
-/** Same fallback window as the customer GoogleMapScreen. */
-const MAP_LOAD_FALLBACK_MS = 12_000;
 
 /**
  * Free map location picker matching the customer-app GoogleMapScreen pattern:
@@ -49,25 +46,7 @@ export default function LocationMapPickerScreen() {
   const [label, setLabel] = useState("");
   const [geocoding, setGeocoding] = useState(false);
   const [locating, setLocating] = useState(false);
-  const [isMapTilesLoaded, setIsMapTilesLoaded] = useState(false);
   const [ready, setReady] = useState(false);
-
-  /**
-   * Marks map tiles as loaded (customer-app `onMapLoaded` handler).
-   * @returns void
-   */
-  const markMapTilesLoaded = useCallback(() => {
-    setIsMapTilesLoaded(true);
-  }, []);
-
-  useEffect(() => {
-    if (isMapTilesLoaded || !ready) return;
-    const timer = setTimeout(() => {
-
-      setIsMapTilesLoaded(true);
-    }, MAP_LOAD_FALLBACK_MS);
-    return () => clearTimeout(timer);
-  }, [isMapTilesLoaded, ready]);
 
   /**
    * Reverse-geocodes the map center with Expo Location / BigDataCloud fallback.
@@ -84,7 +63,6 @@ export default function LocationMapPickerScreen() {
         setLabel(next);
       }
     } catch {
-
       if (seq === geocodeSeq.current) {
         setLabel(`${latitude.toFixed(5)}, ${longitude.toFixed(5)}`);
       }
@@ -136,12 +114,12 @@ export default function LocationMapPickerScreen() {
           return;
         }
       } catch {
-
+        // Fallback below
       }
 
       const fallback: Region = {
-        latitude: 51.5074,
-        longitude: -0.1278,
+        latitude: 31.5497, // Updated default fallback coordinates (compatible regional center)
+        longitude: 74.3436,
         latitudeDelta: 0.05,
         longitudeDelta: 0.05,
       };
@@ -182,7 +160,7 @@ export default function LocationMapPickerScreen() {
       mapRef.current?.animateToRegion(next, 350);
       void geocodeCenter(next.latitude, next.longitude);
     } catch {
-
+      // Ignore location error
     } finally {
       setLocating(false);
     }
@@ -217,7 +195,7 @@ export default function LocationMapPickerScreen() {
 
   return (
     <View style={styles.container}>
-      {/* Full-bleed map first — same structure as customer GoogleMapScreen */}
+      {/* Full-bleed map */}
       <View style={styles.map} collapsable={false}>
         <MapView
           ref={mapRef}
@@ -227,20 +205,15 @@ export default function LocationMapPickerScreen() {
           loadingEnabled
           loadingIndicatorColor={colors.teal}
           loadingBackgroundColor={colors.cardSoft}
-          onMapLoaded={markMapTilesLoaded}
-          onMapReady={() => {
-
-            markMapTilesLoaded();
-          }}
           onRegionChangeComplete={(next) => {
             setRegion(next);
             void geocodeCenter(next.latitude, next.longitude);
           }}
           showsUserLocation
           showsMyLocationButton={false}
-          scrollEnabled={isMapTilesLoaded}
-          zoomEnabled={isMapTilesLoaded}
-          zoomTapEnabled={isMapTilesLoaded}
+          scrollEnabled={true}
+          zoomEnabled={true}
+          zoomTapEnabled={true}
           rotateEnabled={false}
           pitchEnabled={false}
         />
@@ -290,21 +263,12 @@ export default function LocationMapPickerScreen() {
           onPress={onConfirm}
         />
       </View>
-
-      <Modal visible={!isMapTilesLoaded} transparent={false} animationType="fade">
-        <View style={styles.mapLoadingOverlay}>
-          <ActivityIndicator size="large" color={colors.teal} />
-          <AppText style={styles.mapLoadingText}>
-            {t("safety.pick-location-loading")}
-          </AppText>
-        </View>
-      </Modal>
     </View>
   );
 }
 
 /**
- * Builds map-picker styles matching the customer GoogleMapScreen layout.
+ * Builds map-picker styles.
  * @param colors - Active theme colors
  * @returns Style sheet
  */
@@ -348,7 +312,7 @@ function getStyles(colors: ThemeColors) {
       borderRadius: 24,
       backgroundColor: colors.card,
       alignItems: "center",
-      justifyContent: "center",
+      justifyContext: "center",
       borderWidth: 1,
       borderColor: colors.border,
       zIndex: 20,
@@ -384,18 +348,6 @@ function getStyles(colors: ThemeColors) {
     address: {
       color: colors.navy,
       fontSize: 15,
-      fontWeight: "600",
-    },
-    mapLoadingOverlay: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      backgroundColor: colors.cardSoft,
-      gap: 12,
-    },
-    mapLoadingText: {
-      color: colors.muted,
-      fontSize: 14,
       fontWeight: "600",
     },
   });

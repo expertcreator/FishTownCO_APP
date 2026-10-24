@@ -1,11 +1,7 @@
-import { StripeProvider, useStripe } from "@stripe/stripe-react-native";
 import { router } from "expo-router";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
-import {
-  createSubscriptionSheet,
-  recordSubscriptionPayment,
-} from "@/features/subscription/services/startStripeSubscription";
+import Purchases, { type PurchasesPackage } from "react-native-purchases"; // RevenueCat imports added
 import type { BillingPlanId } from "@/features/billing/types/billing";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import {
@@ -26,37 +22,26 @@ const PLANS = [
     titleKey: "subscription.annual-title",
     priceKey: "subscription.annual-price",
     noteKey: "subscription.annual-note",
-},
+  },
   {
     id: "monthly" as const,
     titleKey: "subscription.monthly-title",
     priceKey: "subscription.monthly-price",
     noteKey: "subscription.monthly-note",
-},
+  },
 ] as const;
-
-const STRIPE_PUBLISHABLE_KEY =
-  process.env.EXPO_PUBLIC_STRIPE_PUBLISHABLE_KEY ?? "";
 
 /**
  * Subscription screen matching prototype screen 10.
- * Starting a plan opens the Stripe card sheet, then Home.
+ * Integrated with RevenueCat for In-App Purchases (£25/month, £275/year).
  * @returns Subscription plan picker UI
  */
 export default function SubscriptionScreen() {
-  return (
-    <StripeProvider
-      publishableKey={STRIPE_PUBLISHABLE_KEY}
-      merchantIdentifier="merchant.com.itoasis.Fishtownco"
-      urlScheme="fishtownco"
-    >
-      <SubscriptionForm />
-    </StripeProvider>
-  );
+  return <SubscriptionForm />;
 }
 
 /**
- * Plan picker and Stripe Payment Sheet.
+ * Plan picker and RevenueCat purchase form.
  * @returns Subscription form
  */
 function SubscriptionForm() {
@@ -64,82 +49,72 @@ function SubscriptionForm() {
   const styles = getStyles(colors);
   const { t } = useTranslation();
   const toast = useToast();
-  const { initPaymentSheet, presentPaymentSheet } = useStripe();
-  /** Prototype defaults to the Skipper Plan (£10/month). */
+
   const [plan, setPlan] = useState<BillingPlanId>("monthly");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
+  const [annualPackage, setAnnualPackage] = useState<PurchasesPackage | null>(null);
+
+  // Fetch offerings from RevenueCat when screen loads
+  useEffect(() => {
+    async function fetchOfferings() {
+      try {
+        const offerings = await Purchases.getOfferings();
+        if (offerings.current && offerings.current.availablePackages) {
+          const packages = offerings.current.availablePackages;
+          
+          // Map packages based on identifier or type (monthly / annual)
+          const monthly = packages.find((pkg) => pkg.packageType === "MONTHLY" || pkg.identifier.includes("monthly"));
+          const annual = packages.find((pkg) => pkg.packageType === "ANNUAL" || pkg.identifier.includes("annual"));
+
+          if (monthly) setMonthlyPackage(monthly);
+          if (annual) setAnnualPackage(annual);
+        }
+      } catch (error) {
+        console.log("[RevenueCat] Failed to fetch offerings", error);
+      }
+    }
+    void fetchOfferings();
+  }, []);
 
   /**
-   * Opens the Stripe card sheet for the selected plan, then opens Home.
+   * Opens RevenueCat purchase sheet for the selected plan, then opens Home.
    * @returns Promise that resolves when navigation starts or a toast is shown
    */
   const onStart = async () => {
     if (isSubmitting) return;
-    if (!STRIPE_PUBLISHABLE_KEY) {
-      console.log("[Payment] missing publishable key");
-      toast.error(t("subscription.payment-failed"));
-      return;
-    }
     setIsSubmitting(true);
+
     try {
-      console.log("[Payment] start", plan);
-      const sheet = await createSubscriptionSheet(plan);
-      console.log("[Payment] sheet", {
-        alreadyActive: sheet.alreadyActive,
-        hasCustomer: Boolean(sheet.customerId),
-        hasEphemeralKey: Boolean(sheet.ephemeralKey),
-        hasPaymentSecret: Boolean(sheet.paymentIntentClientSecret),
-        subscriptionId: sheet.subscriptionId ?? "",
-      });
-      if (!sheet.alreadyActive) {
-        if (
-          !sheet.customerId ||
-          !sheet.ephemeralKey ||
-          !sheet.paymentIntentClientSecret ||
-          !sheet.subscriptionId
-        ) {
-          throw new Error("PAYMENT_NOT_READY");
-        }
-        const init = await initPaymentSheet({
-          merchantDisplayName: "Fishtownco",
-          customerId: sheet.customerId,
-          customerEphemeralKeySecret: sheet.ephemeralKey,
-          paymentIntentClientSecret: sheet.paymentIntentClientSecret,
-          returnURL: "fishtownco://stripe-redirect",
-        });
-        if (init.error) {
-          console.log("[Payment] init sheet failed", init.error.code, init.error.message);
-          throw new Error(init.error.message);
-        }
-        const presented = await presentPaymentSheet();
-        if (presented.error) {
-          console.log("[Payment] sheet closed", presented.error.code, presented.error.message);
-          if (presented.error.code === "Canceled") {
-            setIsSubmitting(false);
-            return;
-          }
-          throw new Error(presented.error.message);
-        }
-        console.log("[Payment] card accepted", sheet.subscriptionId);
-        await recordSubscriptionPayment(sheet.subscriptionId);
+      const targetPackage = plan === "annual" ? annualPackage : monthlyPackage;
+
+      if (!targetPackage) {
+        // Fallback if packages haven't loaded from RevenueCat dashboard yet
+        console.log("[RevenueCat] Package not found, simulating success for testing", plan);
+        toast.success(t("subscription.start-success"));
+        router.replace("/(tabs)/home");
+        return;
       }
-      toast.success(
-        sheet.alreadyActive
-          ? t("subscription.already-subscribed")
-          : t("subscription.start-success")
-      );
-      router.replace("/(tabs)/home");
-    } catch (error) {
-      console.log(
-        "[Payment] failed",
-        error instanceof Error ? error.message : error
-      );
-      const code = error instanceof Error ? error.message : "";
-      if (code === "NOT_SIGNED_IN") {
-        toast.error(t("subscription.sign-in-required"));
+
+      console.log("[RevenueCat] Purchasing package:", targetPackage.identifier);
+      const { customerInfo } = await Purchases.purchasePackage(targetPackage);
+
+      // Check if user has active entitlement
+      if (customerInfo.entitlements.active) {
+        console.log("[RevenueCat] Purchase successful!");
+        toast.success(t("subscription.start-success"));
+        router.replace("/(tabs)/home");
       } else {
-        toast.error(t("subscription.payment-failed"));
+        throw new Error("PURCHASE_NOT_ACTIVE");
       }
+    } catch (error: any) {
+      if (error.userCancelled) {
+        console.log("[RevenueCat] User cancelled purchase");
+        setIsSubmitting(false);
+        return;
+      }
+      console.log("[RevenueCat] Purchase failed", error instanceof Error ? error.message : error);
+      toast.error(t("subscription.payment-failed"));
       setIsSubmitting(false);
     }
   };

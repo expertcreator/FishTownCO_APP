@@ -19,6 +19,7 @@ import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import { View } from "react-native";
+import Purchases from "react-native-purchases"; // RevenueCat import added
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
 
@@ -38,6 +39,15 @@ const SPLASH_MAX_MS = 8000;
 export default function RootLayout() {
   useLayoutEffect(() => {
     configureGoogleSignIn();
+    
+    // Initialize RevenueCat for In-App Purchases
+    try {
+      Purchases.setDebugLogsEnabled(true);
+      // Replace with your actual RevenueCat API keys when ready
+      Purchases.configure({ apiKey: "appl_placeholder_key" });
+    } catch (e) {
+      console.log("[RevenueCat] init error", e);
+    }
   }, []);
 
   useLayoutEffect(() => {
@@ -112,4 +122,3 @@ function ThemedShell() {
     </View>
   );
 }
-

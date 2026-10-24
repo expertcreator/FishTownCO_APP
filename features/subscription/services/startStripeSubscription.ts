@@ -1,9 +1,8 @@
-import { firebaseAuth, queryClient } from "@/features/common/firebase";
-import { BILLING_QUERY_KEY } from "@/features/billing/hooks/useBillingPayments";
+// import { firebaseAuth, queryClient } from "@/features/common/firebase"; // Stripe service disabled
+// import { BILLING_QUERY_KEY } from "@/features/billing/hooks/useBillingPayments"; // Stripe service disabled
 import type { BillingPlanId } from "@/features/billing/types/billing";
 
-const FUNCTION_BASE =
-  "https://europe-west2-fishtownco-5093a.cloudfunctions.net";
+// const FUNCTION_BASE = "https://europe-west2-fishtownco-5093a.cloudfunctions.net"; // Stripe cloud function disabled
 
 export type SubscriptionSheet = {
   alreadyActive: boolean;
@@ -14,12 +13,10 @@ export type SubscriptionSheet = {
 };
 
 /**
- * Calls a Stripe Cloud Function with the signed-in user's ID token.
- * @param name - Function name
- * @param body - JSON body
- * @returns Parsed JSON response
- * @throws {Error} When signed out or the function returns an error code
+ * Stripe Cloud Function calls disabled. Ready for RevenueCat integration.
  */
+
+/*
 async function postFunction<T>(name: string, body: unknown): Promise<T> {
   const user = firebaseAuth.currentUser;
   if (!user) throw new Error("NOT_SIGNED_IN");
@@ -49,26 +46,29 @@ async function postFunction<T>(name: string, body: unknown): Promise<T> {
   }
   return payload as T;
 }
+*/
 
 /**
- * Asks Stripe for a Payment Sheet for the selected plan.
+ * Stripe subscription sheet creation disabled.
  * @param planId - Monthly or annual price
- * @returns Sheet secrets, or an already-active result
+ * @returns Sheet secrets placeholder
  */
 export function createSubscriptionSheet(
   planId: BillingPlanId
 ): Promise<SubscriptionSheet> {
-  return postFunction<SubscriptionSheet>("createSubscriptionPayment", { planId });
+  // Stripe disabled, return dummy/empty or mock for now
+  console.log("[Payment] createSubscriptionSheet disabled for Stripe, use RevenueCat instead", planId);
+  return Promise.resolve({ alreadyActive: false });
 }
 
 /**
- * Stores the paid invoice after the card sheet succeeds.
- * @param subscriptionId - Stripe subscription id from the sheet request
- * @returns Promise that resolves when Firestore has the billing row
+ * Stripe invoice recording disabled.
+ * @param subscriptionId - Subscription id placeholder
+ * @returns Promise
  */
 export async function recordSubscriptionPayment(
   subscriptionId: string
 ): Promise<void> {
-  await postFunction("recordSubscriptionPayment", { subscriptionId });
-  await queryClient.invalidateQueries({ queryKey: BILLING_QUERY_KEY });
+  // Stripe disabled
+  console.log("[Payment] recordSubscriptionPayment disabled for Stripe", subscriptionId);
 }

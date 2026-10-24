@@ -152,6 +152,7 @@ export default function SafetyScreen() {
 
 /**
  * Builds Safety screen styles matching the prototype inventory layout.
+ * Filter pills background color updated to be darker for clear visibility.
  * @param colors - Active theme colors
  * @returns Style sheet
  */
@@ -160,35 +161,38 @@ function getStyles(colors: ThemeColors) {
     screenContent: {
       flex: 1,
       paddingBottom: 0,
+      paddingHorizontal: 16,
     },
     body: { flex: 1 },
     scroll: { flex: 1 },
     scrollContent: {
-      paddingBottom: 96,
+      paddingBottom: 110,
+      paddingTop: 8,
     },
     title: {
       color: colors.navy,
-      fontSize: 28,
+      fontSize: 26,
       fontWeight: "800",
-      letterSpacing: 0.8,
+      letterSpacing: 0.5,
     },
-    sub: { color: colors.muted, marginTop: 6, marginBottom: 16, fontSize: 14 },
+    sub: { color: colors.muted, marginTop: 4, marginBottom: 14, fontSize: 13 },
     filters: {
       flexDirection: "row",
       flexWrap: "wrap",
       gap: 8,
-      marginBottom: 14,
+      marginBottom: 16,
     },
     chip: {
       borderRadius: 999,
       paddingHorizontal: 14,
       paddingVertical: 8,
-      backgroundColor: colors.chipIdle,
+      // Using a darker tone derived from border or card background for clear visibility
+      backgroundColor: colors.border, 
     },
-    chipOn: { backgroundColor: colors.inverse },
+    chipOn: { backgroundColor: colors.orange },
     chipText: { color: colors.navy, fontSize: 12, fontWeight: "700" },
-    chipTextOn: { color: colors.onInverse },
-    list: { gap: 14 },
+    chipTextOn: { color: "#FFFFFF" },
+    list: { gap: 12 },
     empty: {
       color: colors.muted,
       textAlign: "center",

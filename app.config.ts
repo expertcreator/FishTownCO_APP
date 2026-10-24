@@ -98,6 +98,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         },
       ],
       "expo-image",
+      
+      // Stripe disabled
+      /*
       [
         "@stripe/stripe-react-native",
         {
@@ -105,6 +108,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           enableGooglePay: false,
         },
       ],
+      */
+
+      // RevenueCat enabled (No special config plugin required in plugins array for basic purchases, SDK handles it)
+
       "@react-native-firebase/app",
       "@react-native-firebase/auth",
       "@react-native-google-signin/google-signin",
