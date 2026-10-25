@@ -84,11 +84,13 @@ export default function SafetyItemDetailScreen() {
   const dueDateObj = item.dueDateIso
     ? new Date(item.dueDateIso)
     : parseSafetyDueDate(item.dueDate);
-  const days = dueDateObj ? daysUntilDue(dueDateObj) : 0;
+  const days = dueDateObj ? daysUntilDue(dueDateObj) : null;
   const tone = item.tone;
   const icon = resolveSafetyCategoryIcon(item.category, categories);
-  const progress = getComplianceProgress(days);
-  const timelineLabel = getComplianceTimelineLabel(days);
+  const progress = days === null ? 0 : getComplianceProgress(days);
+  const timelineLabel =
+    days === null ? t("common.not-set") : getComplianceTimelineLabel(days);
+  const unset = t("common.not-set");
   const banner = getBannerCopy(tone, item.dueDate, t);
   const bannerColors = getBannerColors(colors, tone);
   const nextDueColors = getNextDueColors(colors, tone);
@@ -243,7 +245,7 @@ export default function SafetyItemDetailScreen() {
         title={t("safety.compliance-timeline")}
         label={timelineLabel}
         tone={tone}
-        daysUntil={days}
+        daysUntil={days ?? Number.POSITIVE_INFINITY}
         progress={progress}
         nowLabel={t("safety.now")}
         overdueLabel={t("safety.status-overdue").toUpperCase()}
@@ -252,13 +254,13 @@ export default function SafetyItemDetailScreen() {
       <Card style={styles.specs}>
         <SpecRow
           label={t("safety.make-model")}
-          value={item.makeModel || "—"}
+          value={item.makeModel || unset}
         />
         <Divider />
         <View style={styles.specBlock}>
           <AppText style={styles.specLabel}>{t("safety.serial")}</AppText>
           <View style={styles.serialRow}>
-            <AppText style={styles.serialValue}>{item.serial || "—"}</AppText>
+            <AppText style={styles.serialValue}>{item.serial || unset}</AppText>
             {item.serial ? (
               <Pressable
                 onPress={onCopySerial}
@@ -278,13 +280,13 @@ export default function SafetyItemDetailScreen() {
           <AppText style={styles.specLabel}>{t("safety.location-aboard")}</AppText>
           <View style={styles.locationRow}>
             <Ionicons name="compass-outline" size={20} color={colors.teal} />
-            <AppText style={styles.specValue}>{item.location || "—"}</AppText>
+            <AppText style={styles.specValue}>{item.location || unset}</AppText>
           </View>
         </View>
         <Divider />
         <SpecRow
           label={t("safety.last-service-date")}
-          value={item.lastServiceDate || "—"}
+          value={item.lastServiceDate || unset}
         />
         <Divider />
         <View style={styles.specBlock}>
@@ -304,7 +306,9 @@ export default function SafetyItemDetailScreen() {
               >
                 {tone === "ok"
                   ? t("safety.valid")
-                  : t("safety.action-needed")}
+                  : tone === "info"
+                    ? t("safety.needs-setup")
+                    : t("safety.action-needed")}
               </AppText>
             </View>
           </View>
@@ -510,6 +514,9 @@ function getBannerCopy(
   if (tone === "due") {
     return t("safety.banner-due", { date: dueDate });
   }
+  if (tone === "info") {
+    return t("safety.banner-needs-setup");
+  }
   return t("safety.banner-ok", { date: dueDate });
 }
 
@@ -556,6 +563,9 @@ function getNextDueColors(colors: ThemeColors, tone: StatusTone) {
   }
   if (tone === "due") {
     return { text: colors.orange, bg: colors.softOrange };
+  }
+  if (tone === "info") {
+    return { text: colors.navy, bg: colors.cardSoft };
   }
   return { text: colors.navy, bg: colors.softTeal };
 }

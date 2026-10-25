@@ -38,12 +38,15 @@ export function WalletDocCard({ doc, onPress }: WalletDocCardProps) {
   const statusIcon = getCrewStatusIcon(doc.tone);
   const categoryIcon = getWalletDocTypeIcon(doc.docType);
 
-  const expiresLine = doc.expiresMeta
-    ? t("wallet.expires-with-meta", {
-        date: doc.expires,
-        meta: doc.expiresMeta,
-      })
-    : t("wallet.expires-on", { date: doc.expires });
+  const expiresLine =
+    doc.tone === "info"
+      ? t("common.date-not-set")
+      : doc.expiresMeta
+        ? t("wallet.expires-with-meta", {
+            date: doc.expires,
+            meta: doc.expiresMeta,
+          })
+        : t("wallet.expires-on", { date: doc.expires });
 
   return (
     <Pressable
@@ -143,6 +146,14 @@ function getToneStyle(colors: ThemeColors, tone: StatusTone): ToneStyle {
         pillBg: colors.softOrange,
         pillText: colors.orange,
         pillBorder: colors.orange,
+      };
+    case "info":
+      return {
+        iconBg: colors.cardSoft,
+        icon: colors.navy,
+        pillBg: colors.cardSoft,
+        pillText: colors.navy,
+        pillBorder: colors.border,
       };
     default:
       return {

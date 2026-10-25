@@ -9,6 +9,7 @@ import {
   queryClient,
 } from "@/features/common/firebase";
 import { VESSEL_QUERY_KEY } from "@/features/vessel/hooks/useVesselProfile";
+import { createChecklistRecords } from "@/features/vessel/services/createChecklistRecords";
 import { VESSEL_DOC_ID } from "@/features/vessel/services/fetchVesselProfile";
 
 /**
@@ -30,6 +31,7 @@ export async function saveVesselChecklist(
   const uniqueIds = [...new Set(checklistIds.map((id) => id.trim()).filter(Boolean))];
 
   try {
+    await createChecklistRecords(uniqueIds);
     await setDoc(
       doc(firebaseFirestore, "users", user.uid, "vessel", VESSEL_DOC_ID),
       {

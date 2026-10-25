@@ -32,20 +32,17 @@ export function mapSafetyItemDoc(
   const dueDateObj =
     dueParsed && !Number.isNaN(dueParsed.getTime()) ? dueParsed : null;
   const tone = dueDateObj ? getSafetyTone(dueDateObj) : "info";
-  const status = getSafetyStatusLabel(tone === "info" ? "ok" : tone);
-  const resolvedTone = tone === "info" ? "ok" : tone;
+  const status = getSafetyStatusLabel(tone);
 
   return {
     id: docSnap.id,
     name,
     category,
     location,
-    dueDate: dueDateObj
-      ? formatSafetyDueDateLong(dueDateObj)
-      : String(data.nextDueDate ?? data.dueDate ?? "—"),
+    dueDate: dueDateObj ? formatSafetyDueDateLong(dueDateObj) : "Date not set",
     dueDateIso: dueDateObj ? dueDateObj.toISOString() : null,
     status,
-    tone: resolvedTone,
+    tone,
     serial: data.serial ? String(data.serial) : undefined,
     makeModel: data.makeModel ? String(data.makeModel) : undefined,
     lastServiceDate: data.lastServiceDate

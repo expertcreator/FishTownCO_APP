@@ -37,6 +37,7 @@ export { CertificatePhotoUpload } from "./CertificatePhotoUpload";
 export { StickyFormFooter } from "./StickyFormFooter";
 export { ImagePickerSheet } from "./ImagePickerSheet";
 
+export { LegalPolicyModal } from "./LegalPolicyModal";
 export { ConfirmModal } from "./ConfirmModal";
 export { LogoutModal } from "./LogoutModal";
 export { OptionsPickerModal } from "./OptionsPickerModal";

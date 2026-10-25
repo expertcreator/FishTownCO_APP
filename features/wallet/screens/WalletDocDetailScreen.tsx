@@ -70,9 +70,11 @@ export default function WalletDocDetailScreen() {
   }
 
   const dueDateObj = doc.expiresIso ? new Date(doc.expiresIso) : null;
-  const days = dueDateObj ? daysUntilDue(dueDateObj) : 0;
-  const progress = getComplianceProgress(days);
-  const timelineLabel = getComplianceTimelineLabel(days);
+  const days = dueDateObj ? daysUntilDue(dueDateObj) : null;
+  const progress = days === null ? 0 : getComplianceProgress(days);
+  const timelineLabel =
+    days === null ? t("common.not-set") : getComplianceTimelineLabel(days);
+  const unset = t("common.not-set");
   const tone = doc.tone;
   const bannerColors = getBannerColors(colors, tone);
   const fileUri =
@@ -103,11 +105,13 @@ export default function WalletDocDetailScreen() {
   };
 
   const banner =
-    tone === "overdue"
-      ? t("wallet.banner-overdue", { date: doc.expires })
-      : tone === "due"
-        ? t("wallet.banner-due", { date: doc.expires })
-        : t("wallet.banner-ok", { date: doc.expires });
+    tone === "info"
+      ? t("wallet.banner-needs-setup")
+      : tone === "overdue"
+        ? t("wallet.banner-overdue", { date: doc.expires })
+        : tone === "due"
+          ? t("wallet.banner-due", { date: doc.expires })
+          : t("wallet.banner-ok", { date: doc.expires });
 
   /**
    * Deletes the wallet document and returns to the previous screen.
@@ -182,17 +186,15 @@ export default function WalletDocDetailScreen() {
         bottomBadge={doc.detail || undefined}
       />
 
-      {dueDateObj ? (
-        <ComplianceTimelineCard
-          title={t("safety.compliance-timeline")}
-          label={timelineLabel}
-          tone={tone}
-          daysUntil={days}
-          progress={progress}
-          nowLabel={t("safety.now")}
-          overdueLabel={t("safety.status-overdue").toUpperCase()}
-        />
-      ) : null}
+      <ComplianceTimelineCard
+        title={t("safety.compliance-timeline")}
+        label={timelineLabel}
+        tone={tone}
+        daysUntil={days ?? Number.POSITIVE_INFINITY}
+        progress={progress}
+        nowLabel={t("safety.now")}
+        overdueLabel={t("safety.status-overdue").toUpperCase()}
+      />
 
       <AppText style={styles.certsTitle}>{t("wallet.attachment")}</AppText>
       <View style={styles.certsRow}>
@@ -250,10 +252,10 @@ export default function WalletDocDetailScreen() {
         <Divider />
         <Spec
           label={t("wallet.doc-reference")}
-          value={doc.reference || "—"}
+          value={doc.reference || unset}
         />
         <Divider />
-        <Spec label={t("wallet.issue-date")} value={doc.issueDate || "—"} />
+        <Spec label={t("wallet.issue-date")} value={doc.issueDate || unset} />
         <Divider />
         <View style={styles.specBlock}>
           <AppText style={styles.specLabel}>{t("wallet.expiry-date")}</AppText>
@@ -282,7 +284,9 @@ export default function WalletDocDetailScreen() {
                       ? colors.softTeal
                       : tone === "due"
                         ? colors.softOrange
-                        : colors.statusOverdueBg,
+                        : tone === "info"
+                          ? colors.cardSoft
+                          : colors.statusOverdueBg,
                 },
               ]}
             >
@@ -292,7 +296,9 @@ export default function WalletDocDetailScreen() {
                     ? "checkmark"
                     : tone === "due"
                       ? "time"
-                      : "warning"
+                      : tone === "info"
+                        ? "alert-circle-outline"
+                        : "warning"
                 }
                 size={12}
                 color={bannerColors.text}

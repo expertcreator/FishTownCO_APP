@@ -24,6 +24,8 @@ export function getCrewStatusIcon(
       return "alert-circle";
     case "due":
       return "time-outline";
+    case "info":
+      return "alert-circle-outline";
     default:
       return "checkmark-circle";
   }

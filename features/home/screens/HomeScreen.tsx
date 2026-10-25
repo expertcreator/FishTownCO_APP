@@ -78,18 +78,22 @@ export default function HomeScreen() {
   );
 
   const records = useMemo<HomeRecord[]>(() => {
-    const safetyRecords: HomeRecord[] = safetyItems.map((item) => ({
-      kind: "safety",
-      id: `safety-${item.id}`,
-      tone: item.tone,
-      item,
-    }));
-    const docRecords: HomeRecord[] = walletDocs.map((doc) => ({
-      kind: "document",
-      id: `doc-${doc.id}`,
-      tone: doc.tone,
-      doc,
-    }));
+    const safetyRecords: HomeRecord[] = safetyItems
+      .filter((item) => item.tone !== "info")
+      .map((item) => ({
+        kind: "safety",
+        id: `safety-${item.id}`,
+        tone: item.tone,
+        item,
+      }));
+    const docRecords: HomeRecord[] = walletDocs
+      .filter((doc) => doc.tone !== "info")
+      .map((doc) => ({
+        kind: "document",
+        id: `doc-${doc.id}`,
+        tone: doc.tone,
+        doc,
+      }));
     return [...safetyRecords, ...docRecords];
   }, [safetyItems, walletDocs]);
 

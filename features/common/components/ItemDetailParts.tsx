@@ -218,6 +218,14 @@ export function getBannerColors(colors: ThemeColors, tone: StatusTone) {
       icon: "time" as const,
     };
   }
+  if (tone === "info") {
+    return {
+      bg: colors.cardSoft,
+      border: colors.border,
+      text: colors.navy,
+      icon: "alert-circle" as const,
+    };
+  }
   return {
     bg: colors.softTeal,
     border: colors.teal,

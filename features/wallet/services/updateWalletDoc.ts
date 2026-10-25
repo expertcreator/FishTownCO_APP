@@ -54,6 +54,7 @@ export async function updateWalletDoc(
     issueDate: input.issueDate.trim(),
     expiryDate: input.expiryDate.trim(),
     expiryDateIso: input.expiryDateIso,
+    needsSetup: false,
     ...mediaPatch,
     updatedAt: serverTimestamp(),
   });

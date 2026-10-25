@@ -51,6 +51,8 @@ export function getSafetyStatusLabel(tone: StatusTone): string {
       return "Overdue";
     case "due":
       return "Due soon";
+    case "info":
+      return "Needs setup";
     default:
       return "OK";
   }

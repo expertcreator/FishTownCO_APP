@@ -25,7 +25,7 @@ import { useTranslation } from "@/ui/translations";
 /**
  * Build Checklist screen matching prototype screen 9
  * (https://fishtownco.itoasis.co/).
- * Persists selected item ids on the vessel profile, then opens Subscription.
+ * Creates a placeholder safety item or wallet document for each ticked entry, then opens Subscription.
  * @returns Checklist builder UI
  */
 export default function BuildChecklistScreen() {

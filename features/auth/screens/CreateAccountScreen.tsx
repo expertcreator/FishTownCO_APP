@@ -3,7 +3,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useMemo, useState } from "react";
 import { useForm } from "react-hook-form";
-import { Modal, Pressable, StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
 import { SocialAuthRow } from "@/features/auth/components/SocialAuthRow";
 import { createAccount } from "@/features/auth/services/createAccount";
 import { loginWithApple } from "@/features/auth/services/loginWithApple";
@@ -14,20 +14,20 @@ import {
   createAccountSchema,
   type CreateAccountSchema,
 } from "@/features/auth/validation/authSchema";
+import type { LegalDocument } from "@/features/common/legal/policyLinks";
 import { registerPushTokenAfterAuth } from "@/features/common/notifications/useNotifications";
 import { startSessionPrefetch } from "@/features/vessel/services/prefetchVesselCatalogs";
 import {
   AppText,
   Card,
   FormField,
+  LegalPolicyModal,
   PrimaryButton,
   Screen,
   useToast,
 } from "@/ui/components";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
-
-type LegalModal = "terms" | "privacy" | null;
 
 /**
  * Create Account screen matching https://fishtownco.itoasis.co/ (prototype screen 6).
@@ -41,7 +41,7 @@ export default function CreateAccountScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isAppleLoading, setIsAppleLoading] = useState(false);
-  const [legalModal, setLegalModal] = useState<LegalModal>(null);
+  const [legalModal, setLegalModal] = useState<LegalDocument | null>(null);
 
   const { t } = useTranslation();
   const schema = useMemo(() => createAccountSchema(t), [t]);
@@ -178,13 +178,6 @@ export default function CreateAccountScreen() {
     }
   };
 
-  const legalTitle =
-    legalModal === "terms"
-      ? t("auth.terms-modal-title")
-      : t("auth.privacy-modal-title");
-  const legalIcon =
-    legalModal === "terms" ? "document-text-outline" : "shield-outline";
-
   return (
     <Screen contentStyle={styles.content}>
       <View style={styles.header}>
@@ -309,71 +302,14 @@ export default function CreateAccountScreen() {
         </AppText>
       </AppText>
 
-      <Modal
-        visible={legalModal != null}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setLegalModal(null)}
-      >
-        <Pressable
-          style={styles.modalOverlay}
-          onPress={() => setLegalModal(null)}
-        >
-          <Pressable
-            style={styles.modalCard}
-            onPress={(event) => event.stopPropagation()}
-          >
-            <Pressable
-              style={styles.modalClose}
-              onPress={() => setLegalModal(null)}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel={t("common.close")}
-            >
-              <Ionicons name="close" size={20} color={colors.muted} />
-            </Pressable>
-            <View style={styles.modalTitleRow}>
-              <Ionicons name={legalIcon} size={24} color={colors.teal} />
-              <AppText style={styles.modalTitle}>{legalTitle}</AppText>
-            </View>
-            <View style={styles.modalBody}>
-              {legalModal === "terms" ? (
-                <>
-                  <AppText style={styles.modalText}>
-                    {t("auth.terms-body-1")}
-                  </AppText>
-                  <AppText style={styles.modalText}>
-                    {t("auth.terms-body-2")}
-                  </AppText>
-                </>
-              ) : (
-                <>
-                  <AppText style={styles.modalText}>
-                    {t("auth.privacy-body-1")}
-                  </AppText>
-                  <AppText style={styles.modalText}>
-                    {t("auth.privacy-body-2")}
-                  </AppText>
-                </>
-              )}
-            </View>
-            <Pressable
-              style={({ pressed }) => [
-                styles.acceptBtn,
-                pressed && styles.pressed,
-              ]}
-              onPress={() => {
-                setValue("agreed", true, { shouldValidate: true });
-                setLegalModal(null);
-              }}
-            >
-              <AppText style={styles.acceptBtnText}>
-                {t("auth.accept-close")}
-              </AppText>
-            </Pressable>
-          </Pressable>
-        </Pressable>
-      </Modal>
+      <LegalPolicyModal
+        document={legalModal}
+        onClose={() => setLegalModal(null)}
+        onAccept={() => {
+          setValue("agreed", true, { shouldValidate: true });
+          setLegalModal(null);
+        }}
+      />
     </Screen>
   );
 }
@@ -506,63 +442,6 @@ function getStyles(colors: ThemeColors) {
     },
     footerLink: {
       fontSize: 13,
-    },
-    modalOverlay: {
-      flex: 1,
-      backgroundColor: "rgba(0,0,0,0.5)",
-      justifyContent: "center",
-      padding: 20,
-    },
-    modalCard: {
-      backgroundColor: colors.card,
-      borderRadius: 18,
-      padding: 24,
-      borderWidth: 1,
-      borderColor: colors.border,
-      gap: 12,
-    },
-    modalClose: {
-      position: "absolute",
-      top: 14,
-      right: 14,
-      zIndex: 1,
-      padding: 4,
-    },
-    modalTitleRow: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: 10,
-      paddingRight: 28,
-    },
-    modalTitle: {
-      flex: 1,
-      color: colors.navy,
-      fontSize: 18,
-      fontWeight: "800",
-      letterSpacing: 0.4,
-      textTransform: "uppercase",
-    },
-    modalBody: {
-      gap: 8,
-      maxHeight: 220,
-    },
-    modalText: {
-      color: colors.muted,
-      fontSize: 12,
-      lineHeight: 18,
-    },
-    acceptBtn: {
-      marginTop: 4,
-      minHeight: 40,
-      borderRadius: 12,
-      backgroundColor: colors.navy,
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    acceptBtnText: {
-      color: colors.white,
-      fontSize: 12,
-      fontWeight: "600",
     },
   });
 }

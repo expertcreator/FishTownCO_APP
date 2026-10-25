@@ -1,9 +1,10 @@
 import { router } from "expo-router";
-import { useState, useEffect } from "react";
+import { useEffect, useState } from "react";
 import { BackHandler, Pressable, StyleSheet, View } from "react-native";
 import Purchases, { type PurchasesPackage } from "react-native-purchases";
 import type { BillingPlanId } from "@/features/billing/types/billing";
 import { getCurrentUser } from "@/features/common/firebase";
+import type { LegalDocument } from "@/features/common/legal/policyLinks";
 import {
   configurePurchases,
   PREMIUM_ENTITLEMENT_ID,
@@ -24,6 +25,7 @@ import {
   CARD_RIPPLE,
   Card,
   getPressedItemStyle,
+  LegalPolicyModal,
   PrimaryButton,
   Screen,
   useToast,
@@ -70,6 +72,7 @@ function SubscriptionForm() {
   const [annualPackage, setAnnualPackage] = useState<PurchasesPackage | null>(null);
   const [access, setAccess] = useState<SubscriptionAccess | null>(null);
   const [startingTrial, setStartingTrial] = useState(false);
+  const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
   const locked = access !== null && !canUseApp(access) && !isTrialActive(access) && Boolean(access.trialStartedAt);
   const canStartTrial = access !== null && !access.trialStartedAt;
 
@@ -231,6 +234,26 @@ function SubscriptionForm() {
           <AppText style={styles.skip}>{t("subscription.trial")}</AppText>
         </Pressable>
       ) : null}
+      <AppText style={styles.legal}>
+        {t("subscription.agree-prefix")}{" "}
+        <AppText
+          style={styles.legalLink}
+          onPress={() => setLegalDocument("terms")}
+        >
+          {t("subscription.terms")}
+        </AppText>
+        {" & "}
+        <AppText
+          style={styles.legalLink}
+          onPress={() => setLegalDocument("privacy")}
+        >
+          {t("subscription.privacy")}
+        </AppText>
+      </AppText>
+      <LegalPolicyModal
+        document={legalDocument}
+        onClose={() => setLegalDocument(null)}
+      />
     </Screen>
   );
 }
@@ -275,6 +298,19 @@ function getStyles(colors: ThemeColors) {
       textAlign: "center",
       color: colors.teal,
       marginTop: 14,
+      fontWeight: "700",
+      textDecorationLine: "underline",
+    },
+    legal: {
+      textAlign: "center",
+      color: colors.muted,
+      fontSize: 12,
+      lineHeight: 18,
+      marginTop: 18,
+    },
+    legalLink: {
+      color: colors.teal,
+      fontSize: 12,
       fontWeight: "700",
       textDecorationLine: "underline",
     },

@@ -107,7 +107,9 @@ export function SafetyItemCard({
                   color={toneStyle.due}
                 />
                 <AppText style={[styles.due, { color: toneStyle.due }]}>
-                  {t(dateLabelKey, { date: item.dueDate })}
+                  {item.tone === "info"
+                    ? t("common.date-not-set")
+                    : t(dateLabelKey, { date: item.dueDate })}
                 </AppText>
               </View>
             </View>
@@ -186,6 +188,16 @@ function getToneStyle(colors: ThemeColors, tone: StatusTone): ToneStyle {
         pillText: colors.orange,
         pillBorder: colors.orange,
         pillIcon: "timer-outline",
+      };
+    case "info":
+      return {
+        iconBg: colors.cardSoft,
+        icon: colors.navy,
+        due: colors.muted,
+        pillBg: colors.cardSoft,
+        pillText: colors.navy,
+        pillBorder: colors.border,
+        pillIcon: "alert-circle-outline",
       };
     default:
       return {

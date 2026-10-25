@@ -12,8 +12,27 @@ import {
 import {
   getWalletCategoryLabel,
   mapDocTypeToCategory,
+  type WalletCategory,
   type WalletDoc,
 } from "@/features/wallet/types/wallet";
+
+const WALLET_CATEGORIES: WalletCategory[] = [
+  "insurance",
+  "registry",
+  "compliance",
+  "telecom",
+  "safety",
+  "other",
+];
+
+/**
+ * Returns whether a stored category key is one the wallet understands.
+ * @param value - Firestore category field
+ * @returns True when the value is a wallet category
+ */
+function isWalletCategory(value: string): value is WalletCategory {
+  return WALLET_CATEGORIES.includes(value as WalletCategory);
+}
 
 /**
  * Builds the wallet card detail line (`Label: value`) without duplicates.
@@ -70,8 +89,11 @@ export function buildWalletDetailLine(input: {
  */
 export function mapWalletDoc(docSnap: QueryDocumentSnapshot): WalletDoc {
   const data = docSnap.data() as Record<string, unknown>;
-  const docType = String(data.docType ?? data.category ?? "Other").trim();
-  const category = mapDocTypeToCategory(docType);
+  const docType = String(data.docType ?? "Other").trim() || "Other";
+  const storedCategory = String(data.category ?? "").trim();
+  const category = isWalletCategory(storedCategory)
+    ? storedCategory
+    : mapDocTypeToCategory(docType);
   const title = String(data.title ?? "").trim() || "Untitled document";
   const reference = String(data.reference ?? data.refNumber ?? data.code ?? "").trim();
   const subCategory = String(
@@ -87,11 +109,7 @@ export function mapWalletDoc(docSnap: QueryDocumentSnapshot): WalletDoc {
       : null);
   const expiryDate =
     parsed && !Number.isNaN(parsed.getTime()) ? parsed : null;
-  const tone: StatusTone = expiryDate
-    ? getSafetyTone(expiryDate) === "info"
-      ? "ok"
-      : getSafetyTone(expiryDate)
-    : "ok";
+  const tone: StatusTone = expiryDate ? getSafetyTone(expiryDate) : "info";
   const status = getSafetyStatusLabel(tone);
   const days = expiryDate ? daysUntilDue(expiryDate) : null;
   const expiresMeta =
@@ -113,9 +131,7 @@ export function mapWalletDoc(docSnap: QueryDocumentSnapshot): WalletDoc {
     detail,
     reference,
     issueDate: String(data.issueDate ?? "").trim(),
-    expires: expiryDate
-      ? formatSafetyDueDateLong(expiryDate)
-      : String(data.expiryDate ?? data.expires ?? "—"),
+    expires: expiryDate ? formatSafetyDueDateLong(expiryDate) : "Date not set",
     expiresIso: expiryDate ? expiryDate.toISOString() : null,
     expiresMeta,
     tone,

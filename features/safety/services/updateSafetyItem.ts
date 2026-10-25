@@ -84,6 +84,7 @@ export async function updateSafetyItem(
       expiryDate: input.expiryDate?.trim() || null,
       latitude: input.latitude ?? null,
       longitude: input.longitude ?? null,
+      needsSetup: false,
       ...mediaPatch,
       updatedAt: serverTimestamp(),
     });
