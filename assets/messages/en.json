@@ -99,6 +99,7 @@
     "delete-account-subscription": "Cancel the subscription in the store first. The account was not deleted, and billing continues until you cancel.",
     "delete-account-success": "Account deleted",
     "delete-account-failed": "Could not delete your account. Please try again.",
+    "delete-account-apple": "Apple sign-in could not be revoked, so the account was not deleted. Try again on this iPhone.",
     "delete-account-recent-login": "Please log out, sign in again, then delete your account.",
     "create-account-failed-title": "Create account failed",
     "create-account-success": "Account created. Set up your vessel.",

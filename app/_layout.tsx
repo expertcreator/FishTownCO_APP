@@ -14,10 +14,11 @@ import {
 } from "@/ui/components";
 import { prefetchBrandLogos } from "@/features/auth/utils/prefetchBrandLogos";
 import { ThemeProvider, useColors, useTheme } from "@/ui/theme";
+import { onAuthStateChanged } from "@react-native-firebase/auth";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
-import { useLayoutEffect } from "react";
+import { useEffect, useLayoutEffect } from "react";
 import { GestureHandlerRootView } from "react-native-gesture-handler";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";

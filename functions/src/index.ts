@@ -11,6 +11,7 @@ import {
   type MilestoneReminder,
 } from "./attention";
 
+export { revokeAppleToken, storeAppleRefreshToken } from "./appleAuth";
 export { deleteUserData } from "./deleteUserData";
 export { revenueCatWebhook } from "./revenueCatWebhook";
 

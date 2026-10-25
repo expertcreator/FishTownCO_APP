@@ -107,10 +107,16 @@ function AppHeaderActions() {
       router.replace("/(auth)/login");
     } catch (error) {
       const code = getAuthErrorCode(error);
+      const message = error instanceof Error ? error.message : "";
       toast.error(
         code === "auth/requires-recent-login"
           ? t("auth.delete-account-recent-login")
-          : t("auth.delete-account-failed")
+          : message === "APPLE_REVOKE_FAILED" ||
+              message === "APPLE_TOKEN_MISSING" ||
+              message === "APPLE_CODE_MISSING" ||
+              message === "APPLE_SIGNIN_CANCELLED"
+            ? t("auth.delete-account-apple")
+            : t("auth.delete-account-failed")
       );
     } finally {
       setDeleting(false);

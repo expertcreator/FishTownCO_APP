@@ -6,6 +6,7 @@ import {
 } from "@react-native-firebase/auth";
 import { Platform } from "react-native";
 import { firebaseAuth } from "@/features/common/firebase";
+import { storeAppleAuthorizationCode } from "@/features/auth/services/appleRevoke";
 import { ensureUserProfile } from "@/features/auth/services/ensureUserProfile";
 import type { SocialLoginResult } from "@/features/auth/services/loginWithGoogle";
 import { isNewAuthUser } from "@/features/auth/utils/isNewAuthUser";
@@ -55,6 +56,17 @@ export async function loginWithApple(): Promise<SocialLoginResult> {
     }
 
     await ensureUserProfile();
+    const authorizationCode = appleAuthRequestResponse.authorizationCode?.trim() ?? "";
+    if (authorizationCode) {
+      try {
+        await storeAppleAuthorizationCode(authorizationCode);
+      } catch (error) {
+        console.log(
+          "[Apple] refresh token was not stored",
+          error instanceof Error ? error.message : error
+        );
+      }
+    }
 
     return {
       uid: result.user.uid,

@@ -11,6 +11,7 @@ import {
   firebaseFirestore,
   queryClient,
 } from "@/features/common/firebase";
+import { revokeAppleSignInIfNeeded } from "@/features/auth/services/appleRevoke";
 import { deleteUserStorage } from "@/features/auth/services/deleteUserStorage";
 import { revenueCatApiKey } from "@/features/subscription/services/configurePurchases";
 
@@ -24,9 +25,9 @@ const USER_COLLECTIONS = [
 
 /**
  * Deletes the signed-in Firebase account, Storage files, and Firestore records.
- * Storage files and device tokens are removed before the Auth user so the
- * signed-in user can still authorize those deletes. An Auth deletion trigger
- * removes anything this device could not reach.
+ * An Apple account revokes its Sign in with Apple token first. Storage files
+ * and device tokens are removed before the Auth user so the signed-in user
+ * can still authorize those deletes.
  * @returns Promise that resolves when the auth user is deleted
  * @throws {Error} When no user is signed in, Storage deletion fails, or Auth rejects the delete
  */
@@ -37,6 +38,7 @@ export async function deleteAccount(): Promise<void> {
   }
 
   const uid = user.uid;
+  await revokeAppleSignInIfNeeded(user);
   await deleteUserStorage(uid);
   try {
     await wipeUserData(uid);

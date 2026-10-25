@@ -170,6 +170,7 @@ export default function HomeScreen() {
         </View>
       </Pressable>
 
+      {counts.overdue > 0 ? (
       <Pressable
         onPress={() => setFilter("overdue")}
         accessibilityRole="button"
@@ -203,6 +204,7 @@ export default function HomeScreen() {
           </View>
         </View>
       </Pressable>
+      ) : null}
 
       <View style={styles.stats}>
         <StatCard
