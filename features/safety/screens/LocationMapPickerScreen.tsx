@@ -23,8 +23,6 @@ import MapView, { type Region, PROVIDER_GOOGLE } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DEFAULT_DELTA = 0.024;
-/** Same fallback window as the customer GoogleMapScreen. */
-const MAP_LOAD_FALLBACK_MS = 12_000;
 /** Google Maps on Android. Apple Maps on iOS (no API key needed). */
 const MAP_PROVIDER = Platform.OS === "android" ? PROVIDER_GOOGLE : undefined;
 
@@ -123,8 +121,8 @@ export default function LocationMapPickerScreen() {
       }
 
       const fallback: Region = {
-        latitude: 31.5497, // Updated default fallback coordinates (compatible regional center)
-        longitude: 74.3436,
+        latitude: 51.5074, // Updated default fallback coordinates (compatible regional center)
+        longitude: -0.1278,
         latitudeDelta: 0.05,
         longitudeDelta: 0.05,
       };
@@ -317,7 +315,7 @@ function getStyles(colors: ThemeColors) {
       borderRadius: 24,
       backgroundColor: colors.card,
       alignItems: "center",
-      justifyContext: "center",
+      justifyContent: "center",
       borderWidth: 1,
       borderColor: colors.border,
       zIndex: 20,
