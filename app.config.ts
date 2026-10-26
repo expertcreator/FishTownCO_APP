@@ -43,11 +43,25 @@ export default ({ config }: ConfigContext): ExpoConfig => {
     userInterfaceStyle: "automatic",
     icon: `${BRAND_ROOT}/icon.png`,
     ios: {
+      // iPad gets all four orientations (Expo adds them; App Store requires them for multitasking).
       supportsTablet: true,
       bundleIdentifier: "com.itoasis.Fishtownco",
+      // Build number for Xcode archives / TestFlight. Raise it for every upload.
+      // (EAS builds ignore this and use the remote build number from eas.json.)
+      buildNumber: "2",
+      /** Client's Apple Developer team. */
+      appleTeamId: "5G3N4M29YF",
       usesAppleSignIn: true,
+      googleServicesFile: "./GoogleService-Info.plist",
+      backgroundColor: SPLASH_BG,
       config: {
         googleMapsApiKey: iosMapsKey,
+        // Only standard HTTPS. Skips the export-compliance prompt per upload.
+        usesNonExemptEncryption: false,
+      },
+      infoPlist: {
+        // iPhone stays portrait only (`orientation` would also allow upside down).
+        UISupportedInterfaceOrientations: ["UIInterfaceOrientationPortrait"],
       },
     },
     android: {
@@ -127,7 +141,13 @@ export default ({ config }: ConfigContext): ExpoConfig => {
 
       // RevenueCat enabled (No special config plugin required in plugins array for basic purchases, SDK handles it)
 
-      "@react-native-firebase/app",
+      [
+        "@react-native-firebase/app",
+        {
+          // Resolve Firebase through CocoaPods. SPM needs dynamic frameworks.
+          ios: { disableSPM: true },
+        },
+      ],
       "@react-native-firebase/auth",
       "@react-native-google-signin/google-signin",
       "./plugins/withIosAppleSignIn",
@@ -140,12 +160,12 @@ export default ({ config }: ConfigContext): ExpoConfig => {
           ios: {
             image: `${BRAND_ROOT}/splash.png`,
             backgroundColor: SPLASH_BG,
-            resizeMode: "contain",
+            imageWidth: 240,
           },
           android: {
             image: `${BRAND_ROOT}/splash.png`,
             backgroundColor: SPLASH_BG,
-            imageWidth: 240,
+            imageWidth: 180,
           },
         },
       ],
@@ -158,6 +178,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             // Compress native libraries so a sideloaded APK installs.
             // Uncompressed libs install with adb and fail from the phone installer.
             useLegacyPackaging: true,
+          },
+          ios: {
+            // Firebase iOS pods need frameworks for their Swift modules.
+            useFrameworks: "static",
           },
         },
       ],

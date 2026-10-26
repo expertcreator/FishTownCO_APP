@@ -316,7 +316,12 @@
     "length-overall": "LENGTH OVERALL",
     "details": "VESSEL DETAILS",
     "details-sub": "Hull, engine specs, dimensions & registration",
-    "details-coming-soon": "Vessel Details — Coming soon in next update",
+    "details-registration": "REGISTRATION",
+    "details-length": "Length",
+    "details-engine-hours": "Engine hours",
+    "details-home-port": "Home port",
+    "details-mmsi": "MMSI",
+    "details-registration-no": "Registration no",
     "equipment": "EQUIPMENT",
     "equipment-sub": "{{count}} safety items, navigation & deck gear",
     "maintenance": "MAINTENANCE & SERVICING",
@@ -513,6 +518,18 @@
     "start-subscription": "Start Subscription",
     "receipt-coming-soon": "{{amount}} on {{date}} — Receipt coming soon in next update",
     "load-failed": "Could not load billing history. Try again."
+  },
+  "settings": {
+    "title": "SETTINGS",
+    "open": "Open settings",
+    "appearance": "APPEARANCE",
+    "theme": "Theme",
+    "theme-light": "Light",
+    "theme-system": "System",
+    "theme-dark": "Dark",
+    "account": "ACCOUNT",
+    "log-out-sub": "Sign out of this device",
+    "delete-account-sub": "This can't be undone"
   },
   "common": {
     "continue": "Continue",

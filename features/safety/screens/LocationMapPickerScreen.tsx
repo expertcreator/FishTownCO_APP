@@ -14,6 +14,7 @@ import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Platform,
   Pressable,
   StyleSheet,
   View,
@@ -22,11 +23,15 @@ import MapView, { type Region, PROVIDER_GOOGLE } from "react-native-maps";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 const DEFAULT_DELTA = 0.024;
+/** Same fallback window as the customer GoogleMapScreen. */
+const MAP_LOAD_FALLBACK_MS = 12_000;
+/** Google Maps on Android. Apple Maps on iOS (no API key needed). */
+const MAP_PROVIDER = Platform.OS === "android" ? PROVIDER_GOOGLE : undefined;
 
 /**
  * Free map location picker matching the customer-app GoogleMapScreen pattern:
- * full-bleed Google MapView, center pin, Expo Location reverse-geocode
- * (BigDataCloud fallback — no Places API).
+ * full-bleed MapView (Google on Android, Apple on iOS), center pin, Expo
+ * Location reverse-geocode (BigDataCloud fallback — no Places API).
  * @returns Map picker screen
  */
 export default function LocationMapPickerScreen() {
@@ -199,7 +204,7 @@ export default function LocationMapPickerScreen() {
       <View style={styles.map} collapsable={false}>
         <MapView
           ref={mapRef}
-          provider={PROVIDER_GOOGLE}
+          provider={MAP_PROVIDER}
           style={StyleSheet.absoluteFill}
           initialRegion={region}
           loadingEnabled

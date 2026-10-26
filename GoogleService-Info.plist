@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>687496220200-6pt857mn1009cabqsile1m4gca0r4n7i.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.687496220200-6pt857mn1009cabqsile1m4gca0r4n7i</string>
+	<key>ANDROID_CLIENT_ID</key>
+	<string>687496220200-ujs1t4q9rfl3lsolfempii14tc970l3f.apps.googleusercontent.com</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCbiPC5XOVwuJ5Ick1Ba2lEXcPv5vVmsYw</string>
+	<key>GCM_SENDER_ID</key>
+	<string>687496220200</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.itoasis.Fishtownco</string>
+	<key>PROJECT_ID</key>
+	<string>fishtownco-5093a</string>
+	<key>STORAGE_BUCKET</key>
+	<string>fishtownco-5093a.firebasestorage.app</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:687496220200:ios:1e4951118695500c222f1d</string>
+</dict>
+</plist>
