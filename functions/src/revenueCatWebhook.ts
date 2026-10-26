@@ -33,6 +33,7 @@ function planIdFromProduct(productId: string): "monthly" | "annual" | null {
 export const revenueCatWebhook = onRequest(
   {
     region: "europe-west2",
+    invoker: "public",
     secrets: [webhookSecret],
   },
   async (req, res) => {

@@ -32,6 +32,26 @@ import {
 } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
 
+/**
+ * Matches the RevenueCat monthly package. Product ids use "monthly".
+ * @param pkg - Offering package
+ * @returns Whether this is the monthly plan
+ */
+function isMonthlyPackage(pkg: PurchasesPackage): boolean {
+  const id = `${pkg.identifier} ${pkg.product.identifier}`.toLowerCase();
+  return pkg.packageType === "MONTHLY" || id.includes("month");
+}
+
+/**
+ * Matches the RevenueCat yearly package. The offering calls it yearly.
+ * @param pkg - Offering package
+ * @returns Whether this is the annual plan
+ */
+function isAnnualPackage(pkg: PurchasesPackage): boolean {
+  const id = `${pkg.identifier} ${pkg.product.identifier}`.toLowerCase();
+  return pkg.packageType === "ANNUAL" || /year|annual/.test(id);
+}
+
 const PLANS = [
   {
     id: "annual" as const,
@@ -84,9 +104,8 @@ function SubscriptionForm() {
         if (offerings.current && offerings.current.availablePackages) {
           const packages = offerings.current.availablePackages;
           
-          // Map packages based on identifier or type (monthly / annual)
-          const monthly = packages.find((pkg) => pkg.packageType === "MONTHLY" || pkg.identifier.includes("monthly"));
-          const annual = packages.find((pkg) => pkg.packageType === "ANNUAL" || pkg.identifier.includes("annual"));
+          const monthly = packages.find((pkg) => isMonthlyPackage(pkg));
+          const annual = packages.find((pkg) => isAnnualPackage(pkg));
 
           if (monthly) setMonthlyPackage(monthly);
           if (annual) setAnnualPackage(annual);

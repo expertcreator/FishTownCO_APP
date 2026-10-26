@@ -1,9 +1,8 @@
 /**
  * Public policy pages shown in the app.
- * Both use the placeholder until the PM sends the real Privacy Policy and Terms URLs.
  */
-export const PRIVACY_POLICY_URL = "https://itoasis.co.uk/about-us";
-export const TERMS_OF_SERVICE_URL = "https://itoasis.co.uk/about-us";
+export const PRIVACY_POLICY_URL = "https://fishtownco.co.uk/pages/app-privacy-policy";
+export const TERMS_OF_SERVICE_URL = "https://fishtownco.co.uk/pages/app-terms";
 
 export type LegalDocument = "privacy" | "terms";
 

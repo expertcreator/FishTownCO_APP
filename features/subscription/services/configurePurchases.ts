@@ -2,13 +2,13 @@ import { Platform } from "react-native";
 import Purchases, { LOG_LEVEL } from "react-native-purchases";
 
 /** RevenueCat entitlement that unlocks the paid vessel subscription. */
-export const PREMIUM_ENTITLEMENT_ID = "premium";
+export const PREMIUM_ENTITLEMENT_ID = "fishtownco_pro";
 
 let configuredKey: string | null = null;
 
 /**
  * Reads the public RevenueCat SDK key for this platform.
- * Empty until the iOS `appl_` and Android `goog_` keys are added.
+ * A Test Store key starts with `test_`. Store keys start with `appl_` or `goog_`.
  * @returns Public SDK key, or null when it is not configured
  */
 export function revenueCatApiKey(): string | null {
