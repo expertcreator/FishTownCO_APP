@@ -5,6 +5,7 @@ import { logout } from "@/features/auth/services/logout";
 import { getAuthErrorCode } from "@/features/auth/utils/mapAuthError";
 import { useToast } from "@/ui/components";
 import { useTranslation } from "@/ui/translations";
+import { cancelSubscription } from "@/features/subscription/services/cancelSubscription";
 
 /**
  * Log out and delete-account actions with their confirm-modal state.
@@ -21,22 +22,35 @@ export function useAccountActions() {
 
   /**
    * Deletes the Firebase account and returns to the login screen.
+   * A renewing subscription opens the store's manage page first; if it still
+   * renews after that, the account is kept and a toast explains why.
    * @returns Promise that resolves when navigation starts or a toast is shown
    */
   const onConfirmDelete = async () => {
     if (deleting) return;
     setDeleting(true);
     try {
+      const subscription = await cancelSubscription();
+      if (subscription === "still-renewing") {
+        toast.error(t("auth.delete-account-subscription"));
+        return;
+      }
       await deleteAccount();
       setDeleteOpen(false);
       toast.success(t("auth.delete-account-success"));
       router.replace("/(auth)/login");
     } catch (error) {
       const code = getAuthErrorCode(error);
+      const message = error instanceof Error ? error.message : "";
       toast.error(
         code === "auth/requires-recent-login"
           ? t("auth.delete-account-recent-login")
-          : t("auth.delete-account-failed")
+          : message === "APPLE_REVOKE_FAILED" ||
+            message === "APPLE_TOKEN_MISSING" ||
+            message === "APPLE_CODE_MISSING" ||
+            message === "APPLE_SIGNIN_CANCELLED"
+            ? t("auth.delete-account-apple")
+            : t("auth.delete-account-failed")
       );
     } finally {
       setDeleting(false);
