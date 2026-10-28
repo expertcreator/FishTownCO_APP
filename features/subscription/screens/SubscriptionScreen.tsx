@@ -1,6 +1,6 @@
 import { router } from "expo-router";
-import { useEffect, useState } from "react";
-import { BackHandler, Pressable, StyleSheet, View } from "react-native";
+import { useCallback, useEffect, useState } from "react";
+import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
 import Purchases, { type PurchasesPackage } from "react-native-purchases";
 import type { BillingPlanId } from "@/features/billing/types/billing";
 import { getCurrentUser } from "@/features/common/firebase";
@@ -91,6 +91,8 @@ function SubscriptionForm() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [monthlyPackage, setMonthlyPackage] = useState<PurchasesPackage | null>(null);
   const [annualPackage, setAnnualPackage] = useState<PurchasesPackage | null>(null);
+  /** True once the offerings request has finished, whether or not it found plans. */
+  const [offeringsLoaded, setOfferingsLoaded] = useState(false);
   const [access, setAccess] = useState<SubscriptionAccess | null>(null);
   const [startingTrial, setStartingTrial] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
@@ -99,35 +101,81 @@ function SubscriptionForm() {
   /** No trial or payment yet, so Settings is the only way to log out or delete. */
   const showSettings = access !== null && !canUseApp(access);
 
+  /**
+   * Loads the monthly and annual plans with their store prices from RevenueCat.
+   * Safe to call again after a failed load (slow or no internet).
+   * @returns The plans found, or nulls when the store could not be reached
+   */
+  const loadOfferings = useCallback(async () => {
+    setOfferingsLoaded(false);
+    let monthly: PurchasesPackage | null = null;
+    let annual: PurchasesPackage | null = null;
+    try {
+      const offerings = await Purchases.getOfferings();
+      const packages = offerings.current?.availablePackages ?? [];
+      monthly = packages.find((pkg) => isMonthlyPackage(pkg)) ?? null;
+      annual = packages.find((pkg) => isAnnualPackage(pkg)) ?? null;
+    } catch (error) {
+      console.log("[RevenueCat] Failed to fetch offerings", error);
+    }
+    if (monthly) setMonthlyPackage(monthly);
+    if (annual) setAnnualPackage(annual);
+    setOfferingsLoaded(true);
+    return { monthly, annual };
+  }, []);
+
   // Fetch offerings from RevenueCat when screen loads
   useEffect(() => {
-    async function fetchOfferings() {
-      try {
-        const offerings = await Purchases.getOfferings();
-        if (offerings.current && offerings.current.availablePackages) {
-          const packages = offerings.current.availablePackages;
-          
-          const monthly = packages.find((pkg) => isMonthlyPackage(pkg));
-          const annual = packages.find((pkg) => isAnnualPackage(pkg));
-
-          if (monthly) setMonthlyPackage(monthly);
-          if (annual) setAnnualPackage(annual);
-        }
-      } catch (error) {
-        console.log("[RevenueCat] Failed to fetch offerings", error);
-      }
-    }
-    void fetchOfferings();
+    void loadOfferings();
     void fetchSubscriptionAccess()
       .then(setAccess)
       .catch(() => setAccess(null));
-  }, []);
+  }, [loadOfferings]);
 
   useEffect(() => {
     if (!locked) return;
     const sub = BackHandler.addEventListener("hardwareBackPress", () => true);
     return () => sub.remove();
   }, [locked]);
+
+  /** A plan's price could not be loaded, so offer a retry. */
+  const pricesMissing = offeringsLoaded && (!monthlyPackage || !annualPackage);
+
+  // Try again when the user comes back to the app, e.g. after turning Wi-Fi on.
+  useEffect(() => {
+    if (!pricesMissing) return;
+    const sub = AppState.addEventListener("change", (state) => {
+      if (state === "active") void loadOfferings();
+    });
+    return () => sub.remove();
+  }, [pricesMissing, loadOfferings]);
+
+  /**
+   * Store price for a plan in the buyer's currency, e.g. "£10.00 / month".
+   * Matches what the Apple or Google payment sheet will charge.
+   * @param planId - Monthly or annual
+   * @param priceKey - Text with a {{price}} slot
+   * @returns Price text, or a loading / unavailable message
+   */
+  const planPrice = (planId: BillingPlanId, priceKey: string) => {
+    const pkg = planId === "annual" ? annualPackage : monthlyPackage;
+    const price = pkg?.product.priceString;
+    if (price) return t(priceKey, { price });
+    return offeringsLoaded
+      ? t("subscription.price-unavailable")
+      : t("subscription.price-loading");
+  };
+
+  const selectedPrice = (plan === "annual" ? annualPackage : monthlyPackage)
+    ?.product.priceString;
+  const subscribeLabel = selectedPrice
+    ? t(
+        plan === "monthly"
+          ? "subscription.start-monthly"
+          : "subscription.start-annual",
+        { price: selectedPrice }
+      )
+    : t("subscription.start");
 
   /**
    * Records the 7-day trial once, then opens Home.
@@ -155,11 +203,16 @@ function SubscriptionForm() {
 
     try {
       await configurePurchases(getCurrentUser()?.uid ?? null);
-      const targetPackage = plan === "annual" ? annualPackage : monthlyPackage;
+      let targetPackage = plan === "annual" ? annualPackage : monthlyPackage;
+      if (!targetPackage) {
+        // Prices may have failed to load on a slow connection; try once more.
+        const loaded = await loadOfferings();
+        targetPackage = plan === "annual" ? loaded.annual : loaded.monthly;
+      }
 
       if (!targetPackage) {
         console.log("[RevenueCat] package missing", plan);
-        toast.error(t("subscription.payment-failed"));
+        toast.error(t("subscription.prices-unavailable"));
         setIsSubmitting(false);
         return;
       }
@@ -225,12 +278,22 @@ function SubscriptionForm() {
                 <AppText style={styles.planTitle}>{t(p.titleKey)}</AppText>
                 <View style={[styles.radio, selected && styles.radioOn]} />
               </View>
-              <AppText style={styles.price}>{t(p.priceKey)}</AppText>
+              <AppText style={styles.price}>{planPrice(p.id, p.priceKey)}</AppText>
               <AppText style={styles.note}>{t(p.noteKey)}</AppText>
             </Card>
           </Pressable>
         );
       })}
+
+      {pricesMissing ? (
+        <Pressable
+          onPress={() => void loadOfferings()}
+          style={({ pressed }) => [getPressedItemStyle(pressed)]}
+          accessibilityRole="button"
+        >
+          <AppText style={styles.retry}>{t("subscription.prices-retry")}</AppText>
+        </Pressable>
+      ) : null}
 
       <Card style={styles.perks}>
         <AppText style={styles.perk}>{t("subscription.perk-1")}</AppText>
@@ -239,11 +302,7 @@ function SubscriptionForm() {
       </Card>
 
       <PrimaryButton
-        label={
-          plan === "monthly"
-            ? t("subscription.start-monthly")
-            : t("subscription.start")
-        }
+        label={subscribeLabel}
         loading={isSubmitting}
         onPress={() => void onStart()}
       />
@@ -323,6 +382,14 @@ function getStyles(colors: ThemeColors) {
       marginTop: 14,
       fontWeight: "700",
       textDecorationLine: "underline",
+    },
+    retry: {
+      textAlign: "center",
+      color: colors.teal,
+      fontSize: 13,
+      fontWeight: "700",
+      textDecorationLine: "underline",
+      marginBottom: 14,
     },
     legal: {
       textAlign: "center",
