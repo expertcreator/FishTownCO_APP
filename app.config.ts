@@ -48,7 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: "com.itoasis.Fishtownco",
       // Build number for Xcode archives / TestFlight. Raise it for every upload.
       // (EAS builds ignore this and use the remote build number from eas.json.)
-      buildNumber: "2",
+      buildNumber: "4",
       /** Client's Apple Developer team. */
       appleTeamId: "5G3N4M29YF",
       usesAppleSignIn: true,
@@ -73,7 +73,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: "com.itoasis.Fishtownco",
       // Version code for Play Console uploads. Raise it for every upload.
       // (EAS builds ignore this and use the remote version code from eas.json.)
-      versionCode: 3,
+      versionCode: 4,
       googleServicesFile: "./google-services.json",
       config: {
         googleMaps: {
@@ -102,7 +102,10 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             "Fishtownco uses your location while you add a safety item, so it can be placed on the vessel map.",
           locationAlwaysAndWhenInUsePermission: false,
           locationAlwaysPermission: false,
-          motionUsagePermission: false,
+          // The app never asks for motion data, but expo-location's code references
+          // motion APIs, so App Store upload requires this text (error 90683).
+          motionUsagePermission:
+            "Fishtownco does not use motion or fitness data. This message is required by a location library the app includes.",
         },
       ],
       [
