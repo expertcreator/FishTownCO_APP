@@ -20,6 +20,7 @@ import {
 import { useColors, type ThemeColors } from "@/ui/theme";
 import {
   AppHeader,
+  AppHeaderActions,
   AppText,
   BackHeader,
   CARD_RIPPLE,
@@ -95,6 +96,8 @@ function SubscriptionForm() {
   const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
   const locked = access !== null && !canUseApp(access) && !isTrialActive(access) && Boolean(access.trialStartedAt);
   const canStartTrial = access !== null && !access.trialStartedAt;
+  /** No trial or payment yet, so Settings is the only way to log out or delete. */
+  const showSettings = access !== null && !canUseApp(access);
 
   // Fetch offerings from RevenueCat when screen loads
   useEffect(() => {
@@ -198,6 +201,7 @@ function SubscriptionForm() {
           <BackHeader
             title={t("subscription.title")}
             subtitle={t("subscription.subtitle")}
+            right={showSettings ? <AppHeaderActions /> : undefined}
           />
         )
       }

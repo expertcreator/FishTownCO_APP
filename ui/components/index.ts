@@ -18,7 +18,7 @@ export {
 export { PhoneInput } from "./PhoneInput";
 export { CountryPickerSheet } from "./CountryPickerSheet";
 export { Screen } from "./Screen";
-export { AppHeader } from "./AppHeader";
+export { AppHeader, AppHeaderActions } from "./AppHeader";
 export { BackHeader } from "./BackHeader";
 export { FloatingActionButton } from "./FloatingActionButton";
 export { EmptyState } from "./EmptyState";

@@ -69,9 +69,10 @@ export function AppHeader({
 
 /**
  * Settings (gear) button on tab headers. Opens the Settings screen.
+ * Also used on Subscription so a locked user can still reach Settings.
  * @returns Header action button
  */
-function AppHeaderActions() {
+export function AppHeaderActions() {
   const colors = useColors();
   const { t } = useTranslation();
   const styles = getStyles(colors);

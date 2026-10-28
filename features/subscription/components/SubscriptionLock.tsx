@@ -16,6 +16,7 @@ import { fetchVesselProfile } from "@/features/vessel/services/fetchVesselProfil
  * A signed-in user with no vessel is sent to Add Vessel before the trial starts.
  * Add Vessel and the checklist stay reachable before the trial starts.
  * Auth screens stay reachable so logout and account deletion can finish.
+ * Settings stays reachable so a locked user can log out or delete the account.
  * @returns Nothing. Navigation happens as a side effect.
  */
 export function SubscriptionLock() {
@@ -74,7 +75,7 @@ export function SubscriptionLock() {
     if (!signedIn || !access || canUseApp(access)) return;
     const root = segments[0];
     const child = segments[1];
-    if (root === "(auth)") return;
+    if (root === "(auth)" || root === "settings") return;
     const onVesselSetup =
       root === "vessel" && (child === "edit" || child === "build-checklist");
     const trialNotStarted = !access.trialStartedAt;
