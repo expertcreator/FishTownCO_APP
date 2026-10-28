@@ -8,6 +8,15 @@ import { useTranslation } from "@/ui/translations";
 import { cancelSubscription } from "@/features/subscription/services/cancelSubscription";
 
 /**
+ * Opens Login as the only screen, so the back gesture can't return to the
+ * signed-in tabs that were underneath Settings.
+ */
+function openLoginOnly(): void {
+  if (router.canDismiss()) router.dismissAll();
+  router.replace("/(auth)/login");
+}
+
+/**
  * Log out and delete-account actions with their confirm-modal state.
  * Used by the Settings screen. Both actions show a toast and return to Login.
  * @returns Modal visibility, loading flags, and the confirm handlers
@@ -38,7 +47,7 @@ export function useAccountActions() {
       await deleteAccount();
       setDeleteOpen(false);
       toast.success(t("auth.delete-account-success"));
-      router.replace("/(auth)/login");
+      openLoginOnly();
     } catch (error) {
       const code = getAuthErrorCode(error);
       const message = error instanceof Error ? error.message : "";
@@ -68,7 +77,7 @@ export function useAccountActions() {
       await logout();
       setLogoutOpen(false);
       toast.success(t("auth.log-out-success"));
-      router.replace("/(auth)/login");
+      openLoginOnly();
     } catch {
       setLogoutOpen(false);
       toast.error(t("auth.log-out-failed"));
