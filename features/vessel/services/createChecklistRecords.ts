@@ -22,8 +22,36 @@ import {
 /** Shown until the user adds a real due or expiry date. */
 export const DATE_NOT_SET_LABEL = "Date not set";
 
+/** Fields that mean the user has added a date, photo, or file to a placeholder. */
+const USER_SET_FIELDS = [
+  "dueDateIso",
+  "expiryDateIso",
+  "lastServiceDate",
+  "photoLocalUri",
+  "photoStoragePath",
+  "photoDownloadURL",
+  "certLocalUri",
+  "certStoragePath",
+  "certDownloadURL",
+  "localUri",
+  "storagePath",
+  "downloadURL",
+] as const;
+
 /**
- * Creates a placeholder safety item or wallet document for each new checklist entry.
+ * Whether a record is a checklist placeholder the user has not touched yet.
+ * Only these are removed when their checklist entry is unticked.
+ * @param data - Firestore fields
+ * @returns True when it still needs setup and has no date, photo, or file
+ */
+function isUntouchedPlaceholder(data: Record<string, unknown>): boolean {
+  if (data.needsSetup !== true) return false;
+  return USER_SET_FIELDS.every((field) => !data[field]);
+}
+
+/**
+ * Creates a placeholder safety item or wallet document for each new checklist entry,
+ * and removes untouched placeholders whose entry was unticked.
  * Placeholders have no photo, file, location, or date, so they stay out of reminders.
  * @param checklistIds - Ticked checklist ids
  * @returns How many records were created
@@ -54,11 +82,19 @@ export async function createChecklistRecords(
     getDocs(walletCollection),
   ]);
 
+  const ticked = new Set(checklistIds);
   const existingIds: string[] = [];
   const existingTitles: string[] = [];
+  const unticked: typeof safetySnap.docs = [];
   for (const snap of [...safetySnap.docs, ...walletSnap.docs]) {
     const data = snap.data() as Record<string, unknown>;
-    if (typeof data.checklistId === "string") existingIds.push(data.checklistId);
+    if (typeof data.checklistId === "string") {
+      if (!ticked.has(data.checklistId) && isUntouchedPlaceholder(data)) {
+        unticked.push(snap);
+        continue;
+      }
+      existingIds.push(data.checklistId);
+    }
     const title = data.name ?? data.title;
     if (typeof title === "string") existingTitles.push(title);
   }
@@ -67,9 +103,12 @@ export async function createChecklistRecords(
     checklistIds: existingIds,
     titles: existingTitles,
   });
-  if (pending.length === 0) return 0;
+  if (pending.length === 0 && unticked.length === 0) return 0;
 
   const batch = writeBatch(firebaseFirestore);
+  for (const snap of unticked) {
+    batch.delete(snap.ref);
+  }
   for (const item of pending) {
     if (item.kind === "document") {
       batch.set(doc(walletCollection), walletPlaceholder(item));

@@ -79,6 +79,7 @@ export default function BuildChecklistScreen() {
 
   /**
    * Saves selected checklist ids to Firestore, then opens Subscription.
+   * The button is ready again when the user comes back to change the ticks.
    * @returns Promise that resolves when navigation starts or a toast is shown
    */
   const onBuildVessel = async () => {
@@ -99,6 +100,8 @@ export default function BuildChecklistScreen() {
       } else {
         toast.error(mapAuthError(error, t));
       }
+    } finally {
+      // Subscription is pushed on top, so this screen stays underneath.
       setIsSubmitting(false);
     }
   };
