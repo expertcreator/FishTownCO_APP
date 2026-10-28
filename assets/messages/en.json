@@ -527,6 +527,9 @@
     "theme-light": "Light",
     "theme-system": "System",
     "theme-dark": "Dark",
+    "legal": "LEGAL",
+    "privacy-sub": "How we use and protect your data",
+    "terms-sub": "App rules and subscription terms",
     "account": "ACCOUNT",
     "log-out-sub": "Sign out of this device",
     "delete-account-sub": "This can't be undone"

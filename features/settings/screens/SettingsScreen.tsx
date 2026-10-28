@@ -1,7 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
+import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useAccountActions } from "@/features/auth/hooks/useAccountActions";
 import { getCurrentUser } from "@/features/common/firebase";
+import type { LegalDocument } from "@/features/common/legal/policyLinks";
 import {
   AppText,
   BackHeader,
@@ -9,6 +11,7 @@ import {
   Card,
   ConfirmModal,
   getPressedItemStyle,
+  LegalPolicyModal,
   LogoutModal,
   Screen,
   SectionHeader,
@@ -44,7 +47,8 @@ function getInitials(name: string, email: string): string {
 
 /**
  * Settings screen opened from the gear icon in the tab header.
- * Shows the signed-in user, the theme choice, log out, and delete account.
+ * Shows the signed-in user, the theme choice, the Privacy Policy and Terms,
+ * log out, and delete account.
  * @returns Settings screen
  */
 export default function SettingsScreen() {
@@ -53,6 +57,7 @@ export default function SettingsScreen() {
   const { t } = useTranslation();
   const { themePreference, setThemePreference } = useTheme();
   const account = useAccountActions();
+  const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
 
   const user = getCurrentUser();
   const name = user?.displayName?.trim() ?? "";
@@ -108,6 +113,23 @@ export default function SettingsScreen() {
         </View>
       </Card>
 
+      {/* Legal: opens the website pages in the in-app policy viewer */}
+      <SectionHeader title={t("settings.legal")} />
+      <View style={styles.rowList}>
+        <SettingsRow
+          icon="shield-checkmark-outline"
+          title={t("auth.privacy")}
+          subtitle={t("settings.privacy-sub")}
+          onPress={() => setLegalDocument("privacy")}
+        />
+        <SettingsRow
+          icon="document-text-outline"
+          title={t("auth.terms")}
+          subtitle={t("settings.terms-sub")}
+          onPress={() => setLegalDocument("terms")}
+        />
+      </View>
+
       {/* Account: log out, then delete account last (red) */}
       <SectionHeader title={t("settings.account")} />
       <View style={styles.rowList}>
@@ -126,6 +148,10 @@ export default function SettingsScreen() {
         />
       </View>
 
+      <LegalPolicyModal
+        document={legalDocument}
+        onClose={() => setLegalDocument(null)}
+      />
       <LogoutModal
         visible={account.logoutOpen}
         loading={account.loggingOut}
@@ -286,7 +312,7 @@ function getStyles(colors: ThemeColors) {
     segmentTextOn: {
       color: colors.onInverse,
     },
-    // Stacks the account rows 10px apart, like the My Vessel menu
+    // Stacks the legal and account rows 10px apart, like the My Vessel menu
     rowList: {
       gap: 10,
       marginTop: 8,
