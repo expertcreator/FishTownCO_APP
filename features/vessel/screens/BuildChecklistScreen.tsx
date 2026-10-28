@@ -108,9 +108,8 @@ export default function BuildChecklistScreen() {
       <Screen
         scroll={false}
         edges={["top", "left", "right"]}
-        contentStyle={styles.screen}
+        header={<BackHeader title={t("setup.checklist-title")} />}
       >
-        <BackHeader title={t("setup.checklist-title")} />
         <FormScreenSkeleton />
       </Screen>
     );
@@ -121,9 +120,8 @@ export default function BuildChecklistScreen() {
       <Screen
         scroll={false}
         edges={["top", "left", "right"]}
-        contentStyle={styles.screen}
+        header={<BackHeader title={t("setup.checklist-title")} />}
       >
-        <BackHeader title={t("setup.checklist-title")} />
         <AppText style={styles.error}>{t("vessel.load-failed")}</AppText>
         <PrimaryButton
           label={t("common.try-again")}
@@ -141,22 +139,23 @@ export default function BuildChecklistScreen() {
       <Screen
         scroll={false}
         edges={["top", "left", "right"]}
-        contentStyle={styles.screen}
+        header={<BackHeader title={t("setup.checklist-title")} />}
       >
-        <BackHeader title={t("setup.checklist-title")} />
         <FormScreenSkeleton />
       </Screen>
     );
   }
 
+  // Header uses Screen's padded header slot; the list pads itself so it scrolls edge to edge.
   return (
     <Screen
       scroll={false}
       edges={["top", "left", "right"]}
+      header={
+        <BackHeader title={t("setup.checklist-title")} subtitle={vesselLabel} />
+      }
       contentStyle={styles.screen}
     >
-      <BackHeader title={t("setup.checklist-title")} subtitle={vesselLabel} />
-
       <KeyboardAwareContainer
         useSafeAreaWrapper={false}
         style={styles.scroll}
