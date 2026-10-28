@@ -53,7 +53,7 @@ export default function Index() {
         try {
           let hasVessel = true;
           let requiresSubscription = false;
-          if (hasCompletedOnboarding && user) {
+          if (user) {
             try {
               const profile = await fetchVesselProfile();
               hasVessel = Boolean(profile?.name.trim());

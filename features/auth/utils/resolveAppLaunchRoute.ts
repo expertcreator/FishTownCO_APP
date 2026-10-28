@@ -8,6 +8,8 @@ const SUBSCRIPTION_ROUTE = "/subscription" as const;
 
 /**
  * Resolves the first screen after native splash.
+ * A signed-out user opens Welcome until onboarding is done, then Login.
+ * A signed-in user never sees Welcome, even if they skipped onboarding.
  * A signed-in user with no saved vessel returns to Add Vessel.
  * A signed-in user whose trial has not started, or whose 7-day trial has ended
  * without a payment, opens the subscription screen.
@@ -24,11 +26,8 @@ export function resolveAppLaunchRoute(
   hasVessel = true,
   requiresSubscription = false
 ): Href {
-  if (!onboardingCompleted) {
-    return WELCOME_ROUTE;
-  }
   if (!isSignedIn) {
-    return LOGIN_ROUTE;
+    return onboardingCompleted ? LOGIN_ROUTE : WELCOME_ROUTE;
   }
   if (!hasVessel) {
     return ADD_VESSEL_ROUTE;

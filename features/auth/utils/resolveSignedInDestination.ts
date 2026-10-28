@@ -1,4 +1,5 @@
 import { resolveAppLaunchRoute } from "@/features/auth/utils/resolveAppLaunchRoute";
+import { useOnboardingStore } from "@/features/onboarding/store/onboardingStore";
 import {
   canUseApp,
   fetchSubscriptionAccess,
@@ -8,6 +9,8 @@ import type { Href } from "expo-router";
 
 /**
  * Chooses the screen after a successful sign-in.
+ * Marks onboarding done, so a user who signed in from Welcome without the
+ * slides opens Login, not Welcome, after a later logout.
  * A user with no saved vessel opens Add Vessel, which continues into the
  * build checklist and then the trial or subscription.
  * A user who already has a vessel opens the payment screen when the trial
@@ -15,6 +18,7 @@ import type { Href } from "expo-router";
  * @returns Expo Router href
  */
 export async function resolveSignedInDestination(): Promise<Href> {
+  useOnboardingStore.getState().completeOnboarding();
   let hasVessel = true;
   let requiresSubscription = false;
 
