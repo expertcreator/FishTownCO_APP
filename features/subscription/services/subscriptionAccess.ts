@@ -20,22 +20,31 @@ import {
 /** Free trial length before the payment screen locks the app. */
 export const TRIAL_MS = 7 * 24 * 60 * 60 * 1000;
 
-const accessListeners = new Set<() => void>();
+type AccessListener = (known?: Partial<SubscriptionAccess>) => void;
+
+const accessListeners = new Set<AccessListener>();
 
 /**
  * Reloads subscription gates after a trial start or a purchase.
+ * @param known - Values already saved, applied before the reload finishes so
+ *   a gate never redirects on the old access
  */
-export function notifySubscriptionAccessChanged(): void {
-  accessListeners.forEach((listener) => listener());
+export function notifySubscriptionAccessChanged(
+  known?: Partial<SubscriptionAccess>
+): void {
+  accessListeners.forEach((listener) => {
+    listener(known);
+  });
 }
 
 /**
  * Subscribes to trial and payment changes.
- * @param listener - Called after the saved access changes
+ * @param listener - Called after the saved access changes, with any values
+ *   already known
  * @returns Unsubscribe function
  */
 export function subscribeSubscriptionAccess(
-  listener: () => void
+  listener: AccessListener
 ): () => void {
   accessListeners.add(listener);
   return () => {
@@ -132,12 +141,13 @@ export async function startFreeTrial(): Promise<void> {
   const ref = doc(firebaseFirestore, "users", user.uid);
   const snap = await getDoc(ref);
   if (snap.data()?.trialStartedAt) return;
+  const trialStartedAt = new Date();
   await setDoc(
     ref,
-    { trialStartedAt: Timestamp.fromDate(new Date()) },
+    { trialStartedAt: Timestamp.fromDate(trialStartedAt) },
     { merge: true }
   );
-  notifySubscriptionAccessChanged();
+  notifySubscriptionAccessChanged({ trialStartedAt });
 }
 
 /**

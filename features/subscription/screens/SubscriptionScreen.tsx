@@ -167,7 +167,7 @@ function SubscriptionForm() {
 
       if (premium) {
         console.log("[RevenueCat] Purchase successful");
-        notifySubscriptionAccessChanged();
+        notifySubscriptionAccessChanged({ storePaid: true });
         toast.success(t("subscription.start-success"));
         router.replace("/(tabs)/home");
       } else {

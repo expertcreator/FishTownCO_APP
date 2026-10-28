@@ -25,8 +25,11 @@ export function SubscriptionLock() {
 
   useEffect(() => {
     let cancelled = false;
+    /** Only the newest load may update state; an older one carries stale access. */
+    let latestLoad = 0;
 
     const load = (uid: string | null) => {
+      const loadId = ++latestLoad;
       if (!uid) {
         if (!cancelled) {
           setSignedIn(false);
@@ -36,19 +39,23 @@ export function SubscriptionLock() {
       }
       void fetchSubscriptionAccess()
         .then((next) => {
-          if (cancelled) return;
+          if (cancelled || loadId !== latestLoad) return;
           setSignedIn(true);
           setAccess(next);
         })
         .catch(() => {
-          if (!cancelled) setAccess(null);
+          if (!cancelled && loadId === latestLoad) setAccess(null);
         });
     };
 
     const unsubscribe = onAuthStateChanged(firebaseAuth, (user) => {
       load(user?.uid ?? null);
     });
-    const accessChanged = subscribeSubscriptionAccess(() => {
+    const accessChanged = subscribeSubscriptionAccess((known) => {
+      // Apply saved values now, so the redirect below never runs on the old access.
+      if (known) {
+        setAccess((current) => (current ? { ...current, ...known } : current));
+      }
       load(firebaseAuth.currentUser?.uid ?? null);
     });
     const appState = AppState.addEventListener("change", (state) => {

@@ -71,6 +71,9 @@ export default ({ config }: ConfigContext): ExpoConfig => {
         monochromeImage: `${BRAND_ROOT}/adaptive-icon.png`,
       },
       package: "com.itoasis.Fishtownco",
+      // Version code for Play Console uploads. Raise it for every upload.
+      // (EAS builds ignore this and use the remote version code from eas.json.)
+      versionCode: 3,
       googleServicesFile: "./google-services.json",
       config: {
         googleMaps: {
