@@ -1,7 +1,8 @@
 import {
-  addDoc,
   collection,
+  doc,
   serverTimestamp,
+  setDoc,
 } from "@react-native-firebase/firestore";
 import {
   firebaseFirestore,
@@ -22,6 +23,8 @@ export type CreateBillingPaymentInput = {
   method?: string;
   /** Override payment date (defaults to now). */
   paidAt?: Date;
+  /** Stable id so the same purchase is not written twice. */
+  paymentId?: string;
 };
 
 /** Prototype Skipper Plan is £10/month; annual is ten months up front. */
@@ -48,7 +51,7 @@ export async function createBillingPayment(
   const paidAt = input.paidAt ?? new Date();
   const amountValue = PLAN_AMOUNTS[input.planId];
   const status = input.status ?? "Paid";
-  const method = input.method?.trim() || "Visa •••• 4417";
+  const method = input.method?.trim() || "App Store / Google Play";
   const billingCollection = collection(
     firebaseFirestore,
     "users",
@@ -56,19 +59,23 @@ export async function createBillingPayment(
     "billing"
   );
   const consolePath = `users/${user.uid}/billing`;
+  const payload = {
+    planId: input.planId,
+    amountValue,
+    amountLabel: formatBillingAmount(amountValue),
+    dateIso: paidAt.toISOString(),
+    dateLabel: formatSafetyDueDateLong(paidAt),
+    method,
+    status,
+    createdAt: serverTimestamp(),
+    updatedAt: serverTimestamp(),
+  };
 
   try {
-    const ref = await addDoc(billingCollection, {
-      planId: input.planId,
-      amountValue,
-      amountLabel: formatBillingAmount(amountValue),
-      dateIso: paidAt.toISOString(),
-      dateLabel: formatSafetyDueDateLong(paidAt),
-      method,
-      status,
-      createdAt: serverTimestamp(),
-      updatedAt: serverTimestamp(),
-    });
+    const ref = input.paymentId
+      ? doc(billingCollection, input.paymentId)
+      : doc(billingCollection);
+    await setDoc(ref, payload, { merge: true });
 
     const fullPath = `${consolePath}/${ref.id}`;
 

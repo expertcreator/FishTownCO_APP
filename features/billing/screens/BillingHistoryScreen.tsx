@@ -4,7 +4,7 @@ import { useCallback, useMemo, useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useBillingPayments } from "@/features/billing/hooks/useBillingPayments";
 import { cancelSubscription } from "@/features/subscription/services/cancelSubscription";
-import type { BillingRow } from "@/features/billing/types/billing";
+import type { BillingPlanId, BillingRow } from "@/features/billing/types/billing";
 import {
   formatSafetyDueDate,
   parseSafetyDueDate,
@@ -47,7 +47,8 @@ export default function BillingHistoryScreen() {
   const [cancelling, setCancelling] = useState(false);
 
   const { data, isLoading, isFetching, isError, refetch } = useBillingPayments();
-  const payments = data ?? [];
+  const payments = data?.payments ?? [];
+  const currentPlan = data?.planId ?? null;
   /** `undefined` until first fetch settles — never treat that as an empty list. */
   const isInitialLoad = data === undefined;
 
@@ -98,6 +99,14 @@ export default function BillingHistoryScreen() {
   const rangeValue =
     activeRange === "from" ? fromDate : activeRange === "to" ? toDate : "";
 
+  const planLabel = (planId: BillingPlanId) =>
+    t(planId === "annual" ? "billing.plan-annual" : "billing.plan-monthly");
+  const planPrice = (planId: BillingPlanId) =>
+    t(
+      planId === "annual"
+        ? "billing.plan-price-annual"
+        : "billing.plan-price-monthly"
+    );
   /**
    * Receipt detail is not in the prototype yet — show the same coming-soon cue.
    * @param row - Payment row that was pressed
@@ -108,14 +117,20 @@ export default function BillingHistoryScreen() {
    * @returns Promise that resolves when a toast is shown
    */
   const onCancelSubscription = async () => {
+    console.log("[Billing] Cancel subscription pressed", { currentPlan });
     if (cancelling) return;
     setCancelling(true);
     try {
       const result = await cancelSubscription();
+      console.log("[Billing] Cancel subscription result", result);
       if (result === "cancelled") toast.success(t("subscription.cancel-done"));
       else if (result === "still-renewing") toast.error(t("subscription.cancel-store"));
       else toast.info(t("subscription.cancel-none"));
-    } catch {
+    } catch (error) {
+      console.log(
+        "[Billing] Cancel subscription failed",
+        error instanceof Error ? error.message : error
+      );
       toast.error(t("subscription.payment-failed"));
     } finally {
       setCancelling(false);
@@ -176,6 +191,13 @@ export default function BillingHistoryScreen() {
       contentStyle={styles.content}
     >
       <Card style={styles.filterCard}>
+      {currentPlan ? (
+        <Card style={styles.planCard}>
+          <AppText style={styles.filterLabel}>{t("billing.current-plan")}</AppText>
+          <AppText style={styles.planName}>{planLabel(currentPlan)}</AppText>
+          <AppText style={styles.planPrice}>{planPrice(currentPlan)}</AppText>
+        </Card>
+      ) : null}
         <AppText style={styles.filterLabel}>{t("billing.filter-by-date")}</AppText>
         <View style={styles.chips}>
           {(
@@ -242,7 +264,7 @@ export default function BillingHistoryScreen() {
         })}
       </AppText>
 
-      {rows.length === 0 ? (
+      {rows.length === 0 && !currentPlan ? (
         <EmptyState
           icon="receipt-outline"
           title={t("billing.empty-title")}
@@ -267,6 +289,9 @@ export default function BillingHistoryScreen() {
                 <View style={styles.rowLeft}>
                   <AppText style={styles.amount}>{row.amount}</AppText>
                   <AppText style={styles.date}>{row.date}</AppText>
+                  {row.planId ? (
+                    <AppText style={styles.rowPlan}>{planLabel(row.planId)}</AppText>
+                  ) : null}
                   <AppText style={styles.method}>{row.method}</AppText>
                 </View>
                 <View style={styles.rowRight}>
@@ -318,6 +343,21 @@ function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     content: { paddingBottom: 36 },
     filterCard: {
+    planCard: {
+      gap: 4,
+      marginBottom: 16,
+      borderRadius: 16,
+    },
+    planName: {
+      color: colors.navy,
+      fontSize: 18,
+      fontWeight: "800",
+    },
+    planPrice: {
+      color: colors.orange,
+      fontSize: 14,
+      fontWeight: "700",
+    },
       gap: 12,
       marginBottom: 16,
       borderRadius: 16,
@@ -373,6 +413,12 @@ function getStyles(colors: ThemeColors) {
       fontWeight: "800",
     },
     date: {
+    rowPlan: {
+      color: colors.navy,
+      fontSize: 13,
+      fontWeight: "700",
+      marginTop: 2,
+    },
       color: "rgba(11, 42, 69, 0.6)",
       fontSize: 12,
       marginTop: 2,

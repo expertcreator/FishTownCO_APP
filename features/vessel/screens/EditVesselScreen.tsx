@@ -155,7 +155,13 @@ export default function EditVesselScreen() {
       let nextDocumentUrl = documentUri;
       let nextDocumentName = documentName;
       let nextDocumentPath = vessel?.documentStoragePath ?? "";
-      if (documentUri && isLocalMediaUri(documentUri)) {
+      let photoUrl = vessel?.photoUrl ?? "";
+      let photoThumbUrl = vessel?.photoThumbUrl ?? "";
+      const localPhoto =
+        Boolean(documentUri) &&
+        isLocalMediaUri(documentUri) &&
+        isImageUpload(documentMime, documentName);
+      if (documentUri && isLocalMediaUri(documentUri) && !localPhoto) {
         const uploaded = await uploadVesselDocument(
           documentUri,
           documentName,
@@ -164,18 +170,13 @@ export default function EditVesselScreen() {
         nextDocumentUrl = uploaded.downloadURL;
         nextDocumentName = uploaded.fileName;
         nextDocumentPath = uploaded.storagePath;
-      }
-
-      let photoUrl = vessel?.photoUrl ?? "";
-      let photoThumbUrl = vessel?.photoThumbUrl ?? "";
-      if (
-        documentUri &&
-        isLocalMediaUri(documentUri) &&
-        isImageUpload(documentMime, documentName)
-      ) {
+      } else if (documentUri && localPhoto) {
         const photo = await uploadVesselPhoto(documentUri);
         photoUrl = photo.downloadURL;
         photoThumbUrl = photo.thumbURL;
+        nextDocumentUrl = photo.downloadURL;
+        nextDocumentName = documentName || "vessel-photo.jpg";
+        nextDocumentPath = photo.storagePath;
       }
 
       await saveVesselProfile({
@@ -198,7 +199,9 @@ export default function EditVesselScreen() {
         nextServiceIn: vessel?.nextServiceIn,
         photoUrl,
         photoThumbUrl,
-      });
+      },
+      { isNew: isAdding }
+    );
       toast.success(t("vessel.save-success"));
       if (isAdding) {
         router.replace("/vessel/build-checklist");

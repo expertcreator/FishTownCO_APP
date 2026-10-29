@@ -2,6 +2,7 @@ import { router } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
 import { AppState, BackHandler, Pressable, StyleSheet, View } from "react-native";
 import Purchases, { type PurchasesPackage } from "react-native-purchases";
+import { recordSubscriptionPurchase } from "@/features/billing/services/recordSubscriptionPurchase";
 import type { BillingPlanId } from "@/features/billing/types/billing";
 import { getCurrentUser } from "@/features/common/firebase";
 import type { LegalDocument } from "@/features/common/legal/policyLinks";
@@ -198,11 +199,13 @@ function SubscriptionForm() {
   };
 
   const onStart = async () => {
+    const uid = getCurrentUser()?.uid ?? null;
+    console.log("[Subscription] Subscribe pressed", { plan, uid });
     if (isSubmitting) return;
     setIsSubmitting(true);
 
     try {
-      await configurePurchases(getCurrentUser()?.uid ?? null);
+      await configurePurchases(uid);
       let targetPackage = plan === "annual" ? annualPackage : monthlyPackage;
       if (!targetPackage) {
         // Prices may have failed to load on a slow connection; try once more.
@@ -211,18 +214,52 @@ function SubscriptionForm() {
       }
 
       if (!targetPackage) {
-        console.log("[RevenueCat] package missing", plan);
+        console.log("[Subscription] package missing", plan);
         toast.error(t("subscription.prices-unavailable"));
         setIsSubmitting(false);
         return;
       }
 
-      console.log("[RevenueCat] Purchasing package:", targetPackage.identifier);
+      console.log("[Subscription] Opening payment", {
+        packageId: targetPackage.identifier,
+        productId: targetPackage.product.identifier,
+        price: targetPackage.product.priceString,
+      });
       const { customerInfo } = await Purchases.purchasePackage(targetPackage);
-      const premium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID];
+      const premium = customerInfo.entitlements.active[PREMIUM_ENTITLEMENT_ID] as
+        | {
+            productIdentifier?: string;
+            expirationDate?: string | null;
+            willRenew?: boolean;
+          }
+        | undefined;
+      console.log("[Subscription] Payment returned", {
+        activeEntitlements: Object.keys(customerInfo.entitlements.active),
+        productId: premium?.productIdentifier ?? null,
+        willRenew: premium?.willRenew ?? null,
+        expirationDate: premium?.expirationDate ?? null,
+      });
 
       if (premium) {
-        console.log("[RevenueCat] Purchase successful");
+        console.log("[Subscription] Purchase successful");
+        const productId =
+          premium.productIdentifier || targetPackage.product.identifier;
+        const expiresAt = premium.expirationDate
+          ? new Date(premium.expirationDate)
+          : null;
+        try {
+          await recordSubscriptionPurchase({
+            planId: plan,
+            productId,
+            expiresAt,
+          });
+          console.log("[Subscription] Billing history saved", { plan, productId });
+        } catch (error) {
+          console.log(
+            "[Subscription] Billing history was not saved",
+            error instanceof Error ? error.message : error
+          );
+        }
         notifySubscriptionAccessChanged({ storePaid: true });
         toast.success(t("subscription.start-success"));
         router.replace("/(tabs)/home");
@@ -236,10 +273,19 @@ function SubscriptionForm() {
         "userCancelled" in error &&
         Boolean((error as { userCancelled?: boolean }).userCancelled);
       if (cancelled) {
+        console.log("[Subscription] Payment cancelled by user");
         setIsSubmitting(false);
         return;
       }
-      console.log("[RevenueCat] Purchase failed", error instanceof Error ? error.message : error);
+      const code =
+        typeof error === "object" && error !== null && "code" in error
+          ? String((error as { code?: unknown }).code)
+          : "";
+      console.log(
+        "[Subscription] Payment failed",
+        code,
+        error instanceof Error ? error.message : error
+      );
       toast.error(t("subscription.payment-failed"));
       setIsSubmitting(false);
     }

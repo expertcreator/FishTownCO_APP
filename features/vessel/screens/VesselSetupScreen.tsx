@@ -123,7 +123,9 @@ export default function VesselSetupScreen() {
         yearBuilt: vessel?.yearBuilt,
         skipper: vessel?.skipper,
         nextServiceIn: vessel?.nextServiceIn,
-      });
+      },
+      { isNew: !isEditing }
+    );
       toast.success(t("vessel.save-success"));
       if (isEditing) {
         router.back();

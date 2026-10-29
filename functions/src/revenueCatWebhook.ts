@@ -56,6 +56,8 @@ export const revenueCatWebhook = onRequest(
           product_id?: string;
           transaction_id?: string;
           expiration_at_ms?: number;
+          purchased_at_ms?: number;
+          event_timestamp_ms?: number;
         }
       | undefined;
     const uid = event?.app_user_id?.trim() ?? "";
@@ -96,11 +98,28 @@ export const revenueCatWebhook = onRequest(
     if (status === "active" && planId) {
       const billingId = event?.transaction_id || event?.id || `${type}-${uid}`;
       const amountValue = planId === "annual" ? 100 : 10;
+      const purchasedMs =
+        typeof event?.purchased_at_ms === "number"
+          ? event.purchased_at_ms
+          : typeof event?.event_timestamp_ms === "number"
+            ? event.event_timestamp_ms
+            : Date.now();
+      const paidAt = new Date(purchasedMs);
+      const dateLabel = new Intl.DateTimeFormat("en-GB", {
+        day: "numeric",
+        month: "short",
+        year: "numeric",
+        timeZone: "Europe/London",
+      })
+        .format(paidAt)
+        .replace(/,/g, "");
       await db.doc(`users/${uid}/billing/${billingId}`).set(
         {
           planId,
           amountValue,
           amountLabel: planId === "annual" ? "£100" : "£10",
+          dateIso: paidAt.toISOString(),
+          dateLabel,
           status: "Paid",
           method: "App Store / Google Play",
           source: "revenuecat",

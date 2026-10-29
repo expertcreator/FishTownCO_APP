@@ -1,9 +1,4 @@
-import {
-  collection,
-  getDocs,
-  orderBy,
-  query,
-} from "@react-native-firebase/firestore";
+import { collection, getDocs } from "@react-native-firebase/firestore";
 import {
   firebaseFirestore,
   getCurrentUser,
@@ -23,24 +18,10 @@ export async function fetchBillingPayments(): Promise<BillingRow[]> {
     throw new Error("NOT_SIGNED_IN");
   }
 
-  try {
-    const billingQuery = query(
-      collection(firebaseFirestore, "users", user.uid, "billing"),
-      orderBy("dateIso", "desc")
-    );
-    const snapshot = await getDocs(billingQuery);
-    const rows = snapshot.docs.map(mapBillingDoc);
-
-    return rows;
-  } catch {
-
-    const snapshot = await getDocs(
-      collection(firebaseFirestore, "users", user.uid, "billing")
-    );
-    const rows = snapshot.docs
-      .map(mapBillingDoc)
-      .sort((a, b) => Date.parse(b.dateIso) - Date.parse(a.dateIso));
-
-    return rows;
-  }
+  const snapshot = await getDocs(
+    collection(firebaseFirestore, "users", user.uid, "billing")
+  );
+  return snapshot.docs
+    .map(mapBillingDoc)
+    .sort((a, b) => Date.parse(b.dateIso) - Date.parse(a.dateIso));
 }

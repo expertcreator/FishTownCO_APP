@@ -57,24 +57,30 @@ export async function uploadUserMedia(
   const thumbPath = `${basePath}/thumb.jpg`;
 
   try {
-    const fullUri = await compressImage(input.localUri, {
-      maxEdge: input.maxEdge ?? 1280,
-      quality: 0.7,
-    });
-    const thumbUri = await compressImage(input.localUri, {
-      maxEdge: input.thumbEdge ?? 512,
-      quality: 0.7,
-    });
+    const [fullUri, thumbUri] = await Promise.all([
+      compressImage(input.localUri, {
+        maxEdge: input.maxEdge ?? 1280,
+        quality: 0.7,
+      }),
+      compressImage(input.localUri, {
+        maxEdge: input.thumbEdge ?? 512,
+        quality: 0.7,
+      }),
+    ]);
 
     const originalRef = ref(firebaseStorage, originalPath);
     const thumbRef = ref(firebaseStorage, thumbPath);
     const metadata = { contentType: "image/jpeg" as const };
 
-    await putFile(originalRef, toPutFilePath(fullUri), metadata);
-    await putFile(thumbRef, toPutFilePath(thumbUri), metadata);
+    await Promise.all([
+      putFile(originalRef, toPutFilePath(fullUri), metadata),
+      putFile(thumbRef, toPutFilePath(thumbUri), metadata),
+    ]);
 
-    const downloadURL = await getDownloadURL(originalRef);
-    const thumbURL = await getDownloadURL(thumbRef);
+    const [downloadURL, thumbURL] = await Promise.all([
+      getDownloadURL(originalRef),
+      getDownloadURL(thumbRef),
+    ]);
 
     return {
       downloadURL,
