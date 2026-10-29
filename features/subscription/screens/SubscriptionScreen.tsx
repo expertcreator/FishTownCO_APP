@@ -10,6 +10,7 @@ import {
   configurePurchases,
   PREMIUM_ENTITLEMENT_ID,
 } from "@/features/subscription/services/configurePurchases";
+import { restoreSubscriptionPurchases } from "@/features/subscription/services/restorePurchases";
 import {
   canUseApp,
   fetchSubscriptionAccess,
@@ -96,6 +97,7 @@ function SubscriptionForm() {
   const [offeringsLoaded, setOfferingsLoaded] = useState(false);
   const [access, setAccess] = useState<SubscriptionAccess | null>(null);
   const [startingTrial, setStartingTrial] = useState(false);
+  const [restoring, setRestoring] = useState(false);
   const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
   const locked = access !== null && !canUseApp(access) && !isTrialActive(access) && Boolean(access.trialStartedAt);
   const canStartTrial = access !== null && !access.trialStartedAt;
@@ -291,6 +293,32 @@ function SubscriptionForm() {
     }
   };
 
+  /**
+   * Loads store purchases for this Apple ID or Google account and unlocks Pro.
+   * @returns Promise that resolves when a toast is shown
+   */
+  const onRestore = async () => {
+    if (restoring || isSubmitting || startingTrial) return;
+    setRestoring(true);
+    try {
+      const result = await restoreSubscriptionPurchases();
+      if (result === "restored") {
+        toast.success(t("subscription.restore-success"));
+        router.replace("/(tabs)/home");
+        return;
+      }
+      toast.info(t("subscription.restore-none"));
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message === "NOT_SIGNED_IN"
+          ? t("subscription.sign-in-required")
+          : t("subscription.restore-failed")
+      );
+    } finally {
+      setRestoring(false);
+    }
+  };
+
   return (
     <Screen
       header={
@@ -350,18 +378,31 @@ function SubscriptionForm() {
       <PrimaryButton
         label={subscribeLabel}
         loading={isSubmitting}
+        disabled={restoring}
         onPress={() => void onStart()}
       />
-      {canStartTrial ? (
+      <View style={styles.linkRow}>
         <Pressable
-          disabled={isSubmitting || startingTrial}
-          onPress={() => void onStartTrial()}
+          disabled={isSubmitting || startingTrial || restoring}
+          onPress={() => void onRestore()}
           style={({ pressed }) => [getPressedItemStyle(pressed)]}
           accessibilityRole="button"
         >
-          <AppText style={styles.skip}>{t("subscription.trial")}</AppText>
+          <AppText style={styles.skip}>
+            {restoring ? t("common.loading") : t("subscription.restore")}
+          </AppText>
         </Pressable>
-      ) : null}
+        {canStartTrial ? (
+          <Pressable
+            disabled={isSubmitting || startingTrial || restoring}
+            onPress={() => void onStartTrial()}
+            style={({ pressed }) => [getPressedItemStyle(pressed)]}
+            accessibilityRole="button"
+          >
+            <AppText style={styles.skip}>{t("subscription.trial")}</AppText>
+          </Pressable>
+        ) : null}
+      </View>
       <AppText style={styles.legal}>
         {t("subscription.agree-prefix")}{" "}
         <AppText
@@ -425,9 +466,16 @@ function getStyles(colors: ThemeColors) {
     skip: {
       textAlign: "center",
       color: colors.teal,
-      marginTop: 14,
       fontWeight: "700",
       textDecorationLine: "underline",
+    },
+    linkRow: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      flexWrap: "wrap",
+      gap: 18,
+      marginTop: 14,
     },
     retry: {
       textAlign: "center",

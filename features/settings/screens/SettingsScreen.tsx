@@ -1,9 +1,11 @@
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { useState } from "react";
 import { Pressable, StyleSheet, View } from "react-native";
 import { useAccountActions } from "@/features/auth/hooks/useAccountActions";
 import { getCurrentUser } from "@/features/common/firebase";
 import type { LegalDocument } from "@/features/common/legal/policyLinks";
+import { restoreSubscriptionPurchases } from "@/features/subscription/services/restorePurchases";
 import {
   AppText,
   BackHeader,
@@ -15,6 +17,7 @@ import {
   LogoutModal,
   Screen,
   SectionHeader,
+  useToast,
 } from "@/ui/components";
 import {
   useColors,
@@ -55,13 +58,37 @@ export default function SettingsScreen() {
   const colors = useColors();
   const styles = getStyles(colors);
   const { t } = useTranslation();
+  const toast = useToast();
   const { themePreference, setThemePreference } = useTheme();
   const account = useAccountActions();
   const [legalDocument, setLegalDocument] = useState<LegalDocument | null>(null);
+  const [restoring, setRestoring] = useState(false);
 
   const user = getCurrentUser();
   const name = user?.displayName?.trim() ?? "";
   const email = user?.email?.trim() ?? "";
+
+  const onRestore = async () => {
+    if (restoring) return;
+    setRestoring(true);
+    try {
+      const result = await restoreSubscriptionPurchases();
+      if (result === "restored") {
+        toast.success(t("subscription.restore-success"));
+        router.replace("/(tabs)/home");
+        return;
+      }
+      toast.info(t("subscription.restore-none"));
+    } catch (error) {
+      toast.error(
+        error instanceof Error && error.message === "NOT_SIGNED_IN"
+          ? t("subscription.sign-in-required")
+          : t("subscription.restore-failed")
+      );
+    } finally {
+      setRestoring(false);
+    }
+  };
 
   return (
     <Screen header={<BackHeader title={t("settings.title")} />}>
@@ -133,6 +160,14 @@ export default function SettingsScreen() {
       {/* Account: log out, then delete account last (red) */}
       <SectionHeader title={t("settings.account")} />
       <View style={styles.rowList}>
+        <SettingsRow
+          icon="refresh-outline"
+          title={t("settings.restore")}
+          subtitle={
+            restoring ? t("common.loading") : t("settings.restore-sub")
+          }
+          onPress={() => void onRestore()}
+        />
         <SettingsRow
           icon="log-out-outline"
           title={t("auth.log-out")}
