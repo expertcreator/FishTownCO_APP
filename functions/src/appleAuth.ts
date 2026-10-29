@@ -147,6 +147,7 @@ async function exchangeAuthorizationCode(code: string): Promise<string> {
     }),
   });
   if (!response.ok) {
+    await logAppleRejection("exchange", response);
     throw Object.assign(new Error("APPLE_TOKEN_EXCHANGE_FAILED"), { status: 502 });
   }
   const payload = (await response.json()) as { refresh_token?: string };
@@ -174,8 +175,34 @@ async function revokeRefreshToken(refreshToken: string): Promise<void> {
     }),
   });
   if (!response.ok) {
+    await logAppleRejection("revoke", response);
     throw Object.assign(new Error("APPLE_REVOKE_FAILED"), { status: 502 });
   }
+}
+
+/**
+ * Logs why Apple refused a token or revoke request.
+ * Apple's error body only holds a short code (e.g. invalid_client, invalid_grant),
+ * so no token or key is logged.
+ * @param step - Which Apple call failed
+ * @param response - Apple's error response
+ * @returns Promise that resolves when the reason is logged
+ */
+async function logAppleRejection(
+  step: "exchange" | "revoke",
+  response: Response
+): Promise<void> {
+  const body = (await response.json().catch(() => null)) as {
+    error?: unknown;
+    error_description?: unknown;
+  } | null;
+  logger.warn("Apple rejected the request", {
+    step,
+    status: response.status,
+    appleError: typeof body?.error === "string" ? body.error : "unknown",
+    appleErrorDescription:
+      typeof body?.error_description === "string" ? body.error_description : "",
+  });
 }
 
 /**
