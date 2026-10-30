@@ -101,21 +101,14 @@ export default function BillingHistoryScreen() {
 
   const planLabel = (planId: BillingPlanId) =>
     t(planId === "annual" ? "billing.plan-annual" : "billing.plan-monthly");
+  
   const planPrice = (planId: BillingPlanId) =>
     t(
       planId === "annual"
         ? "billing.plan-price-annual"
         : "billing.plan-price-monthly"
     );
-  /**
-   * Receipt detail is not in the prototype yet — show the same coming-soon cue.
-   * @param row - Payment row that was pressed
-   * @returns void
-   */
-  /**
-   * Opens the store subscription screen so the user can stop renewal.
-   * @returns Promise that resolves when a toast is shown
-   */
+
   const onCancelSubscription = async () => {
     console.log("[Billing] Cancel subscription pressed", { currentPlan });
     if (cancelling) return;
@@ -190,7 +183,6 @@ export default function BillingHistoryScreen() {
       }
       contentStyle={styles.content}
     >
-      <Card style={styles.filterCard}>
       {currentPlan ? (
         <Card style={styles.planCard}>
           <AppText style={styles.filterLabel}>{t("billing.current-plan")}</AppText>
@@ -198,6 +190,8 @@ export default function BillingHistoryScreen() {
           <AppText style={styles.planPrice}>{planPrice(currentPlan)}</AppText>
         </Card>
       ) : null}
+
+      <Card style={styles.filterCard}>
         <AppText style={styles.filterLabel}>{t("billing.filter-by-date")}</AppText>
         <View style={styles.chips}>
           {(
@@ -299,9 +293,7 @@ export default function BillingHistoryScreen() {
                     style={[
                       styles.status,
                       {
-                        color: paid
-                          ? colors.teal
-                          : colors.statusOverdueText,
+                        color: paid ? colors.teal : colors.statusOverdueText,
                       },
                     ]}
                   >
@@ -334,19 +326,14 @@ export default function BillingHistoryScreen() {
   );
 }
 
-/**
- * Builds billing-history styles matching the prototype filter + payment cards.
- * @param colors - Active theme colors
- * @returns Style sheet
- */
 function getStyles(colors: ThemeColors) {
   return StyleSheet.create({
     content: { paddingBottom: 36 },
-    filterCard: {
     planCard: {
       gap: 4,
       marginBottom: 16,
       borderRadius: 16,
+      padding: 16,
     },
     planName: {
       color: colors.navy,
@@ -358,6 +345,7 @@ function getStyles(colors: ThemeColors) {
       fontSize: 14,
       fontWeight: "700",
     },
+    filterCard: {
       gap: 12,
       marginBottom: 16,
       borderRadius: 16,
@@ -413,14 +401,14 @@ function getStyles(colors: ThemeColors) {
       fontWeight: "800",
     },
     date: {
+      color: "rgba(11, 42, 69, 0.6)",
+      fontSize: 12,
+      marginTop: 2,
+    },
     rowPlan: {
       color: colors.navy,
       fontSize: 13,
       fontWeight: "700",
-      marginTop: 2,
-    },
-      color: "rgba(11, 42, 69, 0.6)",
-      fontSize: 12,
       marginTop: 2,
     },
     method: {
