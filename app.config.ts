@@ -48,7 +48,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       bundleIdentifier: "com.itoasis.Fishtownco",
       // Build number for Xcode archives / TestFlight. Raise it for every upload.
       // (EAS builds ignore this and use the remote build number from eas.json.)
-      buildNumber: "4",
+      buildNumber: "5",
       /** Client's Apple Developer team. */
       appleTeamId: "5G3N4M29YF",
       usesAppleSignIn: true,
@@ -73,7 +73,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: "com.itoasis.Fishtownco",
       // Version code for Play Console uploads. Raise it for every upload.
       // (EAS builds ignore this and use the remote version code from eas.json.)
-      versionCode: 4,
+      versionCode: 5,
       googleServicesFile: "./google-services.json",
       config: {
         googleMaps: {
