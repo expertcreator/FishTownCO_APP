@@ -10,12 +10,10 @@ import {
   queryClient,
 } from "@/features/common/firebase";
 import { BILLING_QUERY_KEY } from "@/features/billing/hooks/useBillingPayments";
-import { formatBillingAmount } from "@/features/billing/services/mapBillingDoc";
 import type {
   BillingPlanId,
   BillingStatus,
 } from "@/features/billing/types/billing";
-import { formatSafetyDueDateLong } from "@/features/safety/utils/formatSafetyDueDate";
 
 export type CreateBillingPaymentInput = {
   planId: BillingPlanId;
@@ -27,18 +25,11 @@ export type CreateBillingPaymentInput = {
   paymentId?: string;
 };
 
-/** Prototype Skipper Plan is £10/month; annual is ten months up front. */
-const PLAN_AMOUNTS: Record<BillingPlanId, number> = {
-  monthly: 10,
-  annual: 100,
-};
-
 /**
  * Creates a subscription payment under `users/{uid}/billing`.
- * Used when the user starts a plan on the Subscription screen.
- * @param input - Plan and optional status/method
- * @returns Created payment id and path
- * @throws {Error} When signed out or the Firestore write fails
+ * Note: Client-side direct payment writes have been removed as per M. Sufian's instructions,
+ * so that payments are handled exclusively by the backend webhook to avoid duplicate rows.
+ * This function now returns a dummy/placeholder entry to prevent breaking call flows.
  */
 export async function createBillingPayment(
   input: CreateBillingPaymentInput
@@ -48,41 +39,11 @@ export async function createBillingPayment(
     throw new Error("NOT_SIGNED_IN");
   }
 
-  const paidAt = input.paidAt ?? new Date();
-  const amountValue = PLAN_AMOUNTS[input.planId];
-  const status = input.status ?? "Paid";
-  const method = input.method?.trim() || "App Store / Google Play";
-  const billingCollection = collection(
-    firebaseFirestore,
-    "users",
-    user.uid,
-    "billing"
-  );
+  // Webhook handles actual subscription database logging automatically.
+  // Returning a stable placeholder reference so client navigation and flows don't break.
+  const dummyId = input.paymentId || `client-${Date.now()}`;
   const consolePath = `users/${user.uid}/billing`;
-  const payload = {
-    planId: input.planId,
-    amountValue,
-    amountLabel: formatBillingAmount(amountValue),
-    dateIso: paidAt.toISOString(),
-    dateLabel: formatSafetyDueDateLong(paidAt),
-    method,
-    status,
-    createdAt: serverTimestamp(),
-    updatedAt: serverTimestamp(),
-  };
+  const fullPath = `${consolePath}/${dummyId}`;
 
-  try {
-    const ref = input.paymentId
-      ? doc(billingCollection, input.paymentId)
-      : doc(billingCollection);
-    await setDoc(ref, payload, { merge: true });
-
-    const fullPath = `${consolePath}/${ref.id}`;
-
-    await queryClient.invalidateQueries({ queryKey: BILLING_QUERY_KEY });
-    return { id: ref.id, path: fullPath };
-  } catch (error) {
-
-    throw error;
-  }
+  return { id: dummyId, path: fullPath };
 }

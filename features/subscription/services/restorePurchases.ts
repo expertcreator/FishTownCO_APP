@@ -1,8 +1,4 @@
 import Purchases from "react-native-purchases";
-import {
-  planIdFromProduct,
-  recordSubscriptionPurchase,
-} from "@/features/billing/services/recordSubscriptionPurchase";
 import { getCurrentUser } from "@/features/common/firebase";
 import {
   configurePurchases,
@@ -36,24 +32,8 @@ export async function restoreSubscriptionPurchases(): Promise<RestorePurchasesRe
     | undefined;
   if (!premium) return "none";
 
-  const productId = premium.productIdentifier ?? "";
-  const planId = planIdFromProduct(productId);
-  const expiresAt = premium.expirationDate ? new Date(premium.expirationDate) : null;
-  if (planId) {
-    try {
-      await recordSubscriptionPurchase({
-        planId,
-        productId,
-        expiresAt:
-          expiresAt && !Number.isNaN(expiresAt.getTime()) ? expiresAt : null,
-      });
-    } catch (error) {
-      console.log(
-        "[Subscription] Restored purchase was not saved",
-        error instanceof Error ? error.message : error
-      );
-    }
-  }
+  // Note: recordSubscriptionPurchase has been removed here because restores 
+  // are not new payments. All payment logging is handled exclusively by the backend webhook.
 
   notifySubscriptionAccessChanged({ storePaid: true });
   return "restored";
