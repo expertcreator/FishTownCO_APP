@@ -16,13 +16,18 @@ const ACTIVE_EVENTS = new Set([
 type SubscriptionStatus = "active" | "canceled" | "expired";
 
 /**
- * Maps a store product id onto the monthly or annual plan.
- * @param productId - App Store or Play product id
+ * Maps a store product id or base plan onto the monthly or annual plan.
+ * @param productId - App Store or Play product id / package identifier
  * @returns Plan id, or null when the product is unknown
  */
 function planIdFromProduct(productId: string): "monthly" | "annual" | null {
-  if (/year|annual/i.test(productId)) return "annual";
-  if (/month/i.test(productId)) return "monthly";
+  const lowerId = productId.toLowerCase();
+  if (lowerId.includes("year") || lowerId.includes("annual") || lowerId.includes("yearly")) {
+    return "annual";
+  }
+  if (lowerId.includes("month") || lowerId.includes("monthly")) {
+    return "monthly";
+  }
   return null;
 }
 
