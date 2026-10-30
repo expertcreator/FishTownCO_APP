@@ -63,6 +63,8 @@ export const revenueCatWebhook = onRequest(
           expiration_at_ms?: number;
           purchased_at_ms?: number;
           event_timestamp_ms?: number;
+          price_in_purchased_currency?: number;
+          currency?: string;
         }
       | undefined;
     const uid = event?.app_user_id?.trim() ?? "";
@@ -102,7 +104,12 @@ export const revenueCatWebhook = onRequest(
 
     if (status === "active" && planId) {
       const billingId = event?.transaction_id || event?.id || `${type}-${uid}`;
-      const amountValue = planId === "annual" ? 100 : 10;
+      
+      // Dynamic price aur currency RevenueCat event se uthayi ja rahi hai
+      const amountValue = typeof event?.price_in_purchased_currency === "number" ? event.price_in_purchased_currency : (planId === "annual" ? 274.99 : 25.00);
+      const currencySymbol = event?.currency === "GBP" ? "£" : (event?.currency ? `${event.currency} ` : "£");
+      const amountLabel = `${currencySymbol}${amountValue.toFixed(2)}`;
+
       const purchasedMs =
         typeof event?.purchased_at_ms === "number"
           ? event.purchased_at_ms
@@ -118,11 +125,12 @@ export const revenueCatWebhook = onRequest(
       })
         .format(paidAt)
         .replace(/,/g, "");
+
       await db.doc(`users/${uid}/billing/${billingId}`).set(
         {
           planId,
           amountValue,
-          amountLabel: planId === "annual" ? "£100" : "£10",
+          amountLabel,
           dateIso: paidAt.toISOString(),
           dateLabel,
           status: "Paid",
