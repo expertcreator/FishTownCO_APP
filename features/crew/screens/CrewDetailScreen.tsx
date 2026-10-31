@@ -12,6 +12,7 @@ import {
 import type { StatusTone } from "@/features/common/data/demo";
 import { pickDisplayMediaUri } from "@/features/common/media/mediaStatus";
 import { useCrewMember } from "@/features/crew/hooks/useCrewMember";
+import { deleteCrewMember } from "@/features/crew/services/deleteCrewMember";
 import type { CrewCertificate } from "@/features/crew/types/crew";
 import { getCrewInitials } from "@/features/crew/types/crew";
 import { getCrewStatusLabel } from "@/features/crew/utils/crewStatus";
@@ -20,6 +21,7 @@ import {
   AppText,
   BackHeader,
   Card,
+  ConfirmModal,
   CrewDetailSkeleton,
   PrimaryButton,
   Screen,
@@ -42,6 +44,8 @@ export default function CrewDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const memberId = typeof id === "string" ? id : "";
   const [viewingCert, setViewingCert] = useState<CrewCertificate | null>(null);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   const {
     data: member,
     isLoading,
@@ -84,6 +88,29 @@ export default function CrewDetailScreen() {
       </Screen>
     );
   }
+
+  /**
+   * Deletes this crew member and returns to the crew list.
+   * @returns Promise that resolves when navigation starts or a toast is shown
+   */
+  const onDeleteMember = async () => {
+    if (isDeleting) return;
+    setIsDeleting(true);
+    try {
+      await deleteCrewMember(member.id);
+      setDeleteOpen(false);
+      toast.success(t("crew.delete-member-success"));
+      router.back();
+    } catch (error) {
+      if (error instanceof Error && error.message === "NOT_SIGNED_IN") {
+        toast.error(t("crew.sign-in-required"));
+      } else {
+        toast.error(t("crew.delete-member-failed"));
+      }
+    } finally {
+      setIsDeleting(false);
+    }
+  };
 
   return (
     <Screen
@@ -232,6 +259,33 @@ export default function CrewDetailScreen() {
         label={t("crew.edit-member")}
         icon="create-outline"
         onPress={() => router.push(`/crew/edit/${member.id}`)}
+      />
+      <Pressable
+        onPress={() => setDeleteOpen(true)}
+        disabled={isDeleting}
+        accessibilityRole="button"
+        accessibilityLabel={t("crew.delete-member")}
+        style={({ pressed }) => [
+          styles.deleteBtn,
+          pressed && styles.deletePressed,
+          isDeleting && styles.deleteDisabled,
+        ]}
+      >
+        <Ionicons name="trash-outline" size={18} color={colors.statusOverdueText} />
+        <AppText style={styles.deleteText}>{t("crew.delete-member")}</AppText>
+      </Pressable>
+
+      <ConfirmModal
+        visible={deleteOpen}
+        title={t("crew.delete-member-title")}
+        description={t("crew.delete-member-description")}
+        confirmLabel={t("crew.delete-member")}
+        icon="trash-outline"
+        loading={isDeleting}
+        onClose={() => setDeleteOpen(false)}
+        onConfirm={() => {
+          void onDeleteMember();
+        }}
       />
 
       <CertificateViewerModal
@@ -481,6 +535,25 @@ function getStyles(colors: ThemeColors) {
     editBtn: {
       borderRadius: 16,
       minHeight: 56,
+    },
+    deleteBtn: {
+      marginTop: 12,
+      minHeight: 56,
+      borderRadius: 16,
+      borderWidth: 1,
+      borderColor: colors.statusOverdueText,
+      backgroundColor: colors.statusOverdueBg,
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 8,
+    },
+    deletePressed: { opacity: 0.75 },
+    deleteDisabled: { opacity: 0.5 },
+    deleteText: {
+      color: colors.statusOverdueText,
+      fontSize: 16,
+      fontWeight: "700",
     },
     viewerBackdrop: {
       flex: 1,

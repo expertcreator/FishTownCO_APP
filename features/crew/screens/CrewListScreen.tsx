@@ -75,7 +75,11 @@ export default function CrewListScreen() {
       <View style={styles.headerPad}>
         <BackHeader
           title={t("crew.title")}
-          subtitle={t("crew.registered-aboard", { count: members.length })}
+          subtitle={
+            members.length === 1
+              ? t("crew.registered-aboard-one")
+              : t("crew.registered-aboard", { count: members.length })
+          }
         />
       </View>
 

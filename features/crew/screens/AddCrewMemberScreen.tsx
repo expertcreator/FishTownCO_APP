@@ -230,11 +230,25 @@ export default function AddCrewMemberScreen() {
     label,
   }));
 
+  const expiryBeforeIssue = (issueDate: string, expiryDate: string) => {
+    const issue = parseSafetyDueDate(issueDate);
+    const expiry = parseSafetyDueDate(expiryDate);
+    return Boolean(issue && expiry && expiry.getTime() < issue.getTime());
+  };
   const certsValid = certificates.every(
-    (cert) => cert.type.trim() && cert.issueDate.trim() && cert.expiryDate.trim()
+    (cert) =>
+      cert.type.trim() &&
+      cert.issueDate.trim() &&
+      cert.expiryDate.trim() &&
+      !expiryBeforeIssue(cert.issueDate, cert.expiryDate)
   );
   const certFieldError = (value: string) =>
     submitAttempted && !value.trim() ? t("validation.required") : undefined;
+  const certExpiryError = (issueDate: string, expiryDate: string) =>
+    certFieldError(expiryDate) ??
+    (expiryBeforeIssue(issueDate, expiryDate)
+      ? t("crew.expiry-before-issue")
+      : undefined);
 
   const activeCertType =
     certificates.find((cert) => cert.key === certTypeKey)?.type ?? "";
@@ -508,7 +522,7 @@ export default function AddCrewMemberScreen() {
                   label={t("crew.expiry-date")}
                   value={cert.expiryDate}
                   placeholder={t("safety.date-placeholder")}
-                  error={certFieldError(cert.expiryDate)}
+                  error={certExpiryError(cert.issueDate, cert.expiryDate)}
                   onPress={() =>
                     setDateTarget({ certKey: cert.key, field: "expiryDate" })
                   }

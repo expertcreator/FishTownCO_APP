@@ -101,13 +101,6 @@ export default function BillingHistoryScreen() {
 
   const planLabel = (planId: BillingPlanId) =>
     t(planId === "annual" ? "billing.plan-annual" : "billing.plan-monthly");
-  
-  const planPrice = (planId: BillingPlanId) =>
-    t(
-      planId === "annual"
-        ? "billing.plan-price-annual"
-        : "billing.plan-price-monthly"
-    );
 
   const onCancelSubscription = async () => {
     console.log("[Billing] Cancel subscription pressed", { currentPlan });
@@ -187,7 +180,6 @@ export default function BillingHistoryScreen() {
         <Card style={styles.planCard}>
           <AppText style={styles.filterLabel}>{t("billing.current-plan")}</AppText>
           <AppText style={styles.planName}>{planLabel(currentPlan)}</AppText>
-          <AppText style={styles.planPrice}>{planPrice(currentPlan)}</AppText>
         </Card>
       ) : null}
 
@@ -339,11 +331,6 @@ function getStyles(colors: ThemeColors) {
       color: colors.navy,
       fontSize: 18,
       fontWeight: "800",
-    },
-    planPrice: {
-      color: colors.orange,
-      fontSize: 14,
-      fontWeight: "700",
     },
     filterCard: {
       gap: 12,
