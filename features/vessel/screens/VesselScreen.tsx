@@ -189,9 +189,11 @@ export default function VesselScreen() {
           iconColor={colors.navy}
           title={t("vessel.crew-title")}
           subtitle={
-            crewCount > 0
-              ? t("vessel.crew-sub-count", { count: crewCount })
-              : t("vessel.crew-sub")
+            crewCount === 1
+              ? t("vessel.crew-sub-count-one")
+              : crewCount > 0
+                ? t("vessel.crew-sub-count", { count: crewCount })
+                : t("vessel.crew-sub")
           }
           showDot={crewCount > 0}
           onPress={() => router.push("/crew")}

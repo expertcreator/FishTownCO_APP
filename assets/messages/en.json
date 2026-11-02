@@ -339,6 +339,7 @@
     "crew-title": "MY CREW",
     "crew-sub": "Crew profiles, certificates & expiry dates",
     "crew-sub-count": "{{count}} crew members, certificates & expiry dates",
+    "crew-sub-count-one": "1 crew member, certificates & expiry dates",
     "billing-title": "BILLING HISTORY",
     "billing-sub": "Subscription payments & receipts",
     "edit-profile": "Edit Vessel Profile",
