@@ -11,6 +11,12 @@ service cloud.firestore {
       }
     }
 
+    // Public version check. Clients cannot change the minimum version.
+    match /appConfig/{id} {
+      allow read: if true;
+      allow write: if false;
+    }
+
     // Seeded + read by the app on splash / login
     match /safetyCategories/{id} {
       allow read, create, update: if request.auth != null;

@@ -555,6 +555,12 @@
     "log-out-sub": "Sign out of this device",
     "delete-account-sub": "This can't be undone"
   },
+  "force-update": {
+    "eyebrow": "NEW VERSION",
+    "title": "Keep Fishtownco current",
+    "message": "Install the latest version to keep your vessel, crew, and reminders up to date.",
+    "action": "Update Now"
+  },
   "common": {
     "continue": "Continue",
     "cancel": "Cancel",

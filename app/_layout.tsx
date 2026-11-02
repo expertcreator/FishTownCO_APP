@@ -4,6 +4,7 @@ import { useNotifications } from "@/features/common/notifications/useNotificatio
 import { configureGoogleSignIn } from "@/features/auth/utils/configureGoogleSignIn";
 import { firebaseAuth, queryClient } from "@/features/common/firebase";
 import { configurePurchases } from "@/features/subscription/services/configurePurchases";
+import { ForceUpdateGate } from "@/features/release/components/ForceUpdateGate";
 import { SubscriptionLock } from "@/features/subscription/components/SubscriptionLock";
 import { prefetchSafetyCategories } from "@/features/safety/services/prefetchSafetyCategories";
 import { prefetchVesselCatalogs } from "@/features/vessel/services/prefetchVesselCatalogs";
@@ -81,7 +82,9 @@ export default function RootLayout() {
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaProvider>
           <ThemeProvider>
-            <ThemedShell />
+            <ForceUpdateGate>
+              <ThemedShell />
+            </ForceUpdateGate>
           </ThemeProvider>
         </SafeAreaProvider>
       </GestureHandlerRootView>
