@@ -20,6 +20,27 @@ export async function deleteUserStorage(uid: string): Promise<void> {
 }
 
 /**
+ * Deletes every Storage object under `users/{uid}/{folder}/`, e.g. one wallet doc's files.
+ * The folder must name a single item (at least two segments) so a blank id never wipes a whole section.
+ * @param uid - Firebase user id
+ * @param folder - Item folder under the user, e.g. `wallet/{docId}`
+ * @returns Promise that resolves when the folder is empty
+ * @throws {Error} When the folder is too broad, or listing or deleting fails
+ */
+export async function deleteUserFolder(
+  uid: string,
+  folder: string
+): Promise<void> {
+  const segments = folder.split("/").filter((part) => part.trim());
+  if (!uid || segments.length < 2) {
+    throw new Error("INVALID_STORAGE_FOLDER");
+  }
+  await deletePrefix(
+    ref(firebaseStorage, `users/${uid}/${segments.join("/")}`)
+  );
+}
+
+/**
  * Lists one folder, then deletes its files and child folders.
  * Pages are collected before anything is deleted so a page token stays valid.
  * @param folder - Storage folder reference
