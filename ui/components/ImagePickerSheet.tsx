@@ -8,11 +8,16 @@ import {
   View,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { isImageUpload } from "@/features/common/media/uploadUserFile";
 import { pickImage } from "@/features/common/utils/imagePicker";
 import { pickDocument } from "@/features/common/utils/pickDocument";
 import { useColors, type ThemeColors } from "@/ui/theme";
 import { useTranslation } from "@/ui/translations";
+import { ConfirmModal } from "./ConfirmModal";
 import AppText from "./Text";
+
+/** Largest PDF Storage accepts (matches `storage.rules`). Images are compressed, so they are not checked. */
+const MAX_DOCUMENT_BYTES = 20 * 1024 * 1024;
 
 export type ImagePickerSheetProps = {
   visible: boolean;
@@ -54,6 +59,7 @@ export function ImagePickerSheet({
   const styles = getStyles(colors);
   const isProcessingRef = useRef(false);
   const [pickerBusy, setPickerBusy] = useState(false);
+  const [fileTooLarge, setFileTooLarge] = useState(false);
 
   /**
    * Hides this sheet, then opens a system picker.
@@ -124,115 +130,137 @@ export function ImagePickerSheet({
   const handleDocumentSelection = () =>
     runPicker(async () => {
       const file = await pickDocument();
-      if (file) {
-        onImageSelected(file.uri, {
-          name: file.name,
-          mimeType: file.mimeType,
-        });
+      if (!file) return;
+      if (
+        !isImageUpload(file.mimeType, file.name) &&
+        typeof file.size === "number" &&
+        file.size >= MAX_DOCUMENT_BYTES
+      ) {
+        setFileTooLarge(true);
+        return;
       }
+      onImageSelected(file.uri, {
+        name: file.name,
+        mimeType: file.mimeType,
+      });
     }, t("imagePicker.document-error"));
 
   return (
-    <Modal
-      visible={visible && !pickerBusy}
-      transparent
-      animationType="slide"
-      onRequestClose={onClose}
-      statusBarTranslucent
-    >
-      <View style={styles.overlay}>
-        <Pressable style={styles.backdrop} onPress={onClose} />
-        <View
-          style={[
-            styles.sheet,
-            { paddingBottom: Math.max(insets.bottom, 20) },
-          ]}
-        >
-          <View style={styles.handle} />
-          <View style={styles.header}>
-            <AppText style={styles.title}>
-              {allowDocuments
-                ? t("imagePicker.title-file")
-                : t("imagePicker.title")}
-            </AppText>
-            <Pressable
-              onPress={onClose}
-              hitSlop={12}
-              accessibilityRole="button"
-              accessibilityLabel={t("common.close")}
-              style={({ pressed }) => [
-                styles.closeBtn,
-                pressed && styles.pressed,
-              ]}
-            >
-              <Ionicons name="close" size={22} color={colors.navy} />
-            </Pressable>
-          </View>
-
-          <View style={styles.options}>
-            <Pressable
-              onPress={handleGallerySelection}
-              style={({ pressed }) => [
-                styles.option,
-                pressed && styles.pressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t("imagePicker.choose-from-library")}
-            >
-              <View style={[styles.iconWrap, styles.iconLibrary]}>
-                <Ionicons name="images-outline" size={22} color={colors.teal} />
-              </View>
-              <AppText style={styles.optionLabel}>
-                {t("imagePicker.choose-from-library")}
+    <>
+      <Modal
+        visible={visible && !pickerBusy}
+        transparent
+        animationType="slide"
+        onRequestClose={onClose}
+        statusBarTranslucent
+      >
+        <View style={styles.overlay}>
+          <Pressable style={styles.backdrop} onPress={onClose} />
+          <View
+            style={[
+              styles.sheet,
+              { paddingBottom: Math.max(insets.bottom, 20) },
+            ]}
+          >
+            <View style={styles.handle} />
+            <View style={styles.header}>
+              <AppText style={styles.title}>
+                {allowDocuments
+                  ? t("imagePicker.title-file")
+                  : t("imagePicker.title")}
               </AppText>
-              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-            </Pressable>
-
-            <Pressable
-              onPress={handleCameraSelection}
-              style={({ pressed }) => [
-                styles.option,
-                pressed && styles.pressed,
-              ]}
-              accessibilityRole="button"
-              accessibilityLabel={t("imagePicker.take-photo")}
-            >
-              <View style={[styles.iconWrap, styles.iconCamera]}>
-                <Ionicons name="camera-outline" size={22} color={colors.orange} />
-              </View>
-              <AppText style={styles.optionLabel}>
-                {t("imagePicker.take-photo")}
-              </AppText>
-              <Ionicons name="chevron-forward" size={18} color={colors.muted} />
-            </Pressable>
-
-            {allowDocuments ? (
               <Pressable
-                onPress={handleDocumentSelection}
+                onPress={onClose}
+                hitSlop={12}
+                accessibilityRole="button"
+                accessibilityLabel={t("common.close")}
+                style={({ pressed }) => [
+                  styles.closeBtn,
+                  pressed && styles.pressed,
+                ]}
+              >
+                <Ionicons name="close" size={22} color={colors.navy} />
+              </Pressable>
+            </View>
+
+            <View style={styles.options}>
+              <Pressable
+                onPress={handleGallerySelection}
                 style={({ pressed }) => [
                   styles.option,
                   pressed && styles.pressed,
                 ]}
                 accessibilityRole="button"
-                accessibilityLabel={t("imagePicker.choose-document")}
+                accessibilityLabel={t("imagePicker.choose-from-library")}
               >
-                <View style={[styles.iconWrap, styles.iconDocument]}>
-                  <Ionicons
-                    name="document-text-outline"
-                    size={22}
-                    color={colors.navy}
-                  />
+                <View style={[styles.iconWrap, styles.iconLibrary]}>
+                  <Ionicons name="images-outline" size={22} color={colors.teal} />
                 </View>
                 <AppText style={styles.optionLabel}>
-                  {t("imagePicker.choose-document")}
+                  {t("imagePicker.choose-from-library")}
                 </AppText>
                 <Ionicons name="chevron-forward" size={18} color={colors.muted} />
               </Pressable>
-            ) : null}
+
+              <Pressable
+                onPress={handleCameraSelection}
+                style={({ pressed }) => [
+                  styles.option,
+                  pressed && styles.pressed,
+                ]}
+                accessibilityRole="button"
+                accessibilityLabel={t("imagePicker.take-photo")}
+              >
+                <View style={[styles.iconWrap, styles.iconCamera]}>
+                  <Ionicons name="camera-outline" size={22} color={colors.orange} />
+                </View>
+                <AppText style={styles.optionLabel}>
+                  {t("imagePicker.take-photo")}
+                </AppText>
+                <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+              </Pressable>
+
+              {allowDocuments ? (
+                <Pressable
+                  onPress={handleDocumentSelection}
+                  style={({ pressed }) => [
+                    styles.option,
+                    pressed && styles.pressed,
+                  ]}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("imagePicker.choose-document")}
+                >
+                  <View style={[styles.iconWrap, styles.iconDocument]}>
+                    <Ionicons
+                      name="document-text-outline"
+                      size={22}
+                      color={colors.navy}
+                    />
+                  </View>
+                  <AppText style={styles.optionLabel}>
+                    {t("imagePicker.choose-document")}
+                  </AppText>
+                  <Ionicons name="chevron-forward" size={18} color={colors.muted} />
+                </Pressable>
+              ) : null}
+            </View>
           </View>
         </View>
-      </View>
-    </Modal>
+      </Modal>
+
+      <ConfirmModal
+        visible={fileTooLarge}
+        title={t("imagePicker.file-too-large-title")}
+        description={t("imagePicker.pdf-too-large")}
+        confirmLabel={t("imagePicker.choose-another-file")}
+        icon="document-text-outline"
+        onClose={() => setFileTooLarge(false)}
+        onConfirm={() => {
+          setFileTooLarge(false);
+          void handleDocumentSelection();
+        }}
+      />
+    </>
   );
 }
 
