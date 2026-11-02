@@ -1,7 +1,7 @@
 /**
  * Store listings opened by the force-update screen.
  * The Play package id does not change when a new build is uploaded.
- * Replace `APP_STORE_URL` when the App Store listing is available.
+ * `APP_STORE_URL` is the public listing. It works once the app is live.
  */
 export const ANDROID_PACKAGE = "com.itoasis.Fishtownco";
 
@@ -15,8 +15,8 @@ export const PLAY_STORE_MARKET_URL = `market://details?id=${ANDROID_PACKAGE}`;
 export const PLAY_STORE_URL =
   "https://play.google.com/apps/testing/com.itoasis.Fishtownco";
 
-/**
- * App Store listing. This is a search until the numeric app id is known.
- * Then use `https://apps.apple.com/app/idAPP_ID`.
- */
-export const APP_STORE_URL = "https://apps.apple.com/search?term=Fishtownco";
+/** Opens the App Store app directly. */
+export const APP_STORE_NATIVE_URL = "itms-apps://apps.apple.com/app/id6825324012";
+
+/** Public App Store listing. Works once the app is live. */
+export const APP_STORE_URL = "https://apps.apple.com/gb/app/id6825324012";

@@ -20,6 +20,7 @@ import {
   useForceUpdate,
 } from "@/features/release/services/forceUpdate";
 import {
+  APP_STORE_NATIVE_URL,
   APP_STORE_URL,
   PLAY_STORE_MARKET_URL,
   PLAY_STORE_URL,
@@ -139,7 +140,7 @@ function ForceUpdateModal() {
 }
 
 /**
- * Opens Google Play, or the App Store search on iOS.
+ * Opens Google Play on Android, or the App Store listing on iOS.
  * @returns Promise that resolves when the store link has been requested
  */
 async function openStore(): Promise<void> {
@@ -151,7 +152,10 @@ async function openStore(): Promise<void> {
       await Linking.openURL(canOpenMarket ? PLAY_STORE_MARKET_URL : PLAY_STORE_URL);
       return;
     }
-    await Linking.openURL(APP_STORE_URL);
+    const canOpenAppStore = await Linking.canOpenURL(APP_STORE_NATIVE_URL).catch(
+      () => false
+    );
+    await Linking.openURL(canOpenAppStore ? APP_STORE_NATIVE_URL : APP_STORE_URL);
   } catch {
     // The screen stays up when the store cannot be opened.
   }
