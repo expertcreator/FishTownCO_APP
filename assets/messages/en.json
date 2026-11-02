@@ -582,7 +582,10 @@
     "choose-from-library": "Choose from library",
     "take-photo": "Take a photo",
     "choose-document": "Choose document",
-    "document-error": "Could not open that document. Please try again."
+    "document-error": "Could not open that document. Please try again.",
+    "file-too-large-title": "File too large",
+    "pdf-too-large": "PDFs must be 20 MB or smaller. Please choose a smaller file.",
+    "choose-another-file": "Choose another file"
   },
   "network-welcome-back": "Welcome back",
   "network-no-connection": "No Internet Connection",

@@ -2,6 +2,8 @@ export type PickedDocument = {
   uri: string;
   name: string;
   mimeType: string;
+  /** File size in bytes, when the picker reports it. */
+  size?: number;
 };
 
 /**
@@ -26,5 +28,6 @@ export async function pickDocument(): Promise<PickedDocument | null> {
     uri,
     name: asset.name?.trim() || "document",
     mimeType: asset.mimeType?.trim() || "application/octet-stream",
+    size: typeof asset.size === "number" ? asset.size : undefined,
   };
 }
