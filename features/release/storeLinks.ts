@@ -9,11 +9,10 @@ export const ANDROID_PACKAGE = "com.itoasis.Fishtownco";
 export const PLAY_STORE_MARKET_URL = `market://details?id=${ANDROID_PACKAGE}`;
 
 /**
- * Closed-testing opt-in page. After the app is public, switch this to
- * `https://play.google.com/store/apps/details?id=com.itoasis.Fishtownco`.
+ * Play listing, used when `market://` cannot be opened (the usual case on
+ * Android 11+). Works for closed-testing testers and after launch.
  */
-export const PLAY_STORE_URL =
-  "https://play.google.com/apps/testing/com.itoasis.Fishtownco";
+export const PLAY_STORE_URL = `https://play.google.com/store/apps/details?id=${ANDROID_PACKAGE}`;
 
 /** Opens the App Store app directly. */
 export const APP_STORE_NATIVE_URL = "itms-apps://apps.apple.com/app/id6825324012";
