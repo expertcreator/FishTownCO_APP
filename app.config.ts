@@ -73,7 +73,7 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       package: "com.itoasis.Fishtownco",
       // Version code for Play Console uploads. Raise it for every upload.
       // (EAS builds ignore this and use the remote version code from eas.json.)
-      versionCode: 5,
+      versionCode: 6,
       googleServicesFile: "./google-services.json",
       config: {
         googleMaps: {
